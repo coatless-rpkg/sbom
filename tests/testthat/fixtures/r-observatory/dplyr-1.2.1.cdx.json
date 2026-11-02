@@ -1,0 +1,1269 @@
+{
+    "$schema": "http://cyclonedx.org/schema/bom-1.6.schema.json",
+    "bomFormat": "CycloneDX",
+    "specVersion": "1.6",
+    "serialNumber": "urn:uuid:0243d3fa-27b2-5457-b62c-7957704f0c6a",
+    "version": 1,
+    "metadata": {
+        "timestamp": "2026-10-20T20:28:02Z",
+        "tools": {
+            "components": [
+                {
+                    "type": "application",
+                    "name": "R Observatory",
+                    "externalReferences": [
+                        {
+                            "url": "https://r-observatory.thecoatlessprofessor.com",
+                            "type": "website"
+                        }
+                    ]
+                }
+            ]
+        },
+        "authors": [
+            {
+                "name": "R Observatory"
+            }
+        ],
+        "component": {
+            "type": "library",
+            "bom-ref": "pkg:cran/dplyr@1.2.1",
+            "supplier": {
+                "name": "CRAN",
+                "url": [
+                    "https://cran.r-project.org"
+                ]
+            },
+            "publisher": "Hadley Wickham",
+            "name": "dplyr",
+            "version": "1.2.1",
+            "hashes": [
+                {
+                    "alg": "MD5",
+                    "content": "1c6ba2499c7a08d081bdb530423ab22c"
+                }
+            ],
+            "licenses": [
+                {
+                    "expression": "MIT"
+                }
+            ],
+            "purl": "pkg:cran/dplyr@1.2.1",
+            "externalReferences": [
+                {
+                    "url": "https://cran.r-project.org/package=dplyr",
+                    "type": "website"
+                },
+                {
+                    "url": "https://cran.r-project.org/src/contrib/dplyr_1.2.1.tar.gz",
+                    "type": "distribution"
+                },
+                {
+                    "url": "https://github.com/tidyverse/dplyr",
+                    "type": "vcs"
+                }
+            ],
+            "properties": [
+                {
+                    "name": "r-observatory:maintainer",
+                    "value": "Hadley Wickham"
+                },
+                {
+                    "name": "r-observatory:license-as-written",
+                    "value": "MIT + file LICENSE"
+                },
+                {
+                    "name": "r-observatory:published",
+                    "value": "2026-04-03"
+                },
+                {
+                    "name": "r-observatory:imports",
+                    "value": "cli (>= 3.6.2)"
+                },
+                {
+                    "name": "r-observatory:imports",
+                    "value": "generics"
+                },
+                {
+                    "name": "r-observatory:imports",
+                    "value": "glue (>= 1.3.2)"
+                },
+                {
+                    "name": "r-observatory:imports",
+                    "value": "lifecycle (>= 1.0.5)"
+                },
+                {
+                    "name": "r-observatory:imports",
+                    "value": "magrittr (>= 1.5)"
+                },
+                {
+                    "name": "r-observatory:imports",
+                    "value": "methods"
+                },
+                {
+                    "name": "r-observatory:imports",
+                    "value": "pillar (>= 1.9.0)"
+                },
+                {
+                    "name": "r-observatory:imports",
+                    "value": "R6"
+                },
+                {
+                    "name": "r-observatory:imports",
+                    "value": "rlang (>= 1.1.7)"
+                },
+                {
+                    "name": "r-observatory:imports",
+                    "value": "tibble (>= 3.2.0)"
+                },
+                {
+                    "name": "r-observatory:imports",
+                    "value": "tidyselect (>= 1.2.0)"
+                },
+                {
+                    "name": "r-observatory:imports",
+                    "value": "utils"
+                },
+                {
+                    "name": "r-observatory:imports",
+                    "value": "vctrs (>= 0.7.1)"
+                },
+                {
+                    "name": "r-observatory:depends",
+                    "value": "R (>= 4.1.0)"
+                }
+            ]
+        },
+        "manufacturer": {
+            "name": "R Observatory",
+            "url": [
+                "https://r-observatory.thecoatlessprofessor.com"
+            ]
+        },
+        "properties": [
+            {
+                "name": "r-observatory:dependency-rule",
+                "value": "current-release"
+            },
+            {
+                "name": "r-observatory:dependency-day",
+                "value": "2026-10-20"
+            },
+            {
+                "name": "r-observatory:dependency-rule-text",
+                "value": "Each dependency is at its current release on 2026-10-20, the release an install gets that day."
+            },
+            {
+                "name": "r-observatory:data-release",
+                "value": "v2026-10-20"
+            },
+            {
+                "name": "r-observatory:provenance",
+                "value": "Built by R Observatory from CRAN's own records, data release v2026-10-20, not by the package's maintainer."
+            },
+            {
+                "name": "r-observatory:page",
+                "value": "https://r-observatory.thecoatlessprofessor.com/cran/dplyr/sbom"
+            },
+            {
+                "name": "r-observatory:note",
+                "value": "R is listed at the lowest version stated, R (>= 4.1.0)."
+            },
+            {
+                "name": "r-observatory:note",
+                "value": "Checksums are only those CRAN and Bioconductor listed, and a component without one has none on record."
+            },
+            {
+                "name": "r-observatory:note",
+                "value": "Advisories are those OSV lists for these exact versions."
+            }
+        ]
+    },
+    "components": [
+        {
+            "type": "library",
+            "bom-ref": "pkg:cran/cli@3.6.6",
+            "supplier": {
+                "name": "CRAN",
+                "url": [
+                    "https://cran.r-project.org"
+                ]
+            },
+            "publisher": "Gábor Csárdi",
+            "name": "cli",
+            "version": "3.6.6",
+            "hashes": [
+                {
+                    "alg": "MD5",
+                    "content": "eedc08ba864ae6cd640b05eff1a607ee"
+                }
+            ],
+            "licenses": [
+                {
+                    "expression": "MIT"
+                }
+            ],
+            "purl": "pkg:cran/cli@3.6.6",
+            "externalReferences": [
+                {
+                    "url": "https://cran.r-project.org/package=cli",
+                    "type": "website"
+                },
+                {
+                    "url": "https://cran.r-project.org/src/contrib/cli_3.6.6.tar.gz",
+                    "type": "distribution"
+                },
+                {
+                    "url": "https://github.com/r-lib/cli",
+                    "type": "vcs"
+                }
+            ],
+            "properties": [
+                {
+                    "name": "r-observatory:maintainer",
+                    "value": "Gábor Csárdi"
+                },
+                {
+                    "name": "r-observatory:license-as-written",
+                    "value": "MIT + file LICENSE"
+                },
+                {
+                    "name": "r-observatory:published",
+                    "value": "2026-04-09"
+                },
+                {
+                    "name": "r-observatory:imports",
+                    "value": "utils"
+                }
+            ]
+        },
+        {
+            "type": "library",
+            "bom-ref": "pkg:cran/generics@0.1.4",
+            "supplier": {
+                "name": "CRAN",
+                "url": [
+                    "https://cran.r-project.org"
+                ]
+            },
+            "publisher": "Hadley Wickham",
+            "name": "generics",
+            "version": "0.1.4",
+            "hashes": [
+                {
+                    "alg": "MD5",
+                    "content": "dda54b65216fe3c53571d2adaddc7461"
+                }
+            ],
+            "licenses": [
+                {
+                    "expression": "MIT"
+                }
+            ],
+            "purl": "pkg:cran/generics@0.1.4",
+            "externalReferences": [
+                {
+                    "url": "https://cran.r-project.org/package=generics",
+                    "type": "website"
+                },
+                {
+                    "url": "https://cran.r-project.org/src/contrib/generics_0.1.4.tar.gz",
+                    "type": "distribution"
+                },
+                {
+                    "url": "https://github.com/r-lib/generics",
+                    "type": "vcs"
+                }
+            ],
+            "properties": [
+                {
+                    "name": "r-observatory:maintainer",
+                    "value": "Hadley Wickham"
+                },
+                {
+                    "name": "r-observatory:license-as-written",
+                    "value": "MIT + file LICENSE"
+                },
+                {
+                    "name": "r-observatory:published",
+                    "value": "2025-05-10"
+                },
+                {
+                    "name": "r-observatory:imports",
+                    "value": "methods"
+                }
+            ]
+        },
+        {
+            "type": "library",
+            "bom-ref": "pkg:cran/glue@1.8.1",
+            "supplier": {
+                "name": "CRAN",
+                "url": [
+                    "https://cran.r-project.org"
+                ]
+            },
+            "publisher": "Jennifer Bryan",
+            "name": "glue",
+            "version": "1.8.1",
+            "hashes": [
+                {
+                    "alg": "MD5",
+                    "content": "24e3cd382f52015c929538a5208d11aa"
+                }
+            ],
+            "licenses": [
+                {
+                    "expression": "MIT"
+                }
+            ],
+            "purl": "pkg:cran/glue@1.8.1",
+            "externalReferences": [
+                {
+                    "url": "https://cran.r-project.org/package=glue",
+                    "type": "website"
+                },
+                {
+                    "url": "https://cran.r-project.org/src/contrib/glue_1.8.1.tar.gz",
+                    "type": "distribution"
+                },
+                {
+                    "url": "https://github.com/tidyverse/glue",
+                    "type": "vcs"
+                }
+            ],
+            "properties": [
+                {
+                    "name": "r-observatory:maintainer",
+                    "value": "Jennifer Bryan"
+                },
+                {
+                    "name": "r-observatory:license-as-written",
+                    "value": "MIT + file LICENSE"
+                },
+                {
+                    "name": "r-observatory:published",
+                    "value": "2026-04-17"
+                },
+                {
+                    "name": "r-observatory:imports",
+                    "value": "methods"
+                }
+            ]
+        },
+        {
+            "type": "library",
+            "bom-ref": "pkg:cran/lifecycle@1.0.5",
+            "supplier": {
+                "name": "CRAN",
+                "url": [
+                    "https://cran.r-project.org"
+                ]
+            },
+            "publisher": "Lionel Henry",
+            "name": "lifecycle",
+            "version": "1.0.5",
+            "hashes": [
+                {
+                    "alg": "MD5",
+                    "content": "bce35a7a89fe4108f262db3e441cccae"
+                }
+            ],
+            "licenses": [
+                {
+                    "expression": "MIT"
+                }
+            ],
+            "purl": "pkg:cran/lifecycle@1.0.5",
+            "externalReferences": [
+                {
+                    "url": "https://cran.r-project.org/package=lifecycle",
+                    "type": "website"
+                },
+                {
+                    "url": "https://cran.r-project.org/src/contrib/lifecycle_1.0.5.tar.gz",
+                    "type": "distribution"
+                },
+                {
+                    "url": "https://github.com/r-lib/lifecycle",
+                    "type": "vcs"
+                }
+            ],
+            "properties": [
+                {
+                    "name": "r-observatory:maintainer",
+                    "value": "Lionel Henry"
+                },
+                {
+                    "name": "r-observatory:license-as-written",
+                    "value": "MIT + file LICENSE"
+                },
+                {
+                    "name": "r-observatory:published",
+                    "value": "2026-01-08"
+                },
+                {
+                    "name": "r-observatory:imports",
+                    "value": "cli (>= 3.4.0)"
+                },
+                {
+                    "name": "r-observatory:imports",
+                    "value": "rlang (>= 1.1.0)"
+                }
+            ]
+        },
+        {
+            "type": "library",
+            "bom-ref": "pkg:cran/magrittr@2.0.5",
+            "supplier": {
+                "name": "CRAN",
+                "url": [
+                    "https://cran.r-project.org"
+                ]
+            },
+            "publisher": "Lionel Henry",
+            "name": "magrittr",
+            "version": "2.0.5",
+            "hashes": [
+                {
+                    "alg": "MD5",
+                    "content": "4ee23a88bc1589527696d777d7e68dfc"
+                }
+            ],
+            "licenses": [
+                {
+                    "expression": "MIT"
+                }
+            ],
+            "purl": "pkg:cran/magrittr@2.0.5",
+            "externalReferences": [
+                {
+                    "url": "https://cran.r-project.org/package=magrittr",
+                    "type": "website"
+                },
+                {
+                    "url": "https://cran.r-project.org/src/contrib/magrittr_2.0.5.tar.gz",
+                    "type": "distribution"
+                },
+                {
+                    "url": "https://github.com/tidyverse/magrittr",
+                    "type": "vcs"
+                }
+            ],
+            "properties": [
+                {
+                    "name": "r-observatory:maintainer",
+                    "value": "Lionel Henry"
+                },
+                {
+                    "name": "r-observatory:license-as-written",
+                    "value": "MIT + file LICENSE"
+                },
+                {
+                    "name": "r-observatory:published",
+                    "value": "2026-04-04"
+                }
+            ]
+        },
+        {
+            "type": "library",
+            "bom-ref": "pkg:cran/pillar@1.11.1",
+            "supplier": {
+                "name": "CRAN",
+                "url": [
+                    "https://cran.r-project.org"
+                ]
+            },
+            "publisher": "Kirill Müller",
+            "name": "pillar",
+            "version": "1.11.1",
+            "hashes": [
+                {
+                    "alg": "MD5",
+                    "content": "eb84af558b1ac0d743a4790e99acad6e"
+                }
+            ],
+            "licenses": [
+                {
+                    "expression": "MIT"
+                }
+            ],
+            "purl": "pkg:cran/pillar@1.11.1",
+            "externalReferences": [
+                {
+                    "url": "https://cran.r-project.org/package=pillar",
+                    "type": "website"
+                },
+                {
+                    "url": "https://cran.r-project.org/src/contrib/pillar_1.11.1.tar.gz",
+                    "type": "distribution"
+                },
+                {
+                    "url": "https://github.com/r-lib/pillar",
+                    "type": "vcs"
+                }
+            ],
+            "properties": [
+                {
+                    "name": "r-observatory:maintainer",
+                    "value": "Kirill Müller"
+                },
+                {
+                    "name": "r-observatory:license-as-written",
+                    "value": "MIT + file LICENSE"
+                },
+                {
+                    "name": "r-observatory:published",
+                    "value": "2025-09-17"
+                },
+                {
+                    "name": "r-observatory:imports",
+                    "value": "cli (>= 2.3.0)"
+                },
+                {
+                    "name": "r-observatory:imports",
+                    "value": "glue"
+                },
+                {
+                    "name": "r-observatory:imports",
+                    "value": "lifecycle"
+                },
+                {
+                    "name": "r-observatory:imports",
+                    "value": "rlang (>= 1.0.2)"
+                },
+                {
+                    "name": "r-observatory:imports",
+                    "value": "utf8 (>= 1.1.0)"
+                },
+                {
+                    "name": "r-observatory:imports",
+                    "value": "utils"
+                },
+                {
+                    "name": "r-observatory:imports",
+                    "value": "vctrs (>= 0.5.0)"
+                }
+            ]
+        },
+        {
+            "type": "library",
+            "bom-ref": "pkg:cran/R6@2.6.1",
+            "supplier": {
+                "name": "CRAN",
+                "url": [
+                    "https://cran.r-project.org"
+                ]
+            },
+            "publisher": "Winston Chang",
+            "name": "R6",
+            "version": "2.6.1",
+            "hashes": [
+                {
+                    "alg": "MD5",
+                    "content": "f01b1787f12797c29194d63c9afd5d70"
+                }
+            ],
+            "licenses": [
+                {
+                    "expression": "MIT"
+                }
+            ],
+            "purl": "pkg:cran/R6@2.6.1",
+            "externalReferences": [
+                {
+                    "url": "https://cran.r-project.org/package=R6",
+                    "type": "website"
+                },
+                {
+                    "url": "https://cran.r-project.org/src/contrib/R6_2.6.1.tar.gz",
+                    "type": "distribution"
+                },
+                {
+                    "url": "https://github.com/r-lib/R6",
+                    "type": "vcs"
+                }
+            ],
+            "properties": [
+                {
+                    "name": "r-observatory:maintainer",
+                    "value": "Winston Chang"
+                },
+                {
+                    "name": "r-observatory:license-as-written",
+                    "value": "MIT + file LICENSE"
+                },
+                {
+                    "name": "r-observatory:published",
+                    "value": "2025-02-15"
+                }
+            ]
+        },
+        {
+            "type": "library",
+            "bom-ref": "pkg:cran/rlang@1.3.0",
+            "supplier": {
+                "name": "CRAN",
+                "url": [
+                    "https://cran.r-project.org"
+                ]
+            },
+            "publisher": "Lionel Henry",
+            "name": "rlang",
+            "version": "1.3.0",
+            "hashes": [
+                {
+                    "alg": "MD5",
+                    "content": "b52c165e43f4d7fe5cfa15c5c9467ff4"
+                }
+            ],
+            "licenses": [
+                {
+                    "expression": "MIT"
+                }
+            ],
+            "purl": "pkg:cran/rlang@1.3.0",
+            "externalReferences": [
+                {
+                    "url": "https://cran.r-project.org/package=rlang",
+                    "type": "website"
+                },
+                {
+                    "url": "https://cran.r-project.org/src/contrib/rlang_1.3.0.tar.gz",
+                    "type": "distribution"
+                },
+                {
+                    "url": "https://github.com/r-lib/rlang",
+                    "type": "vcs"
+                }
+            ],
+            "properties": [
+                {
+                    "name": "r-observatory:maintainer",
+                    "value": "Lionel Henry"
+                },
+                {
+                    "name": "r-observatory:license-as-written",
+                    "value": "MIT + file LICENSE"
+                },
+                {
+                    "name": "r-observatory:published",
+                    "value": "2026-07-05"
+                },
+                {
+                    "name": "r-observatory:imports",
+                    "value": "utils"
+                }
+            ]
+        },
+        {
+            "type": "library",
+            "bom-ref": "pkg:cran/tibble@3.3.1",
+            "supplier": {
+                "name": "CRAN",
+                "url": [
+                    "https://cran.r-project.org"
+                ]
+            },
+            "publisher": "Kirill Müller",
+            "name": "tibble",
+            "version": "3.3.1",
+            "hashes": [
+                {
+                    "alg": "MD5",
+                    "content": "97ff25ebdd1460ec152d48e9bb54fa43"
+                }
+            ],
+            "licenses": [
+                {
+                    "expression": "MIT"
+                }
+            ],
+            "purl": "pkg:cran/tibble@3.3.1",
+            "externalReferences": [
+                {
+                    "url": "https://cran.r-project.org/package=tibble",
+                    "type": "website"
+                },
+                {
+                    "url": "https://cran.r-project.org/src/contrib/tibble_3.3.1.tar.gz",
+                    "type": "distribution"
+                },
+                {
+                    "url": "https://github.com/tidyverse/tibble",
+                    "type": "vcs"
+                }
+            ],
+            "properties": [
+                {
+                    "name": "r-observatory:maintainer",
+                    "value": "Kirill Müller"
+                },
+                {
+                    "name": "r-observatory:license-as-written",
+                    "value": "MIT + file LICENSE"
+                },
+                {
+                    "name": "r-observatory:published",
+                    "value": "2026-01-11"
+                },
+                {
+                    "name": "r-observatory:imports",
+                    "value": "cli"
+                },
+                {
+                    "name": "r-observatory:imports",
+                    "value": "lifecycle (>= 1.0.0)"
+                },
+                {
+                    "name": "r-observatory:imports",
+                    "value": "magrittr"
+                },
+                {
+                    "name": "r-observatory:imports",
+                    "value": "methods"
+                },
+                {
+                    "name": "r-observatory:imports",
+                    "value": "pillar (>= 1.8.1)"
+                },
+                {
+                    "name": "r-observatory:imports",
+                    "value": "pkgconfig"
+                },
+                {
+                    "name": "r-observatory:imports",
+                    "value": "rlang (>= 1.0.2)"
+                },
+                {
+                    "name": "r-observatory:imports",
+                    "value": "utils"
+                },
+                {
+                    "name": "r-observatory:imports",
+                    "value": "vctrs (>= 0.5.0)"
+                }
+            ]
+        },
+        {
+            "type": "library",
+            "bom-ref": "pkg:cran/tidyselect@1.2.1",
+            "supplier": {
+                "name": "CRAN",
+                "url": [
+                    "https://cran.r-project.org"
+                ]
+            },
+            "publisher": "Lionel Henry",
+            "name": "tidyselect",
+            "version": "1.2.1",
+            "hashes": [
+                {
+                    "alg": "MD5",
+                    "content": "49c581292e819a2a39aac321f27ab0a8"
+                }
+            ],
+            "licenses": [
+                {
+                    "expression": "MIT"
+                }
+            ],
+            "purl": "pkg:cran/tidyselect@1.2.1",
+            "externalReferences": [
+                {
+                    "url": "https://cran.r-project.org/package=tidyselect",
+                    "type": "website"
+                },
+                {
+                    "url": "https://cran.r-project.org/src/contrib/tidyselect_1.2.1.tar.gz",
+                    "type": "distribution"
+                },
+                {
+                    "url": "https://github.com/r-lib/tidyselect",
+                    "type": "vcs"
+                }
+            ],
+            "properties": [
+                {
+                    "name": "r-observatory:maintainer",
+                    "value": "Lionel Henry"
+                },
+                {
+                    "name": "r-observatory:license-as-written",
+                    "value": "MIT + file LICENSE"
+                },
+                {
+                    "name": "r-observatory:published",
+                    "value": "2024-03-11"
+                },
+                {
+                    "name": "r-observatory:imports",
+                    "value": "cli (>= 3.3.0)"
+                },
+                {
+                    "name": "r-observatory:imports",
+                    "value": "glue (>= 1.3.0)"
+                },
+                {
+                    "name": "r-observatory:imports",
+                    "value": "lifecycle (>= 1.0.3)"
+                },
+                {
+                    "name": "r-observatory:imports",
+                    "value": "rlang (>= 1.0.4)"
+                },
+                {
+                    "name": "r-observatory:imports",
+                    "value": "vctrs (>= 0.5.2)"
+                },
+                {
+                    "name": "r-observatory:imports",
+                    "value": "withr"
+                }
+            ]
+        },
+        {
+            "type": "library",
+            "bom-ref": "pkg:cran/vctrs@0.7.3",
+            "supplier": {
+                "name": "CRAN",
+                "url": [
+                    "https://cran.r-project.org"
+                ]
+            },
+            "publisher": "Davis Vaughan",
+            "name": "vctrs",
+            "version": "0.7.3",
+            "hashes": [
+                {
+                    "alg": "MD5",
+                    "content": "d99218820f353c359ff59fd46b52ddb3"
+                }
+            ],
+            "licenses": [
+                {
+                    "expression": "MIT"
+                }
+            ],
+            "purl": "pkg:cran/vctrs@0.7.3",
+            "externalReferences": [
+                {
+                    "url": "https://cran.r-project.org/package=vctrs",
+                    "type": "website"
+                },
+                {
+                    "url": "https://cran.r-project.org/src/contrib/vctrs_0.7.3.tar.gz",
+                    "type": "distribution"
+                },
+                {
+                    "url": "https://github.com/r-lib/vctrs",
+                    "type": "vcs"
+                }
+            ],
+            "properties": [
+                {
+                    "name": "r-observatory:maintainer",
+                    "value": "Davis Vaughan"
+                },
+                {
+                    "name": "r-observatory:license-as-written",
+                    "value": "MIT + file LICENSE"
+                },
+                {
+                    "name": "r-observatory:published",
+                    "value": "2026-04-11"
+                },
+                {
+                    "name": "r-observatory:imports",
+                    "value": "cli (>= 3.4.0)"
+                },
+                {
+                    "name": "r-observatory:imports",
+                    "value": "glue"
+                },
+                {
+                    "name": "r-observatory:imports",
+                    "value": "lifecycle (>= 1.0.3)"
+                },
+                {
+                    "name": "r-observatory:imports",
+                    "value": "rlang (>= 1.1.7)"
+                }
+            ]
+        },
+        {
+            "type": "library",
+            "bom-ref": "pkg:cran/pkgconfig@2.0.3",
+            "supplier": {
+                "name": "CRAN",
+                "url": [
+                    "https://cran.r-project.org"
+                ]
+            },
+            "publisher": "Gábor Csárdi",
+            "name": "pkgconfig",
+            "version": "2.0.3",
+            "hashes": [
+                {
+                    "alg": "MD5",
+                    "content": "7b9ca1d45d941238381cb55d13ff4d68"
+                }
+            ],
+            "licenses": [
+                {
+                    "expression": "MIT"
+                }
+            ],
+            "purl": "pkg:cran/pkgconfig@2.0.3",
+            "externalReferences": [
+                {
+                    "url": "https://cran.r-project.org/package=pkgconfig",
+                    "type": "website"
+                },
+                {
+                    "url": "https://cran.r-project.org/src/contrib/pkgconfig_2.0.3.tar.gz",
+                    "type": "distribution"
+                },
+                {
+                    "url": "https://github.com/r-lib/pkgconfig#readme",
+                    "type": "vcs"
+                }
+            ],
+            "properties": [
+                {
+                    "name": "r-observatory:maintainer",
+                    "value": "Gábor Csárdi"
+                },
+                {
+                    "name": "r-observatory:license-as-written",
+                    "value": "MIT + file LICENSE"
+                },
+                {
+                    "name": "r-observatory:published",
+                    "value": "2019-09-22"
+                },
+                {
+                    "name": "r-observatory:imports",
+                    "value": "utils"
+                }
+            ]
+        },
+        {
+            "type": "library",
+            "bom-ref": "pkg:cran/utf8@1.2.6",
+            "supplier": {
+                "name": "CRAN",
+                "url": [
+                    "https://cran.r-project.org"
+                ]
+            },
+            "publisher": "Kirill Müller",
+            "name": "utf8",
+            "version": "1.2.6",
+            "hashes": [
+                {
+                    "alg": "MD5",
+                    "content": "12037c186ddded4d9b289762b69fc435"
+                }
+            ],
+            "licenses": [
+                {
+                    "license": {
+                        "name": "Apache License (== 2.0) | file LICENSE"
+                    }
+                }
+            ],
+            "purl": "pkg:cran/utf8@1.2.6",
+            "externalReferences": [
+                {
+                    "url": "https://cran.r-project.org/package=utf8",
+                    "type": "website"
+                },
+                {
+                    "url": "https://cran.r-project.org/src/contrib/utf8_1.2.6.tar.gz",
+                    "type": "distribution"
+                },
+                {
+                    "url": "https://github.com/krlmlr/utf8",
+                    "type": "vcs"
+                }
+            ],
+            "properties": [
+                {
+                    "name": "r-observatory:maintainer",
+                    "value": "Kirill Müller"
+                },
+                {
+                    "name": "r-observatory:published",
+                    "value": "2025-06-08"
+                }
+            ]
+        },
+        {
+            "type": "library",
+            "bom-ref": "pkg:cran/withr@3.0.3",
+            "supplier": {
+                "name": "CRAN",
+                "url": [
+                    "https://cran.r-project.org"
+                ]
+            },
+            "publisher": "Lionel Henry",
+            "name": "withr",
+            "version": "3.0.3",
+            "hashes": [
+                {
+                    "alg": "MD5",
+                    "content": "121bf3699aadb9d1b47d648964b934f8"
+                }
+            ],
+            "licenses": [
+                {
+                    "expression": "MIT"
+                }
+            ],
+            "purl": "pkg:cran/withr@3.0.3",
+            "externalReferences": [
+                {
+                    "url": "https://cran.r-project.org/package=withr",
+                    "type": "website"
+                },
+                {
+                    "url": "https://cran.r-project.org/src/contrib/withr_3.0.3.tar.gz",
+                    "type": "distribution"
+                },
+                {
+                    "url": "https://github.com/r-lib/withr#readme",
+                    "type": "vcs"
+                }
+            ],
+            "properties": [
+                {
+                    "name": "r-observatory:maintainer",
+                    "value": "Lionel Henry"
+                },
+                {
+                    "name": "r-observatory:license-as-written",
+                    "value": "MIT + file LICENSE"
+                },
+                {
+                    "name": "r-observatory:published",
+                    "value": "2026-06-19"
+                },
+                {
+                    "name": "r-observatory:imports",
+                    "value": "graphics"
+                },
+                {
+                    "name": "r-observatory:imports",
+                    "value": "grDevices"
+                }
+            ]
+        },
+        {
+            "type": "platform",
+            "bom-ref": "R",
+            "name": "R",
+            "version": "4.1.0",
+            "description": "The lowest R version stated, R (>= 4.1.0).",
+            "licenses": [
+                {
+                    "expression": "GPL-2.0-only OR GPL-3.0-only"
+                }
+            ],
+            "externalReferences": [
+                {
+                    "url": "https://www.r-project.org",
+                    "type": "website"
+                }
+            ],
+            "properties": [
+                {
+                    "name": "r-observatory:license-as-written",
+                    "value": "GPL-2 | GPL-3"
+                },
+                {
+                    "name": "r-observatory:part-of",
+                    "value": "R"
+                },
+                {
+                    "name": "r-observatory:version-is",
+                    "value": "minimum"
+                }
+            ],
+            "components": [
+                {
+                    "type": "library",
+                    "bom-ref": "R/methods",
+                    "name": "methods",
+                    "description": "Part of R. It comes with R and has no file of its own.",
+                    "properties": [
+                        {
+                            "name": "r-observatory:part-of",
+                            "value": "R"
+                        }
+                    ]
+                },
+                {
+                    "type": "library",
+                    "bom-ref": "R/utils",
+                    "name": "utils",
+                    "description": "Part of R. It comes with R and has no file of its own.",
+                    "properties": [
+                        {
+                            "name": "r-observatory:part-of",
+                            "value": "R"
+                        }
+                    ]
+                },
+                {
+                    "type": "library",
+                    "bom-ref": "R/graphics",
+                    "name": "graphics",
+                    "description": "Part of R. It comes with R and has no file of its own.",
+                    "properties": [
+                        {
+                            "name": "r-observatory:part-of",
+                            "value": "R"
+                        }
+                    ]
+                },
+                {
+                    "type": "library",
+                    "bom-ref": "R/grDevices",
+                    "name": "grDevices",
+                    "description": "Part of R. It comes with R and has no file of its own.",
+                    "properties": [
+                        {
+                            "name": "r-observatory:part-of",
+                            "value": "R"
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "dependencies": [
+        {
+            "ref": "pkg:cran/dplyr@1.2.1",
+            "dependsOn": [
+                "pkg:cran/cli@3.6.6",
+                "pkg:cran/generics@0.1.4",
+                "pkg:cran/glue@1.8.1",
+                "pkg:cran/lifecycle@1.0.5",
+                "pkg:cran/magrittr@2.0.5",
+                "R/methods",
+                "pkg:cran/pillar@1.11.1",
+                "pkg:cran/R6@2.6.1",
+                "pkg:cran/rlang@1.3.0",
+                "pkg:cran/tibble@3.3.1",
+                "pkg:cran/tidyselect@1.2.1",
+                "R/utils",
+                "pkg:cran/vctrs@0.7.3",
+                "R"
+            ]
+        },
+        {
+            "ref": "pkg:cran/cli@3.6.6",
+            "dependsOn": [
+                "R/utils"
+            ]
+        },
+        {
+            "ref": "pkg:cran/generics@0.1.4",
+            "dependsOn": [
+                "R/methods"
+            ]
+        },
+        {
+            "ref": "pkg:cran/glue@1.8.1",
+            "dependsOn": [
+                "R/methods"
+            ]
+        },
+        {
+            "ref": "pkg:cran/lifecycle@1.0.5",
+            "dependsOn": [
+                "pkg:cran/cli@3.6.6",
+                "pkg:cran/rlang@1.3.0"
+            ]
+        },
+        {
+            "ref": "pkg:cran/magrittr@2.0.5",
+            "dependsOn": []
+        },
+        {
+            "ref": "pkg:cran/pillar@1.11.1",
+            "dependsOn": [
+                "pkg:cran/cli@3.6.6",
+                "pkg:cran/glue@1.8.1",
+                "pkg:cran/lifecycle@1.0.5",
+                "pkg:cran/rlang@1.3.0",
+                "pkg:cran/utf8@1.2.6",
+                "R/utils",
+                "pkg:cran/vctrs@0.7.3"
+            ]
+        },
+        {
+            "ref": "pkg:cran/R6@2.6.1",
+            "dependsOn": []
+        },
+        {
+            "ref": "pkg:cran/rlang@1.3.0",
+            "dependsOn": [
+                "R/utils"
+            ]
+        },
+        {
+            "ref": "pkg:cran/tibble@3.3.1",
+            "dependsOn": [
+                "pkg:cran/cli@3.6.6",
+                "pkg:cran/lifecycle@1.0.5",
+                "pkg:cran/magrittr@2.0.5",
+                "R/methods",
+                "pkg:cran/pillar@1.11.1",
+                "pkg:cran/pkgconfig@2.0.3",
+                "pkg:cran/rlang@1.3.0",
+                "R/utils",
+                "pkg:cran/vctrs@0.7.3"
+            ]
+        },
+        {
+            "ref": "pkg:cran/tidyselect@1.2.1",
+            "dependsOn": [
+                "pkg:cran/cli@3.6.6",
+                "pkg:cran/glue@1.8.1",
+                "pkg:cran/lifecycle@1.0.5",
+                "pkg:cran/rlang@1.3.0",
+                "pkg:cran/vctrs@0.7.3",
+                "pkg:cran/withr@3.0.3"
+            ]
+        },
+        {
+            "ref": "pkg:cran/vctrs@0.7.3",
+            "dependsOn": [
+                "pkg:cran/cli@3.6.6",
+                "pkg:cran/glue@1.8.1",
+                "pkg:cran/lifecycle@1.0.5",
+                "pkg:cran/rlang@1.3.0"
+            ]
+        },
+        {
+            "ref": "pkg:cran/pkgconfig@2.0.3",
+            "dependsOn": [
+                "R/utils"
+            ]
+        },
+        {
+            "ref": "pkg:cran/utf8@1.2.6",
+            "dependsOn": []
+        },
+        {
+            "ref": "pkg:cran/withr@3.0.3",
+            "dependsOn": [
+                "R/graphics",
+                "R/grDevices"
+            ]
+        }
+    ]
+}

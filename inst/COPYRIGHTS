@@ -1,0 +1,27 @@
+Licences of files bundled in this package
+=========================================
+
+The sbom package itself is MIT licensed (see LICENSE). The files below are
+third-party, copied unmodified from upstream unless stated otherwise. Their
+exact sources, tags and checksums are in inst/schemas/MANIFEST.csv, and
+data-raw/schemas.R reproduces them.
+
+inst/schemas/cyclonedx/*   (all files in this directory)
+  Source:    https://github.com/CycloneDX/specification, tag 1.7.2, schema/
+  Copyright: The OWASP Foundation and CycloneDX contributors
+  Licence:   Apache License 2.0 (SPDX: Apache-2.0)
+             Upstream file LICENSE; the schemas also state this in their headers.
+  Includes:  bom-1.{4,5,6,7}.schema.json, bom-1.{4,5,6,7}.xsd, spdx.schema.json,
+             spdx.xsd, jsf-0.82.schema.json, cryptography-defs.schema.json
+  Changes:   bom-1.{4,5,6,7}.xsd have the import
+             schemaLocation="http://cyclonedx.org/schema/spdx" rewritten to
+             schemaLocation="spdx.xsd" so that validation needs no network.
+             No other file is changed.
+
+inst/schemas/spdx/spdx-2.3.schema.json
+  Source:    https://github.com/spdx/spdx-spec, tag v2.3, schemas/spdx-schema.json
+  Copyright: SPDX Workgroup, a Linux Foundation Project
+  Licence:   Creative Commons Attribution 3.0 Unported (SPDX: CC-BY-3.0)
+             Upstream file LICENSE at tag v2.3 (GitHub does not detect it
+             automatically; the file text is the CC BY 3.0 legal code).
+  Changes:   None.

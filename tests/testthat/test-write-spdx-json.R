@@ -1,0 +1,51 @@
+test_that("the SPDX document follows R Observatory's layout and passes its schema", {
+  skip_if_not_installed("jsonvalidate")
+  x <- fixture_sbom()
+  d <- spdx_document(x)
+  expect_equal(d$documentNamespace, spdx_namespace(x))
+  expect_equal(d$relationships[[1]],
+               list(spdxElementId = "SPDXRef-DOCUMENT", relationshipType = "DESCRIBES",
+                    relatedSpdxElement = "SPDXRef-local-srcpkg"))
+  cran <- Find(function(p) p$SPDXID == "SPDXRef-cran-cranpkg", d$packages)
+  expect_equal(cran$supplier, "Organization: CRAN")
+  expect_equal(cran$originator, "Person: Grace Hopper")
+  expect_equal(cran$downloadLocation, "NOASSERTION")
+  expect_equal(cran$licenseDeclared, "GPL-2.0-only OR GPL-3.0-only")
+  expect_equal(cran$comment, "Maintainer Grace Hopper. Published 2026-01-02.")
+  utils_pkg <- Find(function(p) p$SPDXID == "SPDXRef-R-utils", d$packages)
+  expect_equal(utils_pkg$downloadLocation, "NONE")
+  local <- Find(function(p) p$SPDXID == "SPDXRef-local-localpkg", d$packages)
+  expect_equal(local$licenseDeclared, "NOASSERTION")
+  sug <- Filter(function(r) r$relationshipType == "OPTIONAL_DEPENDENCY_OF", d$relationships)
+  expect_equal(sug[[1]]$spdxElementId, "SPDXRef-cran-suggestpkg")
+  tf <- withr::local_tempfile(fileext = ".spdx.json")
+  writeLines(spdx_json(x), tf, sep = "")
+  expect_equal(schema_validate(tf, "spdx-json")$status, "pass")
+})
+
+test_that("R, base packages and omitted fields follow the sample", {
+  d <- spdx_document(fixture_sbom())
+  r <- Find(function(p) p$SPDXID == "SPDXRef-R", d$packages)
+  expect_null(r$supplier)
+  expect_equal(r$primaryPackagePurpose, "APPLICATION")
+  u <- Find(function(p) p$SPDXID == "SPDXRef-R-utils", d$packages)
+  expect_null(u$versionInfo)
+  expect_null(u$supplier)
+  expect_equal(u$licenseComments, "Part of R, under R's own licence.")
+  contains <- Filter(function(r) r$relationshipType == "CONTAINS", d$relationships)
+  expect_true(all(vapply(contains, function(r) r$comment == "Part of R", logical(1))))
+  expect_true(all(vapply(contains, function(r) r$spdxElementId == "SPDXRef-R", logical(1))))
+  ids <- vapply(d$packages, function(p) p$SPDXID, "")
+  expect_equal(anyDuplicated(ids), 0L)
+  expect_true(is.null(names(d$packages)) && is.null(names(d$creationInfo$creators)))
+})
+
+test_that("colliding SPDXIDs are made unique with the version", {
+  comps <- data.frame(
+    name = c("a b", "a-b", "x"), version = c("1.0", "2.0", "1"),
+    ecosystem = c("cran", "cran", "local")
+  )
+  ids <- spdx_ids(comps)
+  expect_equal(ids, c("SPDXRef-cran-a-b-1.0", "SPDXRef-cran-a-b-2.0", "SPDXRef-local-x"))
+  expect_equal(anyDuplicated(ids), 0L)
+})

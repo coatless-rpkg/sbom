@@ -17,7 +17,8 @@ Imports:
     xml2
 Suggests:
     jsonvalidate,
-    testthat (>= 3.0.0),
+    testthat (>= 3.2.0),
     withr
+Copyright: See file inst/COPYRIGHTS
 Config/testthat/edition: 3
 Config/roxygen2/version: 8.1.1

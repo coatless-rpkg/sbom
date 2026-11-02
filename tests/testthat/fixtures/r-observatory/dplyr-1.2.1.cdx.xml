@@ -1,0 +1,481 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bom xmlns="http://cyclonedx.org/schema/bom/1.6" serialNumber="urn:uuid:0243d3fa-27b2-5457-b62c-7957704f0c6a" version="1">
+  <metadata>
+    <timestamp>2026-10-20T20:28:02Z</timestamp>
+    <tools>
+      <components>
+        <component type="application"><name>R Observatory</name><externalReferences><reference type="website"><url>https://r-observatory.thecoatlessprofessor.com</url></reference></externalReferences></component>
+      </components>
+    </tools>
+    <authors><author><name>R Observatory</name></author></authors>
+    <component type="library" bom-ref="pkg:cran/dplyr@1.2.1">
+      <supplier><name>CRAN</name><url>https://cran.r-project.org</url></supplier>
+      <publisher>Hadley Wickham</publisher>
+      <name>dplyr</name>
+      <version>1.2.1</version>
+      <hashes><hash alg="MD5">1c6ba2499c7a08d081bdb530423ab22c</hash></hashes>
+      <licenses><expression>MIT</expression></licenses>
+      <purl>pkg:cran/dplyr@1.2.1</purl>
+      <externalReferences>
+        <reference type="website"><url>https://cran.r-project.org/package=dplyr</url></reference>
+        <reference type="distribution"><url>https://cran.r-project.org/src/contrib/dplyr_1.2.1.tar.gz</url></reference>
+        <reference type="vcs"><url>https://github.com/tidyverse/dplyr</url></reference>
+      </externalReferences>
+      <properties>
+        <property name="r-observatory:maintainer">Hadley Wickham</property>
+        <property name="r-observatory:license-as-written">MIT + file LICENSE</property>
+        <property name="r-observatory:published">2026-04-03</property>
+        <property name="r-observatory:imports">cli (&gt;= 3.6.2)</property>
+        <property name="r-observatory:imports">generics</property>
+        <property name="r-observatory:imports">glue (&gt;= 1.3.2)</property>
+        <property name="r-observatory:imports">lifecycle (&gt;= 1.0.5)</property>
+        <property name="r-observatory:imports">magrittr (&gt;= 1.5)</property>
+        <property name="r-observatory:imports">methods</property>
+        <property name="r-observatory:imports">pillar (&gt;= 1.9.0)</property>
+        <property name="r-observatory:imports">R6</property>
+        <property name="r-observatory:imports">rlang (&gt;= 1.1.7)</property>
+        <property name="r-observatory:imports">tibble (&gt;= 3.2.0)</property>
+        <property name="r-observatory:imports">tidyselect (&gt;= 1.2.0)</property>
+        <property name="r-observatory:imports">utils</property>
+        <property name="r-observatory:imports">vctrs (&gt;= 0.7.1)</property>
+        <property name="r-observatory:depends">R (&gt;= 4.1.0)</property>
+      </properties>
+    </component>
+    <manufacturer><name>R Observatory</name><url>https://r-observatory.thecoatlessprofessor.com</url></manufacturer>
+    <properties>
+      <property name="r-observatory:dependency-rule">current-release</property>
+      <property name="r-observatory:dependency-day">2026-10-20</property>
+      <property name="r-observatory:dependency-rule-text">Each dependency is at its current release on 2026-10-20, the release an install gets that day.</property>
+      <property name="r-observatory:data-release">v2026-10-20</property>
+      <property name="r-observatory:provenance">Built by R Observatory from CRAN's own records, data release v2026-10-20, not by the package's maintainer.</property>
+      <property name="r-observatory:page">https://r-observatory.thecoatlessprofessor.com/cran/dplyr/sbom</property>
+      <property name="r-observatory:note">R is listed at the lowest version stated, R (&gt;= 4.1.0).</property>
+      <property name="r-observatory:note">Checksums are only those CRAN and Bioconductor listed, and a component without one has none on record.</property>
+      <property name="r-observatory:note">Advisories are those OSV lists for these exact versions.</property>
+    </properties>
+  </metadata>
+  <components>
+    <component type="library" bom-ref="pkg:cran/cli@3.6.6">
+      <supplier><name>CRAN</name><url>https://cran.r-project.org</url></supplier>
+      <publisher>Gábor Csárdi</publisher>
+      <name>cli</name>
+      <version>3.6.6</version>
+      <hashes><hash alg="MD5">eedc08ba864ae6cd640b05eff1a607ee</hash></hashes>
+      <licenses><expression>MIT</expression></licenses>
+      <purl>pkg:cran/cli@3.6.6</purl>
+      <externalReferences>
+        <reference type="website"><url>https://cran.r-project.org/package=cli</url></reference>
+        <reference type="distribution"><url>https://cran.r-project.org/src/contrib/cli_3.6.6.tar.gz</url></reference>
+        <reference type="vcs"><url>https://github.com/r-lib/cli</url></reference>
+      </externalReferences>
+      <properties>
+        <property name="r-observatory:maintainer">Gábor Csárdi</property>
+        <property name="r-observatory:license-as-written">MIT + file LICENSE</property>
+        <property name="r-observatory:published">2026-04-09</property>
+        <property name="r-observatory:imports">utils</property>
+      </properties>
+    </component>
+    <component type="library" bom-ref="pkg:cran/generics@0.1.4">
+      <supplier><name>CRAN</name><url>https://cran.r-project.org</url></supplier>
+      <publisher>Hadley Wickham</publisher>
+      <name>generics</name>
+      <version>0.1.4</version>
+      <hashes><hash alg="MD5">dda54b65216fe3c53571d2adaddc7461</hash></hashes>
+      <licenses><expression>MIT</expression></licenses>
+      <purl>pkg:cran/generics@0.1.4</purl>
+      <externalReferences>
+        <reference type="website"><url>https://cran.r-project.org/package=generics</url></reference>
+        <reference type="distribution"><url>https://cran.r-project.org/src/contrib/generics_0.1.4.tar.gz</url></reference>
+        <reference type="vcs"><url>https://github.com/r-lib/generics</url></reference>
+      </externalReferences>
+      <properties>
+        <property name="r-observatory:maintainer">Hadley Wickham</property>
+        <property name="r-observatory:license-as-written">MIT + file LICENSE</property>
+        <property name="r-observatory:published">2025-05-10</property>
+        <property name="r-observatory:imports">methods</property>
+      </properties>
+    </component>
+    <component type="library" bom-ref="pkg:cran/glue@1.8.1">
+      <supplier><name>CRAN</name><url>https://cran.r-project.org</url></supplier>
+      <publisher>Jennifer Bryan</publisher>
+      <name>glue</name>
+      <version>1.8.1</version>
+      <hashes><hash alg="MD5">24e3cd382f52015c929538a5208d11aa</hash></hashes>
+      <licenses><expression>MIT</expression></licenses>
+      <purl>pkg:cran/glue@1.8.1</purl>
+      <externalReferences>
+        <reference type="website"><url>https://cran.r-project.org/package=glue</url></reference>
+        <reference type="distribution"><url>https://cran.r-project.org/src/contrib/glue_1.8.1.tar.gz</url></reference>
+        <reference type="vcs"><url>https://github.com/tidyverse/glue</url></reference>
+      </externalReferences>
+      <properties>
+        <property name="r-observatory:maintainer">Jennifer Bryan</property>
+        <property name="r-observatory:license-as-written">MIT + file LICENSE</property>
+        <property name="r-observatory:published">2026-04-17</property>
+        <property name="r-observatory:imports">methods</property>
+      </properties>
+    </component>
+    <component type="library" bom-ref="pkg:cran/lifecycle@1.0.5">
+      <supplier><name>CRAN</name><url>https://cran.r-project.org</url></supplier>
+      <publisher>Lionel Henry</publisher>
+      <name>lifecycle</name>
+      <version>1.0.5</version>
+      <hashes><hash alg="MD5">bce35a7a89fe4108f262db3e441cccae</hash></hashes>
+      <licenses><expression>MIT</expression></licenses>
+      <purl>pkg:cran/lifecycle@1.0.5</purl>
+      <externalReferences>
+        <reference type="website"><url>https://cran.r-project.org/package=lifecycle</url></reference>
+        <reference type="distribution"><url>https://cran.r-project.org/src/contrib/lifecycle_1.0.5.tar.gz</url></reference>
+        <reference type="vcs"><url>https://github.com/r-lib/lifecycle</url></reference>
+      </externalReferences>
+      <properties>
+        <property name="r-observatory:maintainer">Lionel Henry</property>
+        <property name="r-observatory:license-as-written">MIT + file LICENSE</property>
+        <property name="r-observatory:published">2026-01-08</property>
+        <property name="r-observatory:imports">cli (&gt;= 3.4.0)</property>
+        <property name="r-observatory:imports">rlang (&gt;= 1.1.0)</property>
+      </properties>
+    </component>
+    <component type="library" bom-ref="pkg:cran/magrittr@2.0.5">
+      <supplier><name>CRAN</name><url>https://cran.r-project.org</url></supplier>
+      <publisher>Lionel Henry</publisher>
+      <name>magrittr</name>
+      <version>2.0.5</version>
+      <hashes><hash alg="MD5">4ee23a88bc1589527696d777d7e68dfc</hash></hashes>
+      <licenses><expression>MIT</expression></licenses>
+      <purl>pkg:cran/magrittr@2.0.5</purl>
+      <externalReferences>
+        <reference type="website"><url>https://cran.r-project.org/package=magrittr</url></reference>
+        <reference type="distribution"><url>https://cran.r-project.org/src/contrib/magrittr_2.0.5.tar.gz</url></reference>
+        <reference type="vcs"><url>https://github.com/tidyverse/magrittr</url></reference>
+      </externalReferences>
+      <properties>
+        <property name="r-observatory:maintainer">Lionel Henry</property>
+        <property name="r-observatory:license-as-written">MIT + file LICENSE</property>
+        <property name="r-observatory:published">2026-04-04</property>
+      </properties>
+    </component>
+    <component type="library" bom-ref="pkg:cran/pillar@1.11.1">
+      <supplier><name>CRAN</name><url>https://cran.r-project.org</url></supplier>
+      <publisher>Kirill Müller</publisher>
+      <name>pillar</name>
+      <version>1.11.1</version>
+      <hashes><hash alg="MD5">eb84af558b1ac0d743a4790e99acad6e</hash></hashes>
+      <licenses><expression>MIT</expression></licenses>
+      <purl>pkg:cran/pillar@1.11.1</purl>
+      <externalReferences>
+        <reference type="website"><url>https://cran.r-project.org/package=pillar</url></reference>
+        <reference type="distribution"><url>https://cran.r-project.org/src/contrib/pillar_1.11.1.tar.gz</url></reference>
+        <reference type="vcs"><url>https://github.com/r-lib/pillar</url></reference>
+      </externalReferences>
+      <properties>
+        <property name="r-observatory:maintainer">Kirill Müller</property>
+        <property name="r-observatory:license-as-written">MIT + file LICENSE</property>
+        <property name="r-observatory:published">2025-09-17</property>
+        <property name="r-observatory:imports">cli (&gt;= 2.3.0)</property>
+        <property name="r-observatory:imports">glue</property>
+        <property name="r-observatory:imports">lifecycle</property>
+        <property name="r-observatory:imports">rlang (&gt;= 1.0.2)</property>
+        <property name="r-observatory:imports">utf8 (&gt;= 1.1.0)</property>
+        <property name="r-observatory:imports">utils</property>
+        <property name="r-observatory:imports">vctrs (&gt;= 0.5.0)</property>
+      </properties>
+    </component>
+    <component type="library" bom-ref="pkg:cran/R6@2.6.1">
+      <supplier><name>CRAN</name><url>https://cran.r-project.org</url></supplier>
+      <publisher>Winston Chang</publisher>
+      <name>R6</name>
+      <version>2.6.1</version>
+      <hashes><hash alg="MD5">f01b1787f12797c29194d63c9afd5d70</hash></hashes>
+      <licenses><expression>MIT</expression></licenses>
+      <purl>pkg:cran/R6@2.6.1</purl>
+      <externalReferences>
+        <reference type="website"><url>https://cran.r-project.org/package=R6</url></reference>
+        <reference type="distribution"><url>https://cran.r-project.org/src/contrib/R6_2.6.1.tar.gz</url></reference>
+        <reference type="vcs"><url>https://github.com/r-lib/R6</url></reference>
+      </externalReferences>
+      <properties>
+        <property name="r-observatory:maintainer">Winston Chang</property>
+        <property name="r-observatory:license-as-written">MIT + file LICENSE</property>
+        <property name="r-observatory:published">2025-02-15</property>
+      </properties>
+    </component>
+    <component type="library" bom-ref="pkg:cran/rlang@1.3.0">
+      <supplier><name>CRAN</name><url>https://cran.r-project.org</url></supplier>
+      <publisher>Lionel Henry</publisher>
+      <name>rlang</name>
+      <version>1.3.0</version>
+      <hashes><hash alg="MD5">b52c165e43f4d7fe5cfa15c5c9467ff4</hash></hashes>
+      <licenses><expression>MIT</expression></licenses>
+      <purl>pkg:cran/rlang@1.3.0</purl>
+      <externalReferences>
+        <reference type="website"><url>https://cran.r-project.org/package=rlang</url></reference>
+        <reference type="distribution"><url>https://cran.r-project.org/src/contrib/rlang_1.3.0.tar.gz</url></reference>
+        <reference type="vcs"><url>https://github.com/r-lib/rlang</url></reference>
+      </externalReferences>
+      <properties>
+        <property name="r-observatory:maintainer">Lionel Henry</property>
+        <property name="r-observatory:license-as-written">MIT + file LICENSE</property>
+        <property name="r-observatory:published">2026-07-05</property>
+        <property name="r-observatory:imports">utils</property>
+      </properties>
+    </component>
+    <component type="library" bom-ref="pkg:cran/tibble@3.3.1">
+      <supplier><name>CRAN</name><url>https://cran.r-project.org</url></supplier>
+      <publisher>Kirill Müller</publisher>
+      <name>tibble</name>
+      <version>3.3.1</version>
+      <hashes><hash alg="MD5">97ff25ebdd1460ec152d48e9bb54fa43</hash></hashes>
+      <licenses><expression>MIT</expression></licenses>
+      <purl>pkg:cran/tibble@3.3.1</purl>
+      <externalReferences>
+        <reference type="website"><url>https://cran.r-project.org/package=tibble</url></reference>
+        <reference type="distribution"><url>https://cran.r-project.org/src/contrib/tibble_3.3.1.tar.gz</url></reference>
+        <reference type="vcs"><url>https://github.com/tidyverse/tibble</url></reference>
+      </externalReferences>
+      <properties>
+        <property name="r-observatory:maintainer">Kirill Müller</property>
+        <property name="r-observatory:license-as-written">MIT + file LICENSE</property>
+        <property name="r-observatory:published">2026-01-11</property>
+        <property name="r-observatory:imports">cli</property>
+        <property name="r-observatory:imports">lifecycle (&gt;= 1.0.0)</property>
+        <property name="r-observatory:imports">magrittr</property>
+        <property name="r-observatory:imports">methods</property>
+        <property name="r-observatory:imports">pillar (&gt;= 1.8.1)</property>
+        <property name="r-observatory:imports">pkgconfig</property>
+        <property name="r-observatory:imports">rlang (&gt;= 1.0.2)</property>
+        <property name="r-observatory:imports">utils</property>
+        <property name="r-observatory:imports">vctrs (&gt;= 0.5.0)</property>
+      </properties>
+    </component>
+    <component type="library" bom-ref="pkg:cran/tidyselect@1.2.1">
+      <supplier><name>CRAN</name><url>https://cran.r-project.org</url></supplier>
+      <publisher>Lionel Henry</publisher>
+      <name>tidyselect</name>
+      <version>1.2.1</version>
+      <hashes><hash alg="MD5">49c581292e819a2a39aac321f27ab0a8</hash></hashes>
+      <licenses><expression>MIT</expression></licenses>
+      <purl>pkg:cran/tidyselect@1.2.1</purl>
+      <externalReferences>
+        <reference type="website"><url>https://cran.r-project.org/package=tidyselect</url></reference>
+        <reference type="distribution"><url>https://cran.r-project.org/src/contrib/tidyselect_1.2.1.tar.gz</url></reference>
+        <reference type="vcs"><url>https://github.com/r-lib/tidyselect</url></reference>
+      </externalReferences>
+      <properties>
+        <property name="r-observatory:maintainer">Lionel Henry</property>
+        <property name="r-observatory:license-as-written">MIT + file LICENSE</property>
+        <property name="r-observatory:published">2024-03-11</property>
+        <property name="r-observatory:imports">cli (&gt;= 3.3.0)</property>
+        <property name="r-observatory:imports">glue (&gt;= 1.3.0)</property>
+        <property name="r-observatory:imports">lifecycle (&gt;= 1.0.3)</property>
+        <property name="r-observatory:imports">rlang (&gt;= 1.0.4)</property>
+        <property name="r-observatory:imports">vctrs (&gt;= 0.5.2)</property>
+        <property name="r-observatory:imports">withr</property>
+      </properties>
+    </component>
+    <component type="library" bom-ref="pkg:cran/vctrs@0.7.3">
+      <supplier><name>CRAN</name><url>https://cran.r-project.org</url></supplier>
+      <publisher>Davis Vaughan</publisher>
+      <name>vctrs</name>
+      <version>0.7.3</version>
+      <hashes><hash alg="MD5">d99218820f353c359ff59fd46b52ddb3</hash></hashes>
+      <licenses><expression>MIT</expression></licenses>
+      <purl>pkg:cran/vctrs@0.7.3</purl>
+      <externalReferences>
+        <reference type="website"><url>https://cran.r-project.org/package=vctrs</url></reference>
+        <reference type="distribution"><url>https://cran.r-project.org/src/contrib/vctrs_0.7.3.tar.gz</url></reference>
+        <reference type="vcs"><url>https://github.com/r-lib/vctrs</url></reference>
+      </externalReferences>
+      <properties>
+        <property name="r-observatory:maintainer">Davis Vaughan</property>
+        <property name="r-observatory:license-as-written">MIT + file LICENSE</property>
+        <property name="r-observatory:published">2026-04-11</property>
+        <property name="r-observatory:imports">cli (&gt;= 3.4.0)</property>
+        <property name="r-observatory:imports">glue</property>
+        <property name="r-observatory:imports">lifecycle (&gt;= 1.0.3)</property>
+        <property name="r-observatory:imports">rlang (&gt;= 1.1.7)</property>
+      </properties>
+    </component>
+    <component type="library" bom-ref="pkg:cran/pkgconfig@2.0.3">
+      <supplier><name>CRAN</name><url>https://cran.r-project.org</url></supplier>
+      <publisher>Gábor Csárdi</publisher>
+      <name>pkgconfig</name>
+      <version>2.0.3</version>
+      <hashes><hash alg="MD5">7b9ca1d45d941238381cb55d13ff4d68</hash></hashes>
+      <licenses><expression>MIT</expression></licenses>
+      <purl>pkg:cran/pkgconfig@2.0.3</purl>
+      <externalReferences>
+        <reference type="website"><url>https://cran.r-project.org/package=pkgconfig</url></reference>
+        <reference type="distribution"><url>https://cran.r-project.org/src/contrib/pkgconfig_2.0.3.tar.gz</url></reference>
+        <reference type="vcs"><url>https://github.com/r-lib/pkgconfig#readme</url></reference>
+      </externalReferences>
+      <properties>
+        <property name="r-observatory:maintainer">Gábor Csárdi</property>
+        <property name="r-observatory:license-as-written">MIT + file LICENSE</property>
+        <property name="r-observatory:published">2019-09-22</property>
+        <property name="r-observatory:imports">utils</property>
+      </properties>
+    </component>
+    <component type="library" bom-ref="pkg:cran/utf8@1.2.6">
+      <supplier><name>CRAN</name><url>https://cran.r-project.org</url></supplier>
+      <publisher>Kirill Müller</publisher>
+      <name>utf8</name>
+      <version>1.2.6</version>
+      <hashes><hash alg="MD5">12037c186ddded4d9b289762b69fc435</hash></hashes>
+      <licenses><license><name>Apache License (== 2.0) | file LICENSE</name></license></licenses>
+      <purl>pkg:cran/utf8@1.2.6</purl>
+      <externalReferences>
+        <reference type="website"><url>https://cran.r-project.org/package=utf8</url></reference>
+        <reference type="distribution"><url>https://cran.r-project.org/src/contrib/utf8_1.2.6.tar.gz</url></reference>
+        <reference type="vcs"><url>https://github.com/krlmlr/utf8</url></reference>
+      </externalReferences>
+      <properties>
+        <property name="r-observatory:maintainer">Kirill Müller</property>
+        <property name="r-observatory:published">2025-06-08</property>
+      </properties>
+    </component>
+    <component type="library" bom-ref="pkg:cran/withr@3.0.3">
+      <supplier><name>CRAN</name><url>https://cran.r-project.org</url></supplier>
+      <publisher>Lionel Henry</publisher>
+      <name>withr</name>
+      <version>3.0.3</version>
+      <hashes><hash alg="MD5">121bf3699aadb9d1b47d648964b934f8</hash></hashes>
+      <licenses><expression>MIT</expression></licenses>
+      <purl>pkg:cran/withr@3.0.3</purl>
+      <externalReferences>
+        <reference type="website"><url>https://cran.r-project.org/package=withr</url></reference>
+        <reference type="distribution"><url>https://cran.r-project.org/src/contrib/withr_3.0.3.tar.gz</url></reference>
+        <reference type="vcs"><url>https://github.com/r-lib/withr#readme</url></reference>
+      </externalReferences>
+      <properties>
+        <property name="r-observatory:maintainer">Lionel Henry</property>
+        <property name="r-observatory:license-as-written">MIT + file LICENSE</property>
+        <property name="r-observatory:published">2026-06-19</property>
+        <property name="r-observatory:imports">graphics</property>
+        <property name="r-observatory:imports">grDevices</property>
+      </properties>
+    </component>
+    <component type="platform" bom-ref="R">
+      <name>R</name>
+      <version>4.1.0</version>
+      <description>The lowest R version stated, R (&gt;= 4.1.0).</description>
+      <licenses><expression>GPL-2.0-only OR GPL-3.0-only</expression></licenses>
+      <externalReferences>
+        <reference type="website"><url>https://www.r-project.org</url></reference>
+      </externalReferences>
+      <properties>
+        <property name="r-observatory:license-as-written">GPL-2 | GPL-3</property>
+        <property name="r-observatory:part-of">R</property>
+        <property name="r-observatory:version-is">minimum</property>
+      </properties>
+      <components>
+        <component type="library" bom-ref="R/methods">
+          <name>methods</name>
+          <description>Part of R. It comes with R and has no file of its own.</description>
+          <properties>
+            <property name="r-observatory:part-of">R</property>
+          </properties>
+        </component>
+        <component type="library" bom-ref="R/utils">
+          <name>utils</name>
+          <description>Part of R. It comes with R and has no file of its own.</description>
+          <properties>
+            <property name="r-observatory:part-of">R</property>
+          </properties>
+        </component>
+        <component type="library" bom-ref="R/graphics">
+          <name>graphics</name>
+          <description>Part of R. It comes with R and has no file of its own.</description>
+          <properties>
+            <property name="r-observatory:part-of">R</property>
+          </properties>
+        </component>
+        <component type="library" bom-ref="R/grDevices">
+          <name>grDevices</name>
+          <description>Part of R. It comes with R and has no file of its own.</description>
+          <properties>
+            <property name="r-observatory:part-of">R</property>
+          </properties>
+        </component>
+      </components>
+    </component>
+  </components>
+  <dependencies>
+    <dependency ref="pkg:cran/dplyr@1.2.1">
+      <dependency ref="pkg:cran/cli@3.6.6"/>
+      <dependency ref="pkg:cran/generics@0.1.4"/>
+      <dependency ref="pkg:cran/glue@1.8.1"/>
+      <dependency ref="pkg:cran/lifecycle@1.0.5"/>
+      <dependency ref="pkg:cran/magrittr@2.0.5"/>
+      <dependency ref="R/methods"/>
+      <dependency ref="pkg:cran/pillar@1.11.1"/>
+      <dependency ref="pkg:cran/R6@2.6.1"/>
+      <dependency ref="pkg:cran/rlang@1.3.0"/>
+      <dependency ref="pkg:cran/tibble@3.3.1"/>
+      <dependency ref="pkg:cran/tidyselect@1.2.1"/>
+      <dependency ref="R/utils"/>
+      <dependency ref="pkg:cran/vctrs@0.7.3"/>
+      <dependency ref="R"/>
+    </dependency>
+    <dependency ref="pkg:cran/cli@3.6.6">
+      <dependency ref="R/utils"/>
+    </dependency>
+    <dependency ref="pkg:cran/generics@0.1.4">
+      <dependency ref="R/methods"/>
+    </dependency>
+    <dependency ref="pkg:cran/glue@1.8.1">
+      <dependency ref="R/methods"/>
+    </dependency>
+    <dependency ref="pkg:cran/lifecycle@1.0.5">
+      <dependency ref="pkg:cran/cli@3.6.6"/>
+      <dependency ref="pkg:cran/rlang@1.3.0"/>
+    </dependency>
+    <dependency ref="pkg:cran/magrittr@2.0.5"/>
+    <dependency ref="pkg:cran/pillar@1.11.1">
+      <dependency ref="pkg:cran/cli@3.6.6"/>
+      <dependency ref="pkg:cran/glue@1.8.1"/>
+      <dependency ref="pkg:cran/lifecycle@1.0.5"/>
+      <dependency ref="pkg:cran/rlang@1.3.0"/>
+      <dependency ref="pkg:cran/utf8@1.2.6"/>
+      <dependency ref="R/utils"/>
+      <dependency ref="pkg:cran/vctrs@0.7.3"/>
+    </dependency>
+    <dependency ref="pkg:cran/R6@2.6.1"/>
+    <dependency ref="pkg:cran/rlang@1.3.0">
+      <dependency ref="R/utils"/>
+    </dependency>
+    <dependency ref="pkg:cran/tibble@3.3.1">
+      <dependency ref="pkg:cran/cli@3.6.6"/>
+      <dependency ref="pkg:cran/lifecycle@1.0.5"/>
+      <dependency ref="pkg:cran/magrittr@2.0.5"/>
+      <dependency ref="R/methods"/>
+      <dependency ref="pkg:cran/pillar@1.11.1"/>
+      <dependency ref="pkg:cran/pkgconfig@2.0.3"/>
+      <dependency ref="pkg:cran/rlang@1.3.0"/>
+      <dependency ref="R/utils"/>
+      <dependency ref="pkg:cran/vctrs@0.7.3"/>
+    </dependency>
+    <dependency ref="pkg:cran/tidyselect@1.2.1">
+      <dependency ref="pkg:cran/cli@3.6.6"/>
+      <dependency ref="pkg:cran/glue@1.8.1"/>
+      <dependency ref="pkg:cran/lifecycle@1.0.5"/>
+      <dependency ref="pkg:cran/rlang@1.3.0"/>
+      <dependency ref="pkg:cran/vctrs@0.7.3"/>
+      <dependency ref="pkg:cran/withr@3.0.3"/>
+    </dependency>
+    <dependency ref="pkg:cran/vctrs@0.7.3">
+      <dependency ref="pkg:cran/cli@3.6.6"/>
+      <dependency ref="pkg:cran/glue@1.8.1"/>
+      <dependency ref="pkg:cran/lifecycle@1.0.5"/>
+      <dependency ref="pkg:cran/rlang@1.3.0"/>
+    </dependency>
+    <dependency ref="pkg:cran/pkgconfig@2.0.3">
+      <dependency ref="R/utils"/>
+    </dependency>
+    <dependency ref="pkg:cran/utf8@1.2.6"/>
+    <dependency ref="pkg:cran/withr@3.0.3">
+      <dependency ref="R/graphics"/>
+      <dependency ref="R/grDevices"/>
+    </dependency>
+  </dependencies>
+</bom>
