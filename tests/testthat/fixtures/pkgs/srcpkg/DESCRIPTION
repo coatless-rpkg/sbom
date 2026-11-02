@@ -1,0 +1,12 @@
+Package: srcpkg
+Version: 0.1.0
+Title: Fixture Package
+Authors@R: c(person("Ada", "Lovelace", email = "ada@example.org", role = c("aut", "cre"),
+    comment = c(ORCID = "0000-0002-1825-0097")), person("Org", role = "cph"))
+Description: A fixture.
+License: MIT + file LICENSE
+URL: https://github.com/example/srcpkg
+Depends: R (>= 4.1.0)
+Imports: cranpkg (>= 1.0.0), localpkg, utils
+LinkingTo: cranpkg
+Suggests: suggestpkg

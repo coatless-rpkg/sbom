@@ -1,0 +1,4 @@
+Built-with: 4.6.2
+Date: 2026-11-05
+Sources: tools::CRAN_package_db(); Bioconductor release VIEWS (bioc, annotation, experiment, workflows); R itself
+Rows: 205
