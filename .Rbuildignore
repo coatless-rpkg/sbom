@@ -1,0 +1,5 @@
+^docs$
+^data-raw$
+^\.git
+^LICENSE\.md$
+^README\.Rmd$

@@ -1,0 +1,23 @@
+Package: sbom
+Title: Software Bills of Materials for R Code
+Version: 0.0.0.9000
+Authors@R: 
+    person("James", "Balamuta", email = "james.balamuta@gmail.com", role = c("aut", "cre", "cph"))
+Description: Generates Software Bills of Materials for R packages and R library installations in the 'CycloneDX' and 'SPDX' formats.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+Depends:
+    R (>= 4.1.0)
+Imports:
+    cli,
+    jsonlite,
+    tools,
+    utils,
+    xml2
+Suggests:
+    jsonvalidate,
+    testthat (>= 3.0.0),
+    withr
+Config/testthat/edition: 3
+Config/roxygen2/version: 8.1.1
