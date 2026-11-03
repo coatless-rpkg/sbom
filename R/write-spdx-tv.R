@@ -26,7 +26,7 @@ tv_package_tags <- c(
   originator = "PackageOriginator", downloadLocation = "PackageDownloadLocation"
 )
 
-tv_package <- function(p) {
+tv_package <- function(p, version = "2.3") {
   lines <- c("", "## Package Information")
   for (key in names(tv_package_tags)) {
     lines <- c(lines, tv_line(tv_package_tags[[key]], p[[key]]))
@@ -48,9 +48,15 @@ tv_package <- function(p) {
     tv_line("PackageComment", p$comment, wrap = TRUE)
   )
   for (ref in p$externalRefs) {
+    category <- ref$referenceCategory
+    # SPDX 2.2 spells it PACKAGE_MANAGER in JSON, YAML and XML, which its
+    # schema requires, but PACKAGE-MANAGER in tag-value.
+    if (version == "2.2" && identical(category, "PACKAGE_MANAGER")) {
+      category <- "PACKAGE-MANAGER"
+    }
     lines <- c(
       lines,
-      tv_line("ExternalRef", paste(ref$referenceCategory, ref$referenceType, ref$referenceLocator)),
+      tv_line("ExternalRef", paste(category, ref$referenceType, ref$referenceLocator)),
       tv_line("ExternalRefComment", ref$comment, wrap = TRUE)
     )
   }
@@ -77,7 +83,7 @@ spdx_tv <- function(x, version = "2.3") {
     tv_line("Created", doc$creationInfo$created),
     tv_line("CreatorComment", doc$creationInfo$comment, wrap = TRUE)
   )
-  for (p in doc$packages) lines <- c(lines, tv_package(p))
+  for (p in doc$packages) lines <- c(lines, tv_package(p, version))
   lines <- c(lines, "", "## Relationships")
   for (r in doc$relationships) {
     lines <- c(

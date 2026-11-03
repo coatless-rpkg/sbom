@@ -146,3 +146,11 @@ test_that("read.csv() with fileEncoding = 'UTF-8-BOM' reads a written CSV", {
   )
   expect_identical(nrow(df), nrow(sbom_components(x)))
 })
+
+test_that("the version error says the CSV inventory takes no version", {
+  x <- fixture_sbom()
+  tf <- withr::local_tempfile(fileext = ".csv")
+  err <- expect_error(write_sbom(x, tf, version = "1.6"), "is not a version of any format")
+  expect_match(conditionMessage(err), "CSV inventory (takes no version)", fixed = TRUE)
+  expect_false(grepl("()", conditionMessage(err), fixed = TRUE))
+})

@@ -3,7 +3,11 @@ Title: Software Bills of Materials for R Code
 Version: 0.0.0.9000
 Authors@R: 
     person("James", "Balamuta", email = "james.balamuta@gmail.com", role = c("aut", "cre", "cph"))
-Description: Generates Software Bills of Materials for R packages and R library installations in the 'CycloneDX' and 'SPDX' formats.
+Description: Generates Software Bills of Materials for R packages and R
+    library installations, as 'CycloneDX' 1.4 to 1.7 (JSON or XML), 'SPDX'
+    2.2 and 2.3 (JSON, YAML, XML or tag-value) and 'SPDX' 3.0.1 documents
+    and 'SWID' tags, plus a CSV inventory of components for spreadsheet
+    review.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

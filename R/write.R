@@ -42,7 +42,11 @@
 #' The SWID tag names the organization that made the SBOM by its registration
 #' id (regid). [sbom_package()] and [sbom_installed()] take it from their
 #' `regid` argument, whose default is the `sbom.regid` option; without one the
-#' tag uses the placeholder `http://invalid.unavailable`.
+#' tag uses the placeholder `http://invalid.unavailable`. The tag's `tagId` is
+#' the regid without its scheme or a trailing `/`, then a `/` and the root's
+#' reference, such as `example.org/pkg:cran/dplyr@1.2.1` (the reference alone
+#' without a regid), and its `tagVersion` is the date of the timestamp as
+#' `YYYYMMDD`.
 #'
 #' `format = "csv"` writes a component inventory for spreadsheet review. It is
 #' not an SBOM standard, is left out of `format = "all"`, and takes no
@@ -101,7 +105,12 @@ write_sbom <- function(x, path, format = NULL, version = NULL) {
     listed <- vapply(reg[keys], function(r) version %in% r$versions, logical(1))
     if (!any(listed)) {
       each <- vapply(reg[keys], function(r) {
-        paste0(r$name, " (", paste(r$versions, collapse = ", "), ")")
+        versions <- if (length(r$versions) > 0L) {
+          paste(r$versions, collapse = ", ")
+        } else {
+          "takes no version"
+        }
+        paste0(r$name, " (", versions, ")")
       }, character(1))
       names(each) <- rep("*", length(each))
       cli::cli_abort(c(

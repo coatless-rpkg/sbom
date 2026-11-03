@@ -73,6 +73,7 @@ apply_overrides <- function(x, overrides) {
     return(x)
   }
   ov <- read_overrides(overrides)
+  ov[] <- lapply(ov, enc2utf8_bytes)
   comps <- x$components
   issues <- x$issues
   for (i in seq_len(nrow(ov))) {

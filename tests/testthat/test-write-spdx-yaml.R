@@ -112,3 +112,38 @@ test_that("yaml_emit() keeps look-alike strings as strings", {
   )
   expect_equal(back, list(k = value))
 })
+
+test_that("a YAML file cannot run R code, even with yaml.eval.expr set", {
+  skip_if_not_installed("yaml")
+  withr::local_options(yaml.eval.expr = TRUE)
+  withr::local_envvar(SBOM_YAML_EXPR_RAN = NA)
+  tf <- withr::local_tempfile(fileext = ".spdx.yaml")
+  write_text('spdxVersion: !expr Sys.setenv(SBOM_YAML_EXPR_RAN = "yes")\n', tf)
+  doc <- spdx_yaml_read(tf)
+  expect_identical(Sys.getenv("SBOM_YAML_EXPR_RAN"), "")
+  expect_identical(doc$spdxVersion, 'Sys.setenv(SBOM_YAML_EXPR_RAN = "yes")')
+})
+
+test_that("YAML numbers and booleans keep their text, except filesAnalyzed", {
+  skip_if_not_installed("yaml")
+  tf <- withr::local_tempfile(fileext = ".spdx.yaml")
+  write_text(paste0(
+    "spdxVersion: SPDX-2.3\n",
+    "documentDescribes:\n  - 1.0\n  - true\n",
+    "packages:\n",
+    "  - name: no\n    versionInfo: 1.10\n    packageFileName: 12\n",
+    "    filesAnalyzed: false\n",
+    "  - name: b\n    filesAnalyzed: yes\n",
+    "  - name: c\n    filesAnalyzed: \"false\"\n"
+  ), tf)
+  doc <- spdx_yaml_read(tf)
+  expect_identical(doc$documentDescribes, list("1.0", "true"))
+  p <- doc$packages
+  expect_identical(p[[1]]$name, "no")
+  expect_identical(p[[1]]$versionInfo, "1.10")
+  expect_identical(p[[1]]$packageFileName, "12")
+  expect_identical(p[[1]]$filesAnalyzed, FALSE)
+  expect_identical(p[[2]]$filesAnalyzed, TRUE)
+  # A quoted "false" is a string, which the schema then rejects.
+  expect_identical(p[[3]]$filesAnalyzed, "false")
+})

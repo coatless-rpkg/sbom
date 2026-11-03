@@ -57,7 +57,11 @@ inventory is not part of \code{"all"}.
 The SWID tag names the organization that made the SBOM by its registration
 id (regid). \code{\link[=sbom_package]{sbom_package()}} and \code{\link[=sbom_installed]{sbom_installed()}} take it from their
 \code{regid} argument, whose default is the \code{sbom.regid} option; without one the
-tag uses the placeholder \verb{http://invalid.unavailable}.
+tag uses the placeholder \verb{http://invalid.unavailable}. The tag's \code{tagId} is
+the regid without its scheme or a trailing \code{/}, then a \code{/} and the root's
+reference, such as \verb{example.org/pkg:cran/dplyr@1.2.1} (the reference alone
+without a regid), and its \code{tagVersion} is the date of the timestamp as
+\code{YYYYMMDD}.
 
 \code{format = "csv"} writes a component inventory for spreadsheet review. It is
 not an SBOM standard, is left out of \code{format = "all"}, and takes no

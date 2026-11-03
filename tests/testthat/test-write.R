@@ -65,8 +65,8 @@ test_that("every format is byte-identical across runs, also in a C locale", {
 test_that("a library SBOM, and an SBOM with overrides and a latin1 maintainer, validate in every format", {
   skip_if_not_installed("jsonvalidate"); skip_if_not_installed("yaml")
   local_c_ctype()
-  ov <- data.frame(component = "localpkg", field = "license_spdx", value = "Apache-2.0",
-                   asserted_by = "Legal", reason = "Reviewed")
+  ov <- data.frame(component = c("localpkg", "srcpkg"), field = c("license_spdx", "supplier_name"),
+                   value = c("Apache-2.0", "Acme"), asserted_by = "Legal", reason = "Reviewed")
   latin <- local_latin1_pkg()
   sboms <- list(library = sbom_installed(lib = fixture_lib()),
                 asserted = sbom_package(test_path("fixtures/pkgs/srcpkg"), lib = fixture_lib(), overrides = ov),
@@ -82,8 +82,8 @@ test_that("a library SBOM, and an SBOM with overrides and a latin1 maintainer, v
     expect_identical(schema_validate(tf, ck[1], ck[2])$status,
                      if (ck[1] %in% partial) "partial" else "pass", label = paste(nm, ck[1], ck[2]))
     if (nm == "latin1") expect_true(any(grepl("G\u00e1bor Cs\u00e1rdi", readLines(tf, encoding = "UTF-8"), fixed = TRUE)), label = ck[1])
-    # SWID describes only the root, so it carries no asserted component.
-    if (nm == "asserted" && ck[1] != "swid") expect_true(any(grepl(if (startsWith(ck[1], "cyclonedx")) "asserted by Legal" else "Asserted by Legal",
+    # SWID describes only the root, so it carries the root's assertion alone.
+    if (nm == "asserted") expect_true(any(grepl(if (startsWith(ck[1], "cyclonedx")) "asserted by Legal" else "Asserted by Legal",
                                          readLines(tf, encoding = "UTF-8"))), label = ck[1])
   }
   acsv <- withr::local_tempfile(fileext = ".csv")
@@ -122,4 +122,38 @@ test_that("version applies to every format that lists it", {
   expect_match(readLines(file.path(dir, "srcpkg-0.1.0.cdx.xml"), n = 2)[2], "bom/1.6")
   expect_error(write_sbom(x, file.path(dir, "a.spdx.json"), version = "1.6"), "2.2")
   expect_error(write_sbom(x, dir, format = "all", version = "9.9"), "version")
+})
+
+test_that("text typed in a UTF-8 script is written as UTF-8 in a C locale", {
+  # "Cafe A" with an acute e and a ring A: the bytes a UTF-8 script passes in,
+  # marked "unknown".
+  bytes <- as.raw(c(0x43, 0x61, 0x66, 0xc3, 0xa9, 0x20, 0xc3, 0x85))
+  typed <- rawToChar(bytes)
+  regid_bytes <- c(charToRaw("https://caf"), as.raw(c(0xc3, 0xa9)), charToRaw(".example"))
+  expect_identical(Encoding(typed), "unknown")
+  test_env <- environment()
+  build <- function() {
+    ov <- data.frame(component = "srcpkg", field = "supplier_name", value = typed,
+                     asserted_by = typed, reason = typed)
+    sbom_package(test_path("fixtures/pkgs/srcpkg"), lib = fixture_lib(env = test_env),
+                 author = typed, organization = typed, regid = rawToChar(regid_bytes),
+                 overrides = ov)
+  }
+  normal_uuid <- sbom_uuid(build())
+  local_c_ctype()
+  x <- build()
+  expect_identical(sbom_uuid(x), normal_uuid)
+  dir <- withr::local_tempdir()
+  write_sbom(x, dir, format = "all")
+  write_sbom(x, file.path(dir, "inventory.csv"))
+  files <- list.files(dir, full.names = TRUE)
+  expect_length(files, 9L)
+  for (f in files) {
+    raw <- readBin(f, "raw", 1e7)
+    expect_true(length(grepRaw(bytes, raw, fixed = TRUE)) > 0L, label = basename(f))
+    expect_identical(grepRaw("<c3>", raw, fixed = TRUE), integer(), label = basename(f))
+    expect_identical(grepRaw("&lt;c3&gt;", raw, fixed = TRUE), integer(), label = basename(f))
+  }
+  swid <- readBin(files[endsWith(files, ".swidtag")], "raw", 1e7)
+  expect_true(length(grepRaw(regid_bytes, swid, fixed = TRUE)) > 0L)
 })

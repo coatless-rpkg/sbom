@@ -1,15 +1,50 @@
+# YAML types that the yaml package turns into numbers or NA. Every scalar in
+# the SPDX 2 model is a string except `filesAnalyzed`, so these keep their
+# text: `versionInfo: 1.10` is "1.10", not 1.1.
+spdx_yaml_text_types <- c(
+  "int", "int#hex", "int#oct", "int#base60", "int#na", "float", "float#fix",
+  "float#exp", "float#base60", "float#nan", "float#inf", "float#neginf",
+  "float#na", "bool#na"
+)
+
+# Booleans keep their text too, carrying their value in an attribute until
+# the enclosing map or sequence is built: under `filesAnalyzed` they become
+# logical, and anywhere else plain text, so `name: no` is "no".
+spdx_yaml_unmark <- function(x, key) {
+  value <- attr(x, "sbom_bool", exact = TRUE)
+  if (is.null(value)) {
+    return(x)
+  }
+  if (identical(key, "filesAnalyzed")) value else as.vector(x)
+}
+
+spdx_yaml_handlers <- function() {
+  text <- rep(list(function(x) x), length(spdx_yaml_text_types))
+  names(text) <- spdx_yaml_text_types
+  c(text, list(
+    `bool#yes` = function(x) structure(x, sbom_bool = TRUE),
+    `bool#no` = function(x) structure(x, sbom_bool = FALSE),
+    # Keep every sequence a list, so a one-element array stays an array.
+    seq = function(x) lapply(unname(as.list(x)), spdx_yaml_unmark, key = ""),
+    map = function(x) {
+      for (i in seq_along(x)) {
+        x[i] <- list(spdx_yaml_unmark(x[[i]], names(x)[i]))
+      }
+      x
+    }
+  ))
+}
+
 # Reads an SPDX YAML file into the list `jsonlite::fromJSON(spdx_json(x),
 # simplifyVector = FALSE)` gives. Needs the yaml package. The bytes are read
-# as UTF-8, whatever the native locale.
+# as UTF-8, whatever the native locale. A `!expr` tag is read as text and
+# never evaluated, whatever the yaml.eval.expr option says.
 spdx_yaml_read <- function(path) {
   bytes <- readBin(path, "raw", n = file.size(path))
   txt <- rawToChar(bytes)
   Encoding(txt) <- "UTF-8"
-  yaml::yaml.load(
-    txt,
-    # Keep every sequence a list, so a one-element array stays an array.
-    handlers = list(seq = function(x) unname(as.list(x)))
-  )
+  doc <- yaml::yaml.load(txt, eval.expr = FALSE, handlers = spdx_yaml_handlers())
+  spdx_yaml_unmark(doc, "")
 }
 
 # Element names that are always lists in the SPDX JSON model.
@@ -104,6 +139,12 @@ spdx_tv_package_tags <- c(
   PrimaryPackagePurpose = "primaryPackagePurpose"
 )
 
+# Tags that start a section the reader does not model: files, snippets,
+# other licences, annotations and reviews. Each closes the current package,
+# and every tag up to the next package or relationship is skipped, so a
+# file's SPDXID is never taken for the package's.
+spdx_tv_section_tags <- c("FileName", "SnippetSPDXID", "LicenseID", "Annotator", "Reviewer")
+
 # Splits `value` on its first `n` spaces; the last piece keeps any others.
 spdx_tv_split <- function(value, n) {
   out <- character()
@@ -117,12 +158,15 @@ spdx_tv_split <- function(value, n) {
 }
 
 # Reads an SPDX tag-value file into the list `jsonlite::fromJSON(spdx_json(x),
-# simplifyVector = FALSE)` gives. It inverts the tags the writer emits and
-# ignores any others. The bytes are read as UTF-8, whatever the native locale.
+# simplifyVector = FALSE)` gives. It inverts the tags the writer emits. The
+# names of the tags it did not use, those of unmodelled sections and unknown
+# tags, are kept in the attribute "skipped_tags" when there are any. The bytes
+# are read as UTF-8, whatever the native locale, and a byte-order mark is
+# dropped.
 spdx_tv_read <- function(path) {
   txt <- rawToChar(readBin(path, "raw", n = file.size(path)))
   Encoding(txt) <- "UTF-8"
-  txt <- sub("^\\ufeff", "", txt)
+  txt <- sub("^\ufeff", "", txt)
   pairs <- spdx_tv_pairs(strsplit(txt, "\r?\n")[[1]])
   if (length(pairs) == 0L || pairs[[1]]$tag != "SPDXVersion") {
     cli::cli_abort("the first tag is not {.code SPDXVersion}", call = NULL)
@@ -131,6 +175,8 @@ spdx_tv_read <- function(path) {
   doc <- list()
   pkg <- NULL
   rel <- NULL
+  skipping <- FALSE
+  skipped <- character()
   flush_package <- function() {
     if (!is.null(pkg)) doc$packages <<- c(doc$packages, list(pkg))
     pkg <<- NULL
@@ -145,10 +191,12 @@ spdx_tv_read <- function(path) {
     if (tag == "PackageName") {
       flush_relationship()
       flush_package()
+      skipping <- FALSE
       pkg <- list(name = value)
     } else if (tag == "Relationship") {
       flush_relationship()
       flush_package()
+      skipping <- FALSE
       parts <- spdx_tv_split(value, 2L)
       if (length(parts) != 3L) {
         cli::cli_abort("the relationship {.val {value}} does not have three parts", call = NULL)
@@ -157,8 +205,20 @@ spdx_tv_read <- function(path) {
         spdxElementId = parts[1], relationshipType = parts[2],
         relatedSpdxElement = parts[3]
       )
-    } else if (tag == "RelationshipComment") {
-      if (!is.null(rel)) rel$comment <- value
+    } else if (tag %in% spdx_tv_section_tags) {
+      flush_relationship()
+      flush_package()
+      skipping <- TRUE
+      skipped <- c(skipped, tag)
+    } else if (tag == "ExternalDocumentRef") {
+      # A single line of the creation section: the tags after it are read.
+      flush_relationship()
+      flush_package()
+      skipped <- c(skipped, tag)
+    } else if (skipping) {
+      skipped <- c(skipped, tag)
+    } else if (tag == "RelationshipComment" && !is.null(rel)) {
+      rel$comment <- value
     } else if (!is.null(pkg)) {
       if (tag == "FilesAnalyzed") {
         pkg$filesAnalyzed <- tolower(trimws(value)) == "true"
@@ -172,15 +232,21 @@ spdx_tv_read <- function(path) {
         if (length(parts) != 3L) {
           cli::cli_abort("the external reference {.val {value}} does not have three parts", call = NULL)
         }
+        # SPDX 2.2 tag-value writes PACKAGE-MANAGER; its JSON model has PACKAGE_MANAGER.
+        if (identical(doc$spdxVersion, "SPDX-2.2") && parts[1] == "PACKAGE-MANAGER") {
+          parts[1] <- "PACKAGE_MANAGER"
+        }
         pkg$externalRefs <- c(pkg$externalRefs, list(list(
           referenceCategory = parts[1], referenceType = parts[2],
           referenceLocator = parts[3]
         )))
-      } else if (tag == "ExternalRefComment") {
+      } else if (tag == "ExternalRefComment" && length(pkg$externalRefs) > 0L) {
         k <- length(pkg$externalRefs)
-        if (k > 0L) pkg$externalRefs[[k]]$comment <- value
+        pkg$externalRefs[[k]]$comment <- value
       } else if (tag %in% names(spdx_tv_package_tags)) {
         pkg[[spdx_tv_package_tags[[tag]]]] <- value
+      } else {
+        skipped <- c(skipped, tag)
       }
     } else if (is.null(rel)) {
       if (tag == "Creator") {
@@ -191,10 +257,15 @@ spdx_tv_read <- function(path) {
         doc$creationInfo$comment <- value
       } else if (tag %in% names(spdx_tv_doc_tags)) {
         doc[[spdx_tv_doc_tags[[tag]]]] <- value
+      } else {
+        skipped <- c(skipped, tag)
       }
+    } else {
+      skipped <- c(skipped, tag)
     }
   }
   flush_relationship()
   flush_package()
+  if (length(skipped) > 0L) attr(doc, "skipped_tags") <- unique(skipped)
   doc
 }

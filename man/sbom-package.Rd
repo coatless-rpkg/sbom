@@ -6,7 +6,7 @@
 \alias{sbom-package}
 \title{sbom: Software Bills of Materials for R Code}
 \description{
-Generates Software Bills of Materials for R packages and R library installations in the 'CycloneDX' and 'SPDX' formats.
+Generates Software Bills of Materials for R packages and R library installations, as 'CycloneDX' 1.4 to 1.7 (JSON or XML), 'SPDX' 2.2 and 2.3 (JSON, YAML, XML or tag-value) and 'SPDX' 3.0.1 documents and 'SWID' tags, plus a CSV inventory of components for spreadsheet review.
 }
 \author{
 \strong{Maintainer}: James Balamuta \email{james.balamuta@gmail.com} [copyright holder]

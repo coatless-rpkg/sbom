@@ -77,7 +77,9 @@ spdx3_package <- function(row, id, supplier, person) {
   if (spdx_is_set(row$published) && grepl("^[0-9]{4}-[0-9]{2}-[0-9]{2}$", row$published)) {
     p$releaseTime <- paste0(row$published, "T00:00:00Z")
   }
-  p$software_primaryPurpose <- if (row$ecosystem == "r") {
+  # R, and a library root (a platform in CycloneDX too), are platforms.
+  p$software_primaryPurpose <- if (row$ecosystem == "r" ||
+                                     (isTRUE(row$is_root) && row$type == "platform")) {
     "platform"
   } else if (isTRUE(row$is_root) && row$type == "application") {
     "application"

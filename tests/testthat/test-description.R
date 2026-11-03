@@ -132,3 +132,27 @@ test_that("parse_authors() keeps non-ASCII names under a C locale", {
   expect_true(validUTF8(a$name))
   expect_equal(Encoding(a$name), "UTF-8")
 })
+
+test_that("enc2utf8_bytes() relabels only unmarked UTF-8 and converts marked text", {
+  local_c_ctype()
+  utf8 <- as.raw(c(0x43, 0x61, 0x66, 0xc3, 0xa9))
+  out <- enc2utf8_bytes(c(a = rawToChar(utf8), b = NA))
+  expect_identical(names(out), c("a", "b"))
+  expect_identical(Encoding(out[["a"]]), "UTF-8")
+  expect_identical(charToRaw(out[["a"]]), utf8)
+  expect_true(is.na(out[["b"]]))
+  # Marked latin1, the same bytes are two latin1 characters each.
+  latin <- rawToChar(utf8)
+  Encoding(latin) <- "latin1"
+  expect_identical(
+    charToRaw(enc2utf8_bytes(latin)),
+    as.raw(c(0x43, 0x61, 0x66, 0xc3, 0x83, 0xc2, 0xa9))
+  )
+  # Unmarked bytes that are not UTF-8 are read in the native encoding.
+  native <- rawToChar(as.raw(c(0x43, 0x61, 0x66, 0xe9)))
+  expect_identical(enc2utf8_bytes(native), enc2utf8(native))
+})
+
+test_that("enc2utf8_bytes() takes an empty vector", {
+  expect_identical(enc2utf8_bytes(character()), character())
+})

@@ -209,6 +209,8 @@ validate_spdx_tv <- function(path, version) {
   if (is.list(doc) && identical(names(doc), c("status", "findings"))) {
     return(doc)
   }
+  skipped <- attr(doc, "skipped_tags", exact = TRUE)
+  attr(doc, "skipped_tags") <- NULL
   json <- tempfile(fileext = ".json")
   on.exit(unlink(json), add = TRUE)
   write_text(jsonlite::toJSON(doc, auto_unbox = TRUE, null = "null"), json)
@@ -216,13 +218,15 @@ validate_spdx_tv <- function(path, version) {
   if (res$status != "pass") {
     return(res)
   }
+  message <- "Tag-value has no schema, so the document was checked after conversion to the JSON model."
+  if (length(skipped) > 0L) {
+    message <- paste0(
+      message, " These tags were not checked: ", paste(skipped, collapse = ", "), "."
+    )
+  }
   validation_result(
     "partial",
-    data.frame(
-      location = "",
-      message = "Tag-value has no schema, so the document was checked after conversion to the JSON model.",
-      stringsAsFactors = FALSE
-    )
+    data.frame(location = "", message = message, stringsAsFactors = FALSE)
   )
 }
 

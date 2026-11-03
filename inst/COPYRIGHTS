@@ -61,10 +61,18 @@ inst/schemas/swid/swid-2015.xsd
              namespace remains. No other change.
 
 inst/schemas/swid/xmldsig-core-schema.xsd
+  Source:    https://www.w3.org/TR/xmldsig-core/xmldsig-core-schema.xsd
+  Copyright: 2001 The Internet Society and W3C (Massachusetts Institute of
+             Technology, Institut National de Recherche en Informatique et en
+             Automatique, Keio University)
+  Licence:   W3C Software License (SPDX: W3C-19980720), as the file's header
+             states, http://www.w3.org/Consortium/Legal/copyright-software-19980720
+  Changes:   None.
+
 inst/schemas/swid/xml.xsd
-  Source:    https://www.w3.org/TR/xmldsig-core/xmldsig-core-schema.xsd and
-             https://www.w3.org/2001/xml.xsd
-  Copyright: W3C (MIT, ERCIM, Keio, Beihang) and the Internet Society
+  Source:    https://www.w3.org/2001/xml.xsd
+  Copyright: W3C (MIT, ERCIM, Keio, Beihang)
   Licence:   W3C Software and Document License
              (SPDX: W3C-20150513), https://www.w3.org/Consortium/Legal/2015/copyright-software-and-document
+             The file itself carries no licence header.
   Changes:   None.

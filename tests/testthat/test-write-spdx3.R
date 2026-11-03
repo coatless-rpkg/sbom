@@ -193,3 +193,15 @@ test_that("the registry lists SPDX 3 JSON-LD and rejects other versions", {
   expect_match(txt, "\n$")
   expect_false(grepl("\r", txt, fixed = TRUE))
 })
+
+test_that("a library root's purpose is platform, as its CycloneDX type is", {
+  x <- sbom_installed(lib = fixture_lib())
+  g <- spdx3_document(x)[["@graph"]]
+  root <- Find(function(e) identical(e$type, "software_Package") && identical(e$name, "R library"), g)
+  expect_equal(root$software_primaryPurpose, "platform")
+  expect_equal(cdx_document(x)$metadata$component$type, "platform")
+  skip_if_not_installed("jsonvalidate")
+  tf <- withr::local_tempfile(fileext = ".spdx3.jsonld")
+  write_text(spdx3_jsonld(x), tf)
+  expect_equal(schema_validate(tf, "spdx3-jsonld")$status, "partial")
+})

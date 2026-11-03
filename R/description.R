@@ -148,11 +148,15 @@ parse_authors <- function(x) {
   out
 }
 
-# Marks text as UTF-8 when its bytes are valid UTF-8, and leaves NA alone.
-# Never converts through the locale.
+# Text in UTF-8. An unmarked ("unknown") string whose bytes are valid UTF-8
+# is marked as UTF-8, whatever the locale: that is how a UTF-8 script's text
+# arrives in a C locale. A string marked latin1 or UTF-8 is converted by its
+# mark, and an unmarked string that is not valid UTF-8 is read in the native
+# encoding. NA stays NA, and names are kept.
 enc2utf8_bytes <- function(x) {
-  ok <- !is.na(x) & validUTF8(x)
-  Encoding(x)[ok] <- "UTF-8"
+  relabel <- !is.na(x) & Encoding(x) == "unknown" & validUTF8(x)
+  if (any(relabel)) Encoding(x)[relabel] <- "UTF-8"
+  if (!all(relabel)) x[!relabel] <- enc2utf8(x[!relabel])
   x
 }
 

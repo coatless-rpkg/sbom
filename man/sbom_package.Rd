@@ -51,9 +51,10 @@ Without either, an issue is recorded.}
 \item{regid}{The registration id of \code{organization}: the domain name, or URL,
 of the organization, under which it registers SWID tags (ISO/IEC
 19770-2). A SWID tag names the organization as its creator with this
-regid. \code{NA} and the empty string mean none; then the tag uses the
-placeholder \verb{http://invalid.unavailable}, and when an \code{organization} was
-given, an issue is recorded. The default is the \code{sbom.regid} option, as
+regid. It must be a single string. \code{NULL}, \code{NA} and an empty or blank
+string mean none; then the tag uses the placeholder
+\verb{http://invalid.unavailable}, and when an \code{organization} was given, an
+issue is recorded. The default is the \code{sbom.regid} option, as
 \code{author} and \code{organization} read \code{sbom.author} and \code{sbom.organization}.}
 
 \item{timestamp}{The creation time, as a date-time or as seconds since

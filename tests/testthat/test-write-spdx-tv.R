@@ -63,14 +63,17 @@ test_that("a file that is not tag-value fails, without the partial note", {
   expect_false(any(grepl("no schema", broken$findings$message)))
 })
 
-test_that("unknown tags, comments and blank lines are ignored", {
+test_that("unknown tags are skipped and named; comments and blank lines are ignored", {
   tf <- tv_file(paste0(
     "# a comment\n\nSPDXVersion: SPDX-2.3\nFoo: bar\nBaz: <text>a\nb: c</text>\n",
     "PackageName: a\nPackageFlavour: odd\nFilesAnalyzed: false\n"
   ))
-  expect_equal(spdx_tv_read(tf), list(
-    spdxVersion = "SPDX-2.3",
-    packages = list(list(name = "a", filesAnalyzed = FALSE))
+  expect_equal(spdx_tv_read(tf), structure(
+    list(
+      spdxVersion = "SPDX-2.3",
+      packages = list(list(name = "a", filesAnalyzed = FALSE))
+    ),
+    skipped_tags = c("Foo", "Baz", "PackageFlavour")
   ))
 })
 
@@ -120,4 +123,101 @@ test_that("CRLF line endings read the same", {
 
 test_that("a newline in a plain tag becomes one space", {
   expect_equal(tv_line("PackageName", "a \n  b"), "PackageName: a b")
+})
+
+tv_with_file <- function() {
+  paste0(paste(
+    "SPDXVersion: SPDX-2.3", "DataLicense: CC0-1.0", "SPDXID: SPDXRef-DOCUMENT",
+    "DocumentName: d", "DocumentNamespace: https://example.org/d",
+    "Creator: Tool: x", "Created: 2024-01-01T00:00:00Z", "",
+    "PackageName: pkg", "SPDXID: SPDXRef-Package", "PackageDownloadLocation: NOASSERTION",
+    "FilesAnalyzed: true", "PackageVerificationCode: abc",
+    "PackageLicenseConcluded: NOASSERTION", "PackageLicenseDeclared: NOASSERTION",
+    "PackageCopyrightText: NOASSERTION", "",
+    "FileName: ./a.c", "SPDXID: SPDXRef-File1",
+    "FileChecksum: SHA1: 0000000000000000000000000000000000000000",
+    "LicenseConcluded: NOASSERTION", "FileCopyrightText: NOASSERTION", "",
+    "Relationship: SPDXRef-DOCUMENT DESCRIBES SPDXRef-Package",
+    "Relationship: SPDXRef-Package CONTAINS SPDXRef-File1",
+    sep = "\n"
+  ), "\n")
+}
+
+test_that("a file section's tags are not read into the package before it", {
+  doc <- spdx_tv_read(tv_file(tv_with_file()))
+  expect_identical(doc$SPDXID, "SPDXRef-DOCUMENT")
+  expect_length(doc$packages, 1L)
+  expect_identical(doc$packages[[1]]$SPDXID, "SPDXRef-Package")
+  expect_identical(doc$packages[[1]]$licenseConcluded, "NOASSERTION")
+  expect_length(doc$relationships, 2L)
+  expect_identical(
+    attr(doc, "skipped_tags"),
+    c("PackageVerificationCode", "FileName", "SPDXID", "FileChecksum",
+      "LicenseConcluded", "FileCopyrightText")
+  )
+})
+
+test_that("the partial note names the tags that were not checked", {
+  skip_if_not_installed("jsonvalidate")
+  res <- schema_validate(tv_file(tv_with_file()), "spdx-tv")
+  expect_equal(res$status, "partial")
+  expect_equal(res$findings$message, paste(
+    "Tag-value has no schema, so the document was checked after conversion to the JSON model.",
+    "These tags were not checked: PackageVerificationCode, FileName, SPDXID,",
+    "FileChecksum, LicenseConcluded, FileCopyrightText."
+  ))
+})
+
+test_that("snippet, licence, annotation and review sections close the package too", {
+  starts <- c(
+    "SnippetSPDXID: SPDXRef-Snippet1", "LicenseID: LicenseRef-1",
+    "Annotator: Person: A", "Reviewer: Person: B"
+  )
+  for (start in starts) {
+    doc <- spdx_tv_read(tv_file(paste0(
+      "SPDXVersion: SPDX-2.3\nPackageName: pkg\nSPDXID: SPDXRef-Package\n", start,
+      "\nSPDXID: SPDXRef-Other\nPackageComment: <text>not the package's</text>\n"
+    )))
+    expect_identical(doc$packages, list(list(name = "pkg", SPDXID = "SPDXRef-Package")), label = start)
+    expect_null(doc$SPDXID)
+    expect_identical(attr(doc, "skipped_tags"), c(sub(":.*$", "", start), "SPDXID", "PackageComment"))
+  }
+})
+
+test_that("an external document reference closes the package but not the creation section", {
+  doc <- spdx_tv_read(tv_file(paste0(
+    "SPDXVersion: SPDX-2.3\n",
+    "ExternalDocumentRef: DocumentRef-x https://example.org/x SHA1: 00\n",
+    "Creator: Tool: x\nCreated: 2024-01-01T00:00:00Z\n",
+    "PackageName: pkg\nExternalDocumentRef: DocumentRef-y https://example.org/y SHA1: 00\n",
+    "PackageComment: <text>not the package's</text>\n"
+  )))
+  expect_identical(doc$creationInfo, list(creators = list("Tool: x"), created = "2024-01-01T00:00:00Z"))
+  expect_identical(doc$packages, list(list(name = "pkg")))
+  expect_identical(attr(doc, "skipped_tags"), c("ExternalDocumentRef", "PackageComment"))
+})
+
+test_that("a file that starts with a UTF-8 byte-order mark reads", {
+  bom <- rawToChar(as.raw(c(0xef, 0xbb, 0xbf)))
+  Encoding(bom) <- "UTF-8"
+  txt <- spdx_tv(fixture_sbom())
+  expect_equal(spdx_tv_read(tv_file(paste0(bom, txt))), spdx_tv_read(tv_file(txt)))
+})
+
+test_that("SPDX 2.2 tag-value spells the category PACKAGE-MANAGER, and reads it back", {
+  x <- fixture_sbom()
+  tv22 <- spdx_tv(x, "2.2")
+  expect_match(tv22, "\nExternalRef: PACKAGE-MANAGER purl pkg:cran/cranpkg@1.2.0\n", fixed = TRUE)
+  expect_false(grepl("PACKAGE_MANAGER", tv22, fixed = TRUE))
+  for (txt in list(spdx_json(x, "2.2"), spdx_yaml(x, "2.2"), spdx_xml(x, "2.2"))) {
+    expect_match(txt, "PACKAGE_MANAGER", fixed = TRUE)
+  }
+  tf <- tv_file(tv22)
+  cats <- unlist(lapply(spdx_tv_read(tf)$packages, function(p) {
+    vapply(p$externalRefs, function(r) r$referenceCategory, "")
+  }))
+  expect_true("PACKAGE_MANAGER" %in% cats)
+  expect_false("PACKAGE-MANAGER" %in% cats)
+  skip_if_not_installed("jsonvalidate")
+  expect_equal(schema_validate(tf, "spdx-tv", "2.2")$status, "partial")
 })

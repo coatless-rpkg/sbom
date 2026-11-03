@@ -33,9 +33,10 @@
 #' @param regid The registration id of `organization`: the domain name, or URL,
 #'   of the organization, under which it registers SWID tags (ISO/IEC
 #'   19770-2). A SWID tag names the organization as its creator with this
-#'   regid. `NA` and the empty string mean none; then the tag uses the
-#'   placeholder `http://invalid.unavailable`, and when an `organization` was
-#'   given, an issue is recorded. The default is the `sbom.regid` option, as
+#'   regid. It must be a single string. `NULL`, `NA` and an empty or blank
+#'   string mean none; then the tag uses the placeholder
+#'   `http://invalid.unavailable`, and when an `organization` was given, an
+#'   issue is recorded. The default is the `sbom.regid` option, as
 #'   `author` and `organization` read `sbom.author` and `sbom.organization`.
 #' @param timestamp The creation time, as a date-time or as seconds since
 #'   1970-01-01 UTC. `NULL` means now. When the
@@ -65,6 +66,7 @@ sbom_package <- function(path = ".",
                          timestamp = NULL, overrides = NULL) {
   dependencies <- match.arg(dependencies, several.ok = TRUE)
   check_lib(lib)
+  regid <- check_regid(regid)
   root_desc <- read_description(path)
   if (!"Package" %in% names(root_desc) || !nzchar(trimws(root_desc[["Package"]]))) {
     cli::cli_abort("The {.file DESCRIPTION} at {.file {path}} has no {.field Package} field.")
@@ -107,6 +109,7 @@ sbom_installed <- function(pkgs = NULL, lib = .libPaths(), name = "R library",
                            regid = getOption("sbom.regid"),
                            timestamp = NULL, overrides = NULL) {
   check_lib(lib)
+  regid <- check_regid(regid)
   db <- read_library(lib)
   base <- base_packages()
   if (is.null(pkgs)) {
@@ -126,7 +129,8 @@ sbom_installed <- function(pkgs = NULL, lib = .libPaths(), name = "R library",
   root_desc <- c(Package = installed_root_name(), Imports = paste(pkgs[!pkgs %in% base], collapse = ", "))
   root <- list(
     component = component_row(
-      ref = "r-library", name = name, type = "platform", ecosystem = "library",
+      ref = "r-library", name = enc2utf8_bytes(as.character(name)),
+      type = "platform", ecosystem = "library",
       is_root = TRUE, scope = "required", evidence = "observed", source_input = "library"
     ),
     issues = empty_issues()
@@ -164,6 +168,21 @@ check_lib <- function(lib, call = parent.frame()) {
       call = call
     )
   }
+}
+
+# One string, or NA for none: NULL, NA and blank strings mean no regid.
+check_regid <- function(regid, call = parent.frame()) {
+  if (is.null(regid)) {
+    return(NA_character_)
+  }
+  if (length(regid) != 1L || !(is.character(regid) || is.na(regid))) {
+    cli::cli_abort(
+      "{.arg regid} must be a single string, not {.obj_type_friendly {regid}}.",
+      call = call
+    )
+  }
+  regid <- enc2utf8_bytes(as.character(regid))
+  if (is.na(regid) || !nzchar(trimws(regid))) NA_character_ else regid
 }
 
 # Shared by sbom_package() and sbom_installed(). `root` is list(component,
@@ -285,8 +304,9 @@ build_sbom <- function(root, db, root_desc, fields, root_suggests, lib,
   rownames(rels) <- NULL
 
   has_value <- function(x) !is.null(x) && length(x) == 1L && !is.na(x) && nzchar(x)
-  authors <- as.character(author)
+  authors <- enc2utf8_bytes(as.character(author))
   authors <- authors[!is.na(authors) & nzchar(trimws(authors))]
+  organization <- enc2utf8_bytes(as.character(organization))
   if (length(authors) == 0L && !has_value(organization)) {
     issues <- add_issue(
       issues, root_row$ref, "author", "no-sbom-author",
@@ -331,7 +351,7 @@ build_sbom <- function(root, db, root_desc, fields, root_suggests, lib,
       root = root_row$ref,
       timestamp = timestamp,
       author = if (length(authors) > 0L) authors else NA_character_,
-      organization = if (has_value(organization)) as.character(organization) else NA_character_,
+      organization = if (has_value(organization)) organization else NA_character_,
       tool_version = as.character(utils::packageVersion("sbom")),
       notes = notes,
       inputs = inputs,

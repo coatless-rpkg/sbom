@@ -4,7 +4,7 @@ test_that("the SWID tag follows R Observatory's layout", {
   x <- fixture_sbom()
   doc <- xml2::read_xml(swid_tag(x)); root <- xml2::xml_root(doc)
   expect_equal(xml2::xml_attr(root, "tagId"), "local/srcpkg")
-  expect_equal(xml2::xml_attr(root, "tagVersion"), "1")
+  expect_equal(xml2::xml_attr(root, "tagVersion"), "20261104")
   expect_equal(xml2::xml_attr(root, "versionScheme"), "multipartnumeric")
   ent <- xml2::xml_find_all(doc, "//s:Entity", swid_ns)
   expect_equal(xml2::xml_attr(ent, "role"), c("tagCreator", "maintainer"))
@@ -56,6 +56,51 @@ test_that("regid-missing is an info issue on the root, and only with an organiza
   expect_false("regid-missing" %in% sbom_issues(lib)$code)
 })
 
+test_that("with a regid, tagId and requires targets start with its authority", {
+  for (regid in c("https://example.org", "https://example.org/", "example.org")) {
+    x <- sbom_package(test_path("fixtures/pkgs/srcpkg"), lib = fixture_lib(),
+                      organization = "Org", regid = regid)
+    doc <- xml2::read_xml(swid_tag(x))
+    expect_equal(xml2::xml_attr(xml2::xml_root(doc), "tagId"), "example.org/local/srcpkg", label = regid)
+    hrefs <- xml2::xml_attr(xml2::xml_find_all(doc, "//s:Link[@rel='requires']", swid_ns), "href")
+    expect_true("swid:example.org/pkg:cran/cranpkg@1.2.0" %in% hrefs, label = regid)
+    expect_true(all(startsWith(hrefs, "swid:example.org/")), label = regid)
+  }
+  lib <- sbom_installed(lib = fixture_lib(), organization = "Org", regid = "https://example.org/sw/")
+  expect_equal(xml2::xml_attr(xml2::xml_root(xml2::read_xml(swid_tag(lib))), "tagId"), "example.org/sw/r-library")
+  for (y in list(x, lib)) {
+    tf <- withr::local_tempfile(fileext = ".swidtag"); write_text(swid_tag(y), tf)
+    expect_equal(schema_validate(tf, "swid", "2015")$status, "pass")
+  }
+})
+
+test_that("tagVersion is the timestamp's UTC date as YYYYMMDD", {
+  x <- fixture_sbom()
+  root <- xml2::xml_root(xml2::read_xml(swid_tag(x)))
+  expect_equal(xml2::xml_attr(root, "tagVersion"), format(x$metadata$timestamp, "%Y%m%d", tz = "UTC"))
+  withr::local_envvar(SOURCE_DATE_EPOCH = "1700000000")
+  y <- sbom_package(test_path("fixtures/pkgs/srcpkg"), lib = fixture_lib())
+  expect_equal(xml2::xml_attr(xml2::xml_root(xml2::read_xml(swid_tag(y))), "tagVersion"), "20231114")
+})
+
+test_that("regid must be a single string, and a blank one means none", {
+  build <- function(regid) {
+    sbom_package(test_path("fixtures/pkgs/srcpkg"), lib = fixture_lib(),
+                 organization = "Org", regid = regid)
+  }
+  expect_error(build(c("https://a.example", "https://b.example")), "single string")
+  expect_error(build(character()), "single string")
+  expect_error(build(1), "single string")
+  expect_error(sbom_installed(lib = fixture_lib(), regid = c("a", "b")), "single string")
+  for (none in list(NULL, NA, NA_character_, "", "   ")) {
+    x <- build(none)
+    expect_true(is.na(x$metadata$regid))
+    expect_true("regid-missing" %in% sbom_issues(x)$code)
+    ent <- xml2::xml_find_first(xml2::read_xml(swid_tag(x)), "//s:Entity[@role='tagCreator']", swid_ns)
+    expect_equal(xml2::xml_attr(ent, "regid"), "http://invalid.unavailable")
+  }
+})
+
 test_that("the tag creator falls back to the first author, then to sbom", {
   x <- sbom_package(test_path("fixtures/pkgs/srcpkg"), lib = fixture_lib(), author = c("Ann", "Bob"))
   ent <- xml2::xml_find_first(xml2::read_xml(swid_tag(x)), "//s:Entity[@role='tagCreator']", swid_ns)
@@ -87,6 +132,17 @@ test_that("Meta carries the generator, product, notes, purl and licence", {
   expect_false("purl" %in% sub("^.*:", "", names(attrs)))
   p <- xml2::xml_attrs(xml2::xml_find_first(xml2::read_xml(swid_tag(parity_sbom())), "//s:Meta", swid_ns))
   expect_equal(p[["purl"]], "pkg:cran/dplyr@1.2.1")
+})
+
+test_that("Meta describes the root's asserted overrides", {
+  ov <- data.frame(component = c("srcpkg", "cranpkg"), field = "supplier_name",
+                   value = c("Acme", "Other"), asserted_by = "Legal", reason = c("Contract", "Checked"))
+  x <- sbom_package(test_path("fixtures/pkgs/srcpkg"), lib = fixture_lib(), overrides = ov)
+  meta <- xml2::xml_find_first(xml2::read_xml(swid_tag(x)), "//s:Meta", swid_ns)
+  desc <- xml2::xml_attr(meta, "description")
+  expect_match(desc, "Asserted by Legal: supplier_name is Acme (Contract).", fixed = TRUE)
+  expect_false(grepl("supplier_name is Other (Checked).", desc, fixed = TRUE))
+  expect_true(startsWith(desc, paste(document_notes(x), collapse = " ")))
 })
 
 test_that("a root without a version has no version attributes; others get scheme unknown", {
@@ -129,7 +185,7 @@ test_that("package and library tags pass the SWID schema", {
 
 test_that("a tag that breaks the SWID schema fails", {
   tf <- withr::local_tempfile(fileext = ".swidtag")
-  write_text(sub("tagVersion=\"1\"", "tagVersion=\"x\"", swid_tag(fixture_sbom())), tf)
+  write_text(sub("tagVersion=\"[0-9]+\"", "tagVersion=\"x\"", swid_tag(fixture_sbom())), tf)
   res <- schema_validate(tf, "swid", "2015")
   expect_equal(res$status, "fail")
   expect_gt(nrow(res$findings), 0L)
@@ -141,6 +197,20 @@ test_that("the bundled SWID schema has one import per namespace and keeps its no
   expect_equal(lengths(regmatches(txt, gregexpr("<xs:import", txt, fixed = TRUE))), 2L)
   expect_false(grepl("http://www.w3.org/2001/xml.xsd", txt, fixed = TRUE))
   expect_match(txt, "for the purpose of implementing the", fixed = TRUE)
+})
+
+test_that("COPYRIGHTS gives the xmldsig schema the licence its header states", {
+  xsd <- readLines(system.file("schemas/swid/xmldsig-core-schema.xsd", package = "sbom"), warn = FALSE)
+  expect_true(any(grepl("copyright-software-19980720", xsd, fixed = TRUE)))
+  lines <- readLines(system.file("COPYRIGHTS", package = "sbom"), warn = FALSE)
+  start <- which(lines == "inst/schemas/swid/xmldsig-core-schema.xsd")
+  expect_length(start, 1L)
+  blank <- which(lines[-seq_len(start)] == "")
+  end <- if (length(blank) > 0L) start + blank[1] - 1L else length(lines)
+  entry <- paste(lines[start:end], collapse = "\n")
+  expect_match(entry, "W3C Software License (SPDX: W3C-19980720)", fixed = TRUE)
+  expect_match(entry, "The Internet Society and W3C", fixed = TRUE)
+  expect_false(grepl("W3C-20150513", entry, fixed = TRUE))
 })
 
 test_that("SWID is in the registry", {

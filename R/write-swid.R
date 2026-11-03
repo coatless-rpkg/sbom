@@ -1,7 +1,8 @@
 # SWID tag (ISO/IEC 19770-2:2015) writer. Follows R Observatory's tag, with
 # the differences in spec section 6a: the tag creator is the user's
-# organization, `tagId` is the root's ref, and the extension attributes are in
-# the `sbom` namespace.
+# organization, `tagId` is the regid's authority followed by the root's ref,
+# and the extension attributes are in the `sbom` namespace. As in R
+# Observatory, `tagVersion` is the date of the timestamp.
 
 swid_iso_ns <- "http://standards.iso.org/iso/19770/-2/2015/schema.xsd"
 swid_sbom_ns <- "https://cran.r-project.org/package=sbom"
@@ -9,6 +10,22 @@ swid_placeholder_regid <- "http://invalid.unavailable"
 
 swid_set <- function(x) {
   length(x) == 1L && !is.na(x) && nzchar(x)
+}
+
+# The regid without its scheme or trailing "/": "https://example.org" gives
+# "example.org". NA when there is no regid.
+swid_authority <- function(regid) {
+  if (!swid_set(regid)) {
+    return(NA_character_)
+  }
+  out <- sub("/+$", "", sub("^[A-Za-z][A-Za-z0-9+.-]*://", "", regid))
+  if (nzchar(out)) out else NA_character_
+}
+
+# A component's tag id: "<authority>/<ref>", or the ref alone without a regid
+# (which the regid-missing issue reports).
+swid_tag_id <- function(ref, authority) {
+  if (is.na(authority)) ref else paste0(authority, "/", ref)
 }
 
 # Adds `node` as a child of `parent`, with the named attributes that are set.
@@ -39,10 +56,14 @@ swid_tag <- function(x, version = "2015") {
     xml2::xml_set_attr(doc, "version", enc2utf8(root$version))
     xml2::xml_set_attr(doc, "versionScheme", scheme)
   }
-  xml2::xml_set_attr(doc, "tagId", enc2utf8(root$ref))
-  xml2::xml_set_attr(doc, "tagVersion", "1")
-
   meta <- x$metadata
+  authority <- swid_authority(meta$regid)
+  xml2::xml_set_attr(doc, "tagId", enc2utf8(swid_tag_id(root$ref, authority)))
+  # The UTC date as YYYYMMDD, so the version grows with each new tag.
+  xml2::xml_set_attr(
+    doc, "tagVersion", format(as.POSIXct(meta$timestamp), "%Y%m%d", tz = "UTC")
+  )
+
   authors <- meta$author[!is.na(meta$author)]
   creator <- if (swid_set(meta$organization)) {
     meta$organization
@@ -65,7 +86,8 @@ swid_tag <- function(x, version = "2015") {
     swid_node(doc, "Entity", c(name = root$maintainer, role = "maintainer"))
   }
 
-  notes <- document_notes(x)
+  # The tag describes only the root, so its overrides' provenance goes here.
+  notes <- c(document_notes(x), spdx_asserted_sentences(root))
   swid_node(doc, "Meta", c(
     generator = paste("sbom", meta$tool_version), product = root$name,
     description = if (length(notes) > 0L) paste(notes, collapse = " "),
@@ -85,7 +107,7 @@ swid_tag <- function(x, version = "2015") {
   for (i in seq_len(nrow(deps))) {
     d <- deps[i, ]
     link(c(
-      rel = "requires", href = paste0("swid:", d$ref),
+      rel = "requires", href = paste0("swid:", swid_tag_id(d$ref, authority)),
       use = if (identical(d$scope, "optional")) "optional" else "required",
       `sbom:name` = d$name, `sbom:version` = d$version,
       `sbom:versionIs` = if (identical(d$version_is, "minimum")) "minimum",
