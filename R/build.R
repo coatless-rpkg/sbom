@@ -85,7 +85,7 @@ sbom_package <- function(path = ".",
     stringsAsFactors = FALSE
   )
   x <- build_sbom(
-    root = root, db = read_library(lib), root_desc = root_desc,
+    root = root, lookup = library_lookup(lib), root_desc = root_desc,
     fields = intersect(c("Depends", "Imports", "LinkingTo"), dependencies),
     root_suggests = "Suggests" %in% dependencies, lib = lib,
     r_version = r_version, author = author, organization = organization,
@@ -110,14 +110,17 @@ sbom_installed <- function(pkgs = NULL, lib = .libPaths(), name = "R library",
                            timestamp = NULL, overrides = NULL) {
   check_lib(lib)
   regid <- check_regid(regid)
-  db <- read_library(lib)
+  lookup <- library_lookup(lib)
   base <- base_packages()
   if (is.null(pkgs)) {
+    db <- lookup$all()
+    n_installed <- nrow(db)
     pkgs <- db$package[!db$package %in% base]
     listed_base <- db$package[db$package %in% base]
   } else {
+    n_installed <- nrow(library_index(lib))
     pkgs <- unique(as.character(pkgs))
-    absent <- setdiff(pkgs, c(db$package, base))
+    absent <- setdiff(pkgs[!vapply(pkgs, function(p) !is.null(lookup$get(p)), NA)], base)
     if (length(absent) > 0L) {
       cli::cli_abort("{.val {absent}} {?is/are} not installed in {.file {lib}}.")
     }
@@ -135,7 +138,7 @@ sbom_installed <- function(pkgs = NULL, lib = .libPaths(), name = "R library",
     ),
     issues = empty_issues()
   )
-  if (nrow(db) == 0L) {
+  if (n_installed == 0L) {
     root$issues <- add_issue(
       root$issues, root$component$ref, "library", "library-empty",
       "The library sbom read holds no installed packages."
@@ -146,7 +149,7 @@ sbom_installed <- function(pkgs = NULL, lib = .libPaths(), name = "R library",
     stringsAsFactors = FALSE
   )
   x <- build_sbom(
-    root = root, db = db, root_desc = root_desc,
+    root = root, lookup = lookup, root_desc = root_desc,
     fields = c("Depends", "Imports", "LinkingTo"), root_suggests = FALSE,
     lib = lib, r_version = r_version, author = author,
     organization = organization, regid = regid, timestamp = timestamp,
@@ -188,13 +191,13 @@ check_regid <- function(regid, call = parent.frame()) {
 # Shared by sbom_package() and sbom_installed(). `root` is list(component,
 # issues). For a library root, `root_desc` is a stand-in whose Imports are the
 # listed packages. They are all installed, so no issue names the stand-in.
-build_sbom <- function(root, db, root_desc, fields, root_suggests, lib,
+build_sbom <- function(root, lookup, root_desc, fields, root_suggests, lib,
                        r_version, author, organization, regid, timestamp,
                        inputs, extra_base = character()) {
   root_row <- root$component
   root_is_library <- identical(root_row$ecosystem, "library")
   root_name <- root_desc[["Package"]]
-  res <- resolve_dependencies(root_desc, db, fields, root_suggests)
+  res <- resolve_dependencies(root_desc, lookup, fields, root_suggests)
   edges <- res$edges
   base <- base_packages()
 
@@ -207,8 +210,7 @@ build_sbom <- function(root, db, root_desc, fields, root_suggests, lib,
   comps <- list(root_row)
   ref_of <- character()
   for (pkg in res$packages) {
-    i <- match(pkg, db$package)
-    out <- package_component(db$desc[[i]], "observed", "library", scope = scope_of(pkg))
+    out <- package_component(lookup$get(pkg), "observed", "library", scope = scope_of(pkg))
     comps[[length(comps) + 1L]] <- out$component
     issues <- rbind(issues, out$issues)
     ref_of[[pkg]] <- out$component$ref
@@ -237,7 +239,7 @@ build_sbom <- function(root, db, root_desc, fields, root_suggests, lib,
   # Constraints on installed packages.
   checked <- edges[!is.na(edges$constraint) & edges$to %in% res$packages, , drop = FALSE]
   for (i in seq_len(nrow(checked))) {
-    have <- db$version[[match(checked$to[[i]], db$package)]]
+    have <- trimws(lookup$get(checked$to[[i]])[["Version"]])
     if (isFALSE(constraint_satisfied(have, checked$constraint[[i]]))) {
       issues <- add_issue(
         issues, ref_of[[checked$to[[i]]]], "version", "constraint-unsatisfied",
@@ -252,7 +254,7 @@ build_sbom <- function(root, db, root_desc, fields, root_suggests, lib,
   # R and base packages.
   base_edge <- unique(edges$to[edges$to %in% base])
   base_used <- sort(unique(c(base_edge, extra_base)), method = "radix")
-  r <- resolve_r_version(lib, r_version, root_desc, db$desc[match(res$packages, db$package)])
+  r <- resolve_r_version(lib, r_version, root_desc, lapply(res$packages, lookup$get))
   r_rows <- r_components(r$version, r$version_is, r$stated_spec, base_used)
   base_scope <- vapply(base_used, function(p) {
     if (p %in% edges$to && !p %in% required_to) "optional" else "required"

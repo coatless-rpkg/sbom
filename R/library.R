@@ -45,11 +45,92 @@ read_library <- function(lib = .libPaths()) {
   out
 }
 
-# Breadth-first walk from a root DESCRIPTION through db. Required fields are
+# Every directory in the library paths that could hold a package, as
+# (package, path) rows in path order and then name order. Lists directories
+# only: no DESCRIPTION is read. Lock directories, directories without a
+# DESCRIPTION file and non-existent paths are skipped. A package in several
+# paths has one row for each.
+library_candidates <- function(lib = .libPaths()) {
+  package <- character()
+  path_of <- character()
+  for (path in unique(as.character(lib))) {
+    if (is.na(path) || !dir.exists(path)) {
+      next
+    }
+    dirs <- sort(list.dirs(path, full.names = FALSE, recursive = FALSE), method = "radix")
+    dirs <- dirs[!grepl("^00LOCK", dirs)]
+    dirs <- dirs[file.exists(file.path(path, dirs, "DESCRIPTION"))]
+    package <- c(package, dirs)
+    path_of <- c(path_of, rep(path, length(dirs)))
+  }
+  data.frame(package = package, path = path_of, stringsAsFactors = FALSE)
+}
+
+# One row per package directory name, the first library path winning. Reads
+# no DESCRIPTION contents.
+library_index <- function(lib = .libPaths()) {
+  cand <- library_candidates(lib)
+  cand <- cand[!duplicated(cand$package), , drop = FALSE]
+  rownames(cand) <- NULL
+  cand
+}
+
+# A lazy view of the library. `$get(name)` reads and caches one DESCRIPTION,
+# and `$all()` is read_library() (which also fills the cache). The cache lives
+# in the returned environment, so separate lookups never share it.
+#
+# `$get()` matches read_library() on a bad copy: when the first path's
+# DESCRIPTION is unreadable, or lacks Package or Version, that copy is skipped
+# and the next path that holds a usable one wins.
+library_lookup <- function(lib = .libPaths()) {
+  env <- new.env(parent = emptyenv())
+  cand <- library_candidates(lib)
+  cache <- new.env(parent = emptyenv())
+  env$get <- function(name) {
+    if (!is.character(name) || length(name) != 1L || is.na(name) || !nzchar(name)) {
+      return(NULL)
+    }
+    if (!is.null(hit <- cache[[name]])) {
+      return(if (is.na(hit[[1L]][1L])) NULL else hit)
+    }
+    desc <- NULL
+    for (path in cand$path[cand$package == name]) {
+      desc <- read_usable_description(file.path(path, name))
+      if (!is.null(desc)) {
+        break
+      }
+    }
+    cache[[name]] <- if (is.null(desc)) NA_character_ else desc
+    desc
+  }
+  env$all <- function() {
+    db <- read_library(lib)
+    for (i in seq_len(nrow(db))) {
+      cache[[db$package[[i]]]] <- db$desc[[i]]
+    }
+    db
+  }
+  env
+}
+
+# The DESCRIPTION at `dir`, or NULL when it can't be read or lacks a Package
+# or Version.
+read_usable_description <- function(dir) {
+  desc <- tryCatch(read_description(dir), error = function(e) NULL)
+  if (is.null(desc) || !all(c("Package", "Version") %in% names(desc))) {
+    return(NULL)
+  }
+  if (!nzchar(trimws(desc[["Package"]])) || !nzchar(trimws(desc[["Version"]]))) {
+    return(NULL)
+  }
+  desc
+}
+
+# Breadth-first walk from a root DESCRIPTION through the lookup. Required fields are
 # followed to exhaustion first. Suggests are then read from the root only:
 # their edges are recorded, and packages not already reached are listed but
 # not followed.
-resolve_dependencies <- function(root_desc, db,
+resolve_dependencies <- function(root_desc, lookup,
                                  fields = c("Depends", "Imports", "LinkingTo"),
                                  root_suggests = FALSE) {
   root_name <- if ("Package" %in% names(root_desc)) root_desc[["Package"]] else NA_character_
@@ -77,12 +158,13 @@ resolve_dependencies <- function(root_desc, db,
   }
   visit <- function(dep) {
     visited <<- c(visited, dep)
-    if (is.na(match(dep, db$package))) {
+    desc <- lookup$get(dep)
+    if (is.null(desc)) {
       missing <<- c(missing, dep)
-      FALSE
+      NULL
     } else {
       found <<- c(found, dep)
-      TRUE
+      desc
     }
   }
 
@@ -94,10 +176,9 @@ resolve_dependencies <- function(root_desc, db,
       if (dep %in% skip || dep %in% visited) {
         next
       }
-      if (visit(dep)) {
-        queue[[length(queue) + 1L]] <- list(
-          name = dep, desc = db$desc[[match(dep, db$package)]]
-        )
+      desc <- visit(dep)
+      if (!is.null(desc)) {
+        queue[[length(queue) + 1L]] <- list(name = dep, desc = desc)
       }
     }
   }
