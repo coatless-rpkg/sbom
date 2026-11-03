@@ -3,3 +3,4 @@
 ^\.git
 ^LICENSE\.md$
 ^README\.Rmd$
+^\.gitattributes$

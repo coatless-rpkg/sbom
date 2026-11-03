@@ -32,6 +32,42 @@ there it is written as the metadata property \code{sbom:organization}.}
 Serialises an \verb{<sbom>} object as UTF-8 text with \code{"\\n"} line endings and a
 trailing newline. Existing files are overwritten.
 }
+\details{
+The formats, with the \code{format} value, file extension and versions (the
+default of each is in \code{\link[=sbom_formats]{sbom_formats()}}: 1.6 for CycloneDX, 2.3 for SPDX 2.x):\tabular{llll}{
+   \code{format} \tab Output \tab Extension \tab Versions \cr
+   \code{cyclonedx-json} \tab CycloneDX JSON \tab \code{.cdx.json} \tab 1.4, 1.5, 1.6, 1.7 \cr
+   \code{cyclonedx-xml} \tab CycloneDX XML \tab \code{.cdx.xml} \tab 1.4, 1.5, 1.6, 1.7 \cr
+   \code{spdx-json} \tab SPDX JSON \tab \code{.spdx.json} \tab 2.2, 2.3 \cr
+   \code{spdx-yaml} \tab SPDX YAML \tab \code{.spdx.yaml} \tab 2.2, 2.3 \cr
+   \code{spdx-xml} \tab SPDX XML \tab \code{.spdx.xml} \tab 2.2, 2.3 \cr
+   \code{spdx-tv} \tab SPDX tag-value \tab \code{.spdx} \tab 2.2, 2.3 \cr
+   \code{spdx3-jsonld} \tab SPDX 3 JSON-LD \tab \code{.spdx3.jsonld} \tab 3.0.1 \cr
+   \code{swid} \tab SWID tag \tab \code{.swidtag} \tab 2015 \cr
+   \code{csv} \tab CSV inventory \tab \code{.csv} \tab none \cr
+}
+
+
+\code{format = "all"} writes the eight standard formats, each at its default
+version unless \code{version} names one it lists, into the directory \code{path}. The
+files are named after the root component, as \verb{<name>-<version>} followed by
+the extension, or \verb{<name>} alone when the root has no version. The CSV
+inventory is not part of \code{"all"}.
+
+The SWID tag names the organization that made the SBOM by its registration
+id (regid). \code{\link[=sbom_package]{sbom_package()}} and \code{\link[=sbom_installed]{sbom_installed()}} take it from their
+\code{regid} argument, whose default is the \code{sbom.regid} option; without one the
+tag uses the placeholder \verb{http://invalid.unavailable}.
+
+\code{format = "csv"} writes a component inventory for spreadsheet review. It is
+not an SBOM standard, is left out of \code{format = "all"}, and takes no
+\code{version}. In every column, a value that starts with \code{=}, \code{+}, \code{-}, \code{@}, a
+tab or a carriage return gets a leading apostrophe, so a spreadsheet does
+not evaluate it as a formula. Real names, versions, dates and identifiers
+never start that way, so they are unchanged. The file starts with a UTF-8
+byte-order mark so that spreadsheets read it as UTF-8; in R, read it with
+\code{read.csv(path, fileEncoding = "UTF-8-BOM")}.
+}
 \examples{
 x <- sbom_package(system.file("DESCRIPTION", package = "sbom"))
 write_sbom(x, file.path(tempdir(), "sbom.cdx.json"))

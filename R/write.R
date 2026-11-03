@@ -17,6 +17,41 @@
 #'   CycloneDX 1.4 and 1.5 have no field for the organization that made the
 #'   SBOM (their `manufacture` is the maker of the described component), so
 #'   there it is written as the metadata property `sbom:organization`.
+#' @details
+#' The formats, with the `format` value, file extension and versions (the
+#' default of each is in [sbom_formats()]: 1.6 for CycloneDX, 2.3 for SPDX 2.x):
+#'
+#' | `format`         | Output           | Extension       | Versions            |
+#' |:-----------------|:-----------------|:----------------|:--------------------|
+#' | `cyclonedx-json` | CycloneDX JSON   | `.cdx.json`     | 1.4, 1.5, 1.6, 1.7  |
+#' | `cyclonedx-xml`  | CycloneDX XML    | `.cdx.xml`      | 1.4, 1.5, 1.6, 1.7  |
+#' | `spdx-json`      | SPDX JSON        | `.spdx.json`    | 2.2, 2.3            |
+#' | `spdx-yaml`      | SPDX YAML        | `.spdx.yaml`    | 2.2, 2.3            |
+#' | `spdx-xml`       | SPDX XML         | `.spdx.xml`     | 2.2, 2.3            |
+#' | `spdx-tv`        | SPDX tag-value   | `.spdx`         | 2.2, 2.3            |
+#' | `spdx3-jsonld`   | SPDX 3 JSON-LD   | `.spdx3.jsonld` | 3.0.1               |
+#' | `swid`           | SWID tag         | `.swidtag`      | 2015                |
+#' | `csv`            | CSV inventory    | `.csv`          | none                |
+#'
+#' `format = "all"` writes the eight standard formats, each at its default
+#' version unless `version` names one it lists, into the directory `path`. The
+#' files are named after the root component, as `<name>-<version>` followed by
+#' the extension, or `<name>` alone when the root has no version. The CSV
+#' inventory is not part of `"all"`.
+#'
+#' The SWID tag names the organization that made the SBOM by its registration
+#' id (regid). [sbom_package()] and [sbom_installed()] take it from their
+#' `regid` argument, whose default is the `sbom.regid` option; without one the
+#' tag uses the placeholder `http://invalid.unavailable`.
+#'
+#' `format = "csv"` writes a component inventory for spreadsheet review. It is
+#' not an SBOM standard, is left out of `format = "all"`, and takes no
+#' `version`. In every column, a value that starts with `=`, `+`, `-`, `@`, a
+#' tab or a carriage return gets a leading apostrophe, so a spreadsheet does
+#' not evaluate it as a formula. Real names, versions, dates and identifiers
+#' never start that way, so they are unchanged. The file starts with a UTF-8
+#' byte-order mark so that spreadsheets read it as UTF-8; in R, read it with
+#' `read.csv(path, fileEncoding = "UTF-8-BOM")`.
 #' @return `path`, invisibly.
 #' @export
 #' @examples

@@ -122,7 +122,7 @@ spdx_tv_split <- function(value, n) {
 spdx_tv_read <- function(path) {
   txt <- rawToChar(readBin(path, "raw", n = file.size(path)))
   Encoding(txt) <- "UTF-8"
-  txt <- sub("^﻿", "", txt)
+  txt <- sub("^\\ufeff", "", txt)
   pairs <- spdx_tv_pairs(strsplit(txt, "\r?\n")[[1]])
   if (length(pairs) == 0L || pairs[[1]]$tag != "SPDXVersion") {
     cli::cli_abort("the first tag is not {.code SPDXVersion}", call = NULL)

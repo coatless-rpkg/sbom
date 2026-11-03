@@ -1,0 +1,2 @@
+inst/schemas/** -text
+tests/testthat/fixtures/** -text

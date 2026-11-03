@@ -45,6 +45,11 @@ format_registry <- function() {
       name = "SWID tag", writer = swid_tag, extension = ".swidtag",
       versions = "2015", default_version = "2015",
       media_type = "application/swid+xml", all = TRUE
+    ),
+    csv = list(
+      name = "CSV inventory", writer = csv_file, extension = ".csv",
+      versions = character(), default_version = NA_character_,
+      media_type = "text/csv", all = FALSE
     )
   )
 }
