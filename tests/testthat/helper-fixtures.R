@@ -1,15 +1,34 @@
-local_latin1_pkg <- function(env = parent.frame()) {
-  dir <- withr::local_tempdir(.local_envir = env)
+# Writes `lines` (UTF-8 in this file) to dir/DESCRIPTION as bytes in `encoding`.
+write_description_bytes <- function(dir, lines, encoding = "UTF-8") {
+  con <- file(file.path(dir, "DESCRIPTION"), "wb")
+  on.exit(close(con))
+  writeLines(iconv(lines, from = "UTF-8", to = encoding), con, useBytes = TRUE)
+  invisible(dir)
+}
+
+# A package whose DESCRIPTION is latin1 bytes, alone in a library (its parent
+# directory). `declare = FALSE` leaves out the Encoding field.
+local_latin1_pkg <- function(declare = TRUE, env = parent.frame()) {
+  lib <- withr::local_tempdir(.local_envir = env)
+  dir <- file.path(lib, "latin1pkg")
+  dir.create(dir)
   lines <- c(
     "Package: latin1pkg",
     "Version: 1.0",
-    "Encoding: latin1",
+    if (declare) "Encoding: latin1",
     "Maintainer: Gábor Csárdi <g@example.org>"
   )
-  con <- file(file.path(dir, "DESCRIPTION"), "wb")
-  on.exit(close(con))
-  writeLines(iconv(lines, from = "UTF-8", to = "latin1"), con, useBytes = TRUE)
+  write_description_bytes(dir, lines, "latin1")
   dir
+}
+
+# Runs the rest of the calling test with LC_CTYPE = "C", where R treats the
+# native encoding as ASCII. Skips when the platform refuses that locale.
+local_c_ctype <- function(env = parent.frame()) {
+  suppressWarnings(withr::local_locale(c(LC_CTYPE = "C"), .local_envir = env))
+  if (!identical(Sys.getlocale("LC_CTYPE"), "C")) {
+    testthat::skip("This platform refuses LC_CTYPE = C.")
+  }
 }
 
 minimal_sbom <- function() {

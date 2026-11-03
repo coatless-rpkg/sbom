@@ -93,8 +93,11 @@ document_notes <- function(x) {
   c(as.character(x$metadata$notes), unique(x$issues$message))
 }
 
+source_date_epoch <- function() Sys.getenv("SOURCE_DATE_EPOCH", unset = "")
+
+# SOURCE_DATE_EPOCH, when set, wins over `timestamp` (spec section 11).
 resolve_timestamp <- function(timestamp = NULL) {
-  epoch <- Sys.getenv("SOURCE_DATE_EPOCH", unset = "")
+  epoch <- source_date_epoch()
   if (nzchar(epoch)) {
     if (!grepl("^[0-9]+$", epoch)) {
       cli::cli_abort(
@@ -106,7 +109,12 @@ resolve_timestamp <- function(timestamp = NULL) {
   if (is.null(timestamp)) {
     timestamp <- Sys.time()
   }
-  out <- as.POSIXct(timestamp, tz = "UTC")
+  # R before 4.3 needs an origin to convert a number.
+  out <- if (is.numeric(timestamp)) {
+    as.POSIXct(timestamp, origin = "1970-01-01", tz = "UTC")
+  } else {
+    as.POSIXct(timestamp, tz = "UTC")
+  }
   attr(out, "tzone") <- "UTC"
   out
 }

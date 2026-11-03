@@ -18,18 +18,22 @@
 #' `R (>= x)` found, is used as a minimum.
 #'
 #' @param path A package directory, a `DESCRIPTION` file or a source tarball
-#'   (`.tar.gz`). A tarball is also hashed.
+#'   (`.tar.gz`). A tarball is also hashed, and its file name recorded.
 #' @param dependencies The `DESCRIPTION` fields to follow, from `"Depends"`,
 #'   `"Imports"`, `"LinkingTo"` and `"Suggests"`. Only the root's own
 #'   `Suggests` are listed, and the packages they name are not followed.
-#' @param lib Library paths to read installed packages from. When a package is
-#'   in more than one, the first path wins, as it does when R loads it.
+#' @param lib Library paths to read installed packages from. Each must exist.
+#'   When a package is in more than one, the first path wins, as it does when
+#'   R loads it.
 #' @param r_version The R version, as a string, to record exactly. `NULL`
 #'   picks it as described in Details.
 #' @param author,organization Who made the SBOM, recorded in its metadata.
+#'   `author` may name several people; `NA` and empty names are dropped.
 #'   Without either, an issue is recorded.
-#' @param timestamp The creation time. `NULL` means now, unless the
-#'   `SOURCE_DATE_EPOCH` environment variable is set.
+#' @param timestamp The creation time, as a date-time or as seconds since
+#'   1970-01-01 UTC. `NULL` means now. When the
+#'   `SOURCE_DATE_EPOCH` environment variable is set, it wins over
+#'   `timestamp`, so that builds are reproducible, and a note says so.
 #' @param overrides Values to assert where `sbom` found none, or found
 #'   something different. `NULL`, a data frame or the path to a CSV file, with
 #'   the character columns `component` (the `name` or `ref` of one
@@ -52,6 +56,7 @@ sbom_package <- function(path = ".",
                          organization = getOption("sbom.organization"),
                          timestamp = NULL, overrides = NULL) {
   dependencies <- match.arg(dependencies, several.ok = TRUE)
+  check_lib(lib)
   root_desc <- read_description(path)
   if (!"Package" %in% names(root_desc) || !nzchar(trimws(root_desc[["Package"]]))) {
     cli::cli_abort("The {.file DESCRIPTION} at {.file {path}} has no {.field Package} field.")
@@ -62,6 +67,7 @@ sbom_package <- function(path = ".",
       alg = "SHA-256", content = cli::hash_file_sha256(path), of = "source tarball",
       stringsAsFactors = FALSE
     ))
+    root$component$package_file_name <- basename(path)
   }
   inputs <- data.frame(
     kind = c("package", rep("library", length(lib))),
@@ -80,7 +86,9 @@ sbom_package <- function(path = ".",
 
 #' @rdname sbom_package
 #' @param pkgs Names of the installed packages to list. `NULL` lists every
-#'   package in `lib`. The dependencies of the listed packages are listed too.
+#'   package in `lib`, and an issue is recorded when there are none. The
+#'   dependencies of the listed packages are listed too. A name that is not
+#'   installed in `lib`, other than a base package, is an error.
 #' @param name The name of the library, used for its root component.
 #' @examples
 #' sbom_installed("sbom")
@@ -89,6 +97,7 @@ sbom_installed <- function(pkgs = NULL, lib = .libPaths(), name = "R library",
                            r_version = NULL, author = getOption("sbom.author"),
                            organization = getOption("sbom.organization"),
                            timestamp = NULL, overrides = NULL) {
+  check_lib(lib)
   db <- read_library(lib)
   base <- base_packages()
   if (is.null(pkgs)) {
@@ -96,6 +105,10 @@ sbom_installed <- function(pkgs = NULL, lib = .libPaths(), name = "R library",
     listed_base <- db$package[db$package %in% base]
   } else {
     pkgs <- unique(as.character(pkgs))
+    absent <- setdiff(pkgs, c(db$package, base))
+    if (length(absent) > 0L) {
+      cli::cli_abort("{.val {absent}} {?is/are} not installed in {.file {lib}}.")
+    }
     listed_base <- intersect(pkgs, base)
   }
   pkgs <- sort(pkgs, method = "radix")
@@ -109,6 +122,12 @@ sbom_installed <- function(pkgs = NULL, lib = .libPaths(), name = "R library",
     ),
     issues = empty_issues()
   )
+  if (nrow(db) == 0L) {
+    root$issues <- add_issue(
+      root$issues, root$component$ref, "library", "library-empty",
+      "The library sbom read holds no installed packages."
+    )
+  }
   inputs <- data.frame(
     kind = rep("library", length(lib)), path = as.character(lib),
     stringsAsFactors = FALSE
@@ -125,16 +144,28 @@ sbom_installed <- function(pkgs = NULL, lib = .libPaths(), name = "R library",
 
 installed_root_name <- function() ".sbom-library-root"
 
+# Every library path must exist. read_library() skips missing ones, which
+# would otherwise give a confident but empty SBOM.
+check_lib <- function(lib, call = parent.frame()) {
+  lib <- as.character(lib)
+  missing <- lib[is.na(lib) | !dir.exists(lib)]
+  if (length(missing) > 0L) {
+    cli::cli_abort(
+      "{cli::qty(length(missing))}The librar{?y/ies} {.file {missing}} do{?es/} not exist.",
+      call = call
+    )
+  }
+}
+
 # Shared by sbom_package() and sbom_installed(). `root` is list(component,
 # issues). For a library root, `root_desc` is a stand-in whose Imports are the
-# listed packages.
+# listed packages. They are all installed, so no issue names the stand-in.
 build_sbom <- function(root, db, root_desc, fields, root_suggests, lib,
                        r_version, author, organization, timestamp, inputs,
                        extra_base = character()) {
   root_row <- root$component
   root_is_library <- identical(root_row$ecosystem, "library")
   root_name <- root_desc[["Package"]]
-  root_label <- if (root_is_library) root_row$name else root_name
   res <- resolve_dependencies(root_desc, db, fields, root_suggests)
   edges <- res$edges
   base <- base_packages()
@@ -162,14 +193,13 @@ build_sbom <- function(root, db, root_desc, fields, root_suggests, lib,
     comps[[length(comps) + 1L]] <- row
     ref_of[[pkg]] <- row$ref
   }
-  pretty_from <- function(from) if (root_is_library && from == root_name) root_label else from
   gone <- edges[edges$to %in% res$missing, , drop = FALSE]
   gone <- gone[!duplicated(gone[c("from", "to")]), , drop = FALSE]
   for (i in seq_len(nrow(gone))) {
     issues <- add_issue(
       issues, ref_of[[gone$to[[i]]]], "dependencies", "dependency-not-installed",
       paste0(
-        gone$to[[i]], " is named as a dependency of ", pretty_from(gone$from[[i]]),
+        gone$to[[i]], " is named as a dependency of ", gone$from[[i]],
         " but is not installed in the library sbom read, so its version and ",
         "source are unknown."
       )
@@ -184,8 +214,8 @@ build_sbom <- function(root, db, root_desc, fields, root_suggests, lib,
       issues <- add_issue(
         issues, ref_of[[checked$to[[i]]]], "version", "constraint-unsatisfied",
         paste0(
-          checked$to[[i]], " ", have, " is installed, but ",
-          pretty_from(checked$from[[i]]), " requires ", checked$spec[[i]], "."
+          pkg_label(checked$to[[i]], have), " is installed, but ",
+          checked$from[[i]], " requires ", checked$spec[[i]], "."
         )
       )
     }
@@ -246,7 +276,9 @@ build_sbom <- function(root, db, root_desc, fields, root_suggests, lib,
   rownames(rels) <- NULL
 
   has_value <- function(x) !is.null(x) && length(x) == 1L && !is.na(x) && nzchar(x)
-  if (!has_value(author) && !has_value(organization)) {
+  authors <- as.character(author)
+  authors <- authors[!is.na(authors) & nzchar(trimws(authors))]
+  if (length(authors) == 0L && !has_value(organization)) {
     issues <- add_issue(
       issues, root_row$ref, "author", "no-sbom-author",
       paste0(
@@ -258,20 +290,28 @@ build_sbom <- function(root, db, root_desc, fields, root_suggests, lib,
   }
   rownames(issues) <- NULL
 
+  suggests_only <- vapply(c(res$packages, res$missing), scope_of, "") == "optional"
+  timestamp <- resolve_timestamp(timestamp)
   notes <- c(
     if (identical(r$version_is, "minimum") && !is.na(r$version)) {
       paste0("R is listed at the lowest version stated, ", r$stated_spec, ".")
     } else if (is.na(r$version)) {
       "R is listed without a version, since no minimum is stated."
     },
+    if (any(suggests_only)) {
+      "Packages listed only under Suggests are included, but their own dependencies were not read."
+    },
     "Checksums are only those of files sbom read itself, and a component without one has none on record.",
-    "Download locations are not recorded, since sbom did not look up any package repository."
+    "Download locations are not recorded, since sbom did not look up any package repository.",
+    if (nzchar(source_date_epoch())) {
+      "The timestamp comes from the SOURCE_DATE_EPOCH environment variable."
+    }
   )
   new_sbom(
     list(
       root = root_row$ref,
-      timestamp = resolve_timestamp(timestamp),
-      author = if (has_value(author)) as.character(author) else NA_character_,
+      timestamp = timestamp,
+      author = if (length(authors) > 0L) authors else NA_character_,
       organization = if (has_value(organization)) as.character(organization) else NA_character_,
       tool_version = as.character(utils::packageVersion("sbom")),
       notes = notes,

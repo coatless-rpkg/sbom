@@ -11,6 +11,9 @@
 #'   `path`.
 #' @param version Specification version. Applies to CycloneDX only; `NULL`
 #'   uses the default. With `format = "all"` it applies to the CycloneDX files.
+#'   CycloneDX 1.4 and 1.5 have no field for the organization that made the
+#'   SBOM (their `manufacture` is the maker of the described component), so
+#'   there it is written as the metadata property `sbom:organization`.
 #' @return `path`, invisibly.
 #' @export
 #' @examples

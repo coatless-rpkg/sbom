@@ -17,7 +17,10 @@ When \code{NULL}, the format is taken from the longest matching extension of
 \code{path}.}
 
 \item{version}{Specification version. Applies to CycloneDX only; \code{NULL}
-uses the default. With \code{format = "all"} it applies to the CycloneDX files.}
+uses the default. With \code{format = "all"} it applies to the CycloneDX files.
+CycloneDX 1.4 and 1.5 have no field for the organization that made the
+SBOM (their \code{manufacture} is the maker of the described component), so
+there it is written as the metadata property \code{sbom:organization}.}
 }
 \value{
 \code{path}, invisibly.

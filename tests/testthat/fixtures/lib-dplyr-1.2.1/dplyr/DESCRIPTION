@@ -1,0 +1,10 @@
+Package: dplyr
+Version: 1.2.1
+License: MIT + file LICENSE
+Maintainer: Hadley Wickham <maintainer@example.invalid>
+Depends: R (>= 4.1.0)
+Imports: cli (>= 3.6.2), generics, glue (>= 1.3.2), lifecycle (>= 1.0.5), magrittr (>= 1.5), methods, pillar (>= 1.9.0), R6, rlang (>= 1.1.7), tibble (>= 3.2.0), tidyselect (>= 1.2.0), utils, vctrs (>= 0.7.1)
+URL: https://github.com/tidyverse/dplyr
+Date/Publication: 2026-04-03 00:00:00 UTC
+Repository: CRAN
+Encoding: UTF-8

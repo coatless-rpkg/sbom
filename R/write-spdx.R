@@ -176,13 +176,12 @@ spdx_document <- function(x) {
   } else {
     "Tool: sbom"
   }
+  authors <- x$metadata$author[!is.na(x$metadata$author) & nzchar(x$metadata$author)]
   creators <- c(
     if (spdx_is_set(x$metadata$organization)) {
       paste0("Organization: ", x$metadata$organization)
     },
-    if (spdx_is_set(x$metadata$author)) {
-      paste0("Person: ", x$metadata$author)
-    },
+    if (length(authors) > 0L) paste0("Person: ", authors),
     tool
   )
   root <- comps[comps$ref == x$metadata$root, , drop = FALSE][1, ]

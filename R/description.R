@@ -4,6 +4,11 @@ dep_fields <- c("Depends", "Imports", "LinkingTo", "Suggests", "Enhances")
 # Reads a DESCRIPTION from a package directory, a DESCRIPTION file or a
 # source tarball. Returns a named character vector in UTF-8. Fields that are
 # missing stay absent; the caller decides what that means.
+#
+# read.dcf() returns the file's bytes marked as native, whatever they are, so
+# the text is decoded from those bytes and never through the locale: a
+# declared Encoding is converted from, and otherwise valid UTF-8 is marked as
+# such and anything else is read as latin1.
 read_description <- function(path) {
   file <- description_file(path)
   dcf <- tryCatch(
@@ -17,21 +22,22 @@ read_description <- function(path) {
   }
   out <- dcf[1L, ]
   encoding <- if ("Encoding" %in% names(out)) trimws(out[["Encoding"]]) else NA_character_
+  converted <- NULL
   if (!is.na(encoding) && !toupper(encoding) %in% c("UTF-8", "UTF8", "")) {
     converted <- tryCatch(
       iconv(out, from = encoding, to = "UTF-8", sub = "byte"),
       error = function(e) NULL
     )
-    if (is.null(converted)) {
-      # Unsupported Encoding value: keep valid UTF-8, read the rest as latin1.
-      bad <- !validUTF8(out)
-      converted <- out
-      converted[bad] <- iconv(out[bad], from = "latin1", to = "UTF-8")
-    }
-    out[] <- converted
   }
-  out[] <- enc2utf8(out)
-  Encoding(out) <- "UTF-8"
+  if (is.null(converted)) {
+    # UTF-8, no Encoding or an unsupported one: keep valid UTF-8, read the
+    # rest as latin1.
+    bad <- !validUTF8(out)
+    converted <- out
+    converted[bad] <- iconv(out[bad], from = "latin1", to = "UTF-8")
+  }
+  Encoding(converted) <- "UTF-8"
+  out[] <- converted
   out
 }
 

@@ -1,0 +1,9 @@
+Package: pkgconfig
+Version: 2.0.3
+License: MIT + file LICENSE
+Maintainer: Gábor Csárdi <maintainer@example.invalid>
+Imports: utils
+URL: https://github.com/r-lib/pkgconfig#readme
+Date/Publication: 2019-09-22 00:00:00 UTC
+Repository: CRAN
+Encoding: UTF-8

@@ -1,0 +1,8 @@
+Package: R6
+Version: 2.6.1
+License: MIT + file LICENSE
+Maintainer: Winston Chang <maintainer@example.invalid>
+URL: https://github.com/r-lib/R6
+Date/Publication: 2025-02-15 00:00:00 UTC
+Repository: CRAN
+Encoding: UTF-8

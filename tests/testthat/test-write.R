@@ -46,7 +46,9 @@ test_that("output is byte-identical across runs with SOURCE_DATE_EPOCH", {
     expect_false(as.raw(13) %in% raw)
     expect_equal(raw[length(raw)], as.raw(10))
   }
-  expect_match(paste(readLines(file.path(d1, "srcpkg-0.1.0.cdx.json")), collapse = ""), "2023-11-14T22:13:20Z")
+  cdx <- paste(readLines(file.path(d1, "srcpkg-0.1.0.cdx.json")), collapse = "")
+  expect_match(cdx, "2023-11-14T22:13:20Z")
+  expect_match(cdx, "The timestamp comes from the SOURCE_DATE_EPOCH environment variable.", fixed = TRUE)
 })
 
 test_that("a latin1 maintainer is written as UTF-8", {
@@ -56,6 +58,19 @@ test_that("a latin1 maintainer is written as UTF-8", {
   write_sbom(x, tf)
   txt <- readLines(tf, encoding = "UTF-8")
   expect_true(any(grepl("Gábor Csárdi", txt, fixed = TRUE)))
+})
+
+test_that("latin1 maintainers are written as UTF-8 bytes in a C locale", {
+  local_c_ctype()
+  for (declare in c(TRUE, FALSE)) {
+    x <- sbom_package(local_latin1_pkg(declare = declare), lib = local_fake_lib(list()))
+    for (ext in c(".cdx.json", ".cdx.xml", ".spdx.json")) {
+      tf <- withr::local_tempfile(fileext = ext)
+      write_sbom(x, tf)
+      raw <- readBin(tf, "raw", 1e6)
+      expect_length(grepRaw(charToRaw("Gábor Csárdi"), raw, fixed = TRUE), 1L)
+    }
+  }
 })
 
 test_that("a failing writer leaves existing files untouched and writes nothing", {

@@ -6,6 +6,11 @@ test_that("purl() builds package URLs the way R Observatory does", {
   )
   expect_equal(purl("srcpkg", "abc123", source = "github", namespace = "example"),
                "pkg:github/example/srcpkg@abc123")
+  expect_equal(
+    purl("srcpkg", "abc123", source = "github", namespace = "example",
+         repository_url = "https://github.acme.com"),
+    "pkg:github/example/srcpkg@abc123?repository_url=https://github.acme.com"
+  )
   expect_equal(purl("dplyr", NA), "pkg:cran/dplyr")
   expect_equal(purl(c("a", "b"), c("1", "2")), c("pkg:cran/a@1", "pkg:cran/b@2"))
   expect_error(purl("x", "1", source = "github"), "namespace")

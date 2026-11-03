@@ -62,6 +62,9 @@ test_that("resolve_timestamp() falls back to the argument, then the clock", {
   expect_equal(format(ts, "%Y-%m-%dT%H:%M:%SZ"), "2026-01-02T03:04:05Z")
   expect_equal(attr(ts, "tzone"), "UTC")
   expect_s3_class(resolve_timestamp(), "POSIXct")
+  # R before 4.3 needs an origin for numbers.
+  expect_equal(format(resolve_timestamp(1700000000), "%Y-%m-%dT%H:%M:%SZ"), "2023-11-14T22:13:20Z")
+  expect_equal(attr(resolve_timestamp(1700000000L), "tzone"), "UTC")
 })
 
 test_that("document_notes() appends issue sentences once each", {

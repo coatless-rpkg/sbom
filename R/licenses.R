@@ -1,12 +1,14 @@
 #' Translate a License field into an SPDX expression
 #'
 #' Looks up `License` strings from `DESCRIPTION` files in a table precomputed
-#' from R's own licence analysis (`tools::analyze_license()` and R's licence
+#' from R's own license analysis (`tools::analyze_license()` and R's license
 #' database). An expression is returned only when every alternative maps to
-#' SPDX, no alternative is `file LICENSE` alone, and no `+ file LICENSE` is
-#' attached to a licence that is not a template (MIT and BSD are templates).
-#' R expands version ranges, so `GPL (>= 2)` becomes
-#' `GPL-2.0-only OR GPL-3.0-only`.
+#' SPDX, no alternative is `file LICENSE` alone, and every `+ file LICENSE`
+#' is attached to a license that R's license database marks extensible: MIT,
+#' BSD, GPL-3, LGPL-3, AGPL-3 and the CC BY 4.0 family. So
+#' `GPL-3 + file LICENSE` becomes `GPL-3.0-only`, while
+#' `GPL-2 + file LICENSE` has no expression. R expands version ranges, so
+#' `GPL (>= 2)` becomes `GPL-2.0-only OR GPL-3.0-only`.
 #'
 #' @param x A character vector of `License` field values.
 #' @return A character vector the same length as `x`, with `NA` where there is
@@ -50,9 +52,9 @@ license_comment <- function(x) {
   out[mapped] <- paste0("Declared in DESCRIPTION as ", r$spec[mapped], ".")
   unmapped <- have & r$known & is.na(r$spdx)
   out[unmapped] <- paste0("Declared in DESCRIPTION as ", r$spec[unmapped],
-    ", which has no SPDX expression in R's licence database.")
+    ", which has no SPDX expression in R's license database.")
   unknown <- have & !r$known
   out[unknown] <- paste0("Declared in DESCRIPTION as ", r$spec[unknown],
-    ", which sbom's licence table does not cover.")
+    ", which sbom's license table does not cover.")
   out
 }

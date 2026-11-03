@@ -16,6 +16,24 @@ test_that("XML carries the same components as JSON", {
   expect_equal(length(xml2::xml_find_all(doc, "/bom/components/component")), n_json)
 })
 
+test_that("the organization is a property in 1.4 and 1.5, manufacturer later", {
+  x <- fixture_sbom()
+  meta <- function(v) {
+    doc <- xml2::read_xml(cdx_xml(x, v))
+    xml2::xml_ns_strip(doc)
+    xml2::xml_find_first(doc, "/bom/metadata")
+  }
+  for (v in c("1.4", "1.5")) {
+    m <- meta(v)
+    expect_length(xml2::xml_find_all(m, "manufacture|manufacturer"), 0L)
+    org <- xml2::xml_find_all(m, "properties/property[@name='sbom:organization']")
+    expect_equal(xml2::xml_text(org), "Test Org", label = v)
+  }
+  m <- meta("1.6")
+  expect_equal(xml2::xml_text(xml2::xml_find_all(m, "manufacturer/name")), "Test Org")
+  expect_length(xml2::xml_find_all(m, "properties/property[@name='sbom:organization']"), 0L)
+})
+
 test_that("layout: declaration on line 1, bom on line 2, trailing newline", {
   out <- cdx_xml(fixture_sbom())
   lines <- strsplit(out, "\n", fixed = TRUE)[[1]]

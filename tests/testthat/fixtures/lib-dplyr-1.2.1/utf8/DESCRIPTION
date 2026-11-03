@@ -1,0 +1,8 @@
+Package: utf8
+Version: 1.2.6
+License: Apache License (== 2.0) | file LICENSE
+Maintainer: Kirill Müller <maintainer@example.invalid>
+URL: https://github.com/krlmlr/utf8
+Date/Publication: 2025-06-08 00:00:00 UTC
+Repository: CRAN
+Encoding: UTF-8

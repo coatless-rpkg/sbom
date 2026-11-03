@@ -29,23 +29,27 @@ sbom_installed(
 }
 \arguments{
 \item{path}{A package directory, a \code{DESCRIPTION} file or a source tarball
-(\code{.tar.gz}). A tarball is also hashed.}
+(\code{.tar.gz}). A tarball is also hashed, and its file name recorded.}
 
 \item{dependencies}{The \code{DESCRIPTION} fields to follow, from \code{"Depends"},
 \code{"Imports"}, \code{"LinkingTo"} and \code{"Suggests"}. Only the root's own
 \code{Suggests} are listed, and the packages they name are not followed.}
 
-\item{lib}{Library paths to read installed packages from. When a package is
-in more than one, the first path wins, as it does when R loads it.}
+\item{lib}{Library paths to read installed packages from. Each must exist.
+When a package is in more than one, the first path wins, as it does when
+R loads it.}
 
 \item{r_version}{The R version, as a string, to record exactly. \code{NULL}
 picks it as described in Details.}
 
 \item{author, organization}{Who made the SBOM, recorded in its metadata.
+\code{author} may name several people; \code{NA} and empty names are dropped.
 Without either, an issue is recorded.}
 
-\item{timestamp}{The creation time. \code{NULL} means now, unless the
-\code{SOURCE_DATE_EPOCH} environment variable is set.}
+\item{timestamp}{The creation time, as a date-time or as seconds since
+1970-01-01 UTC. \code{NULL} means now. When the
+\code{SOURCE_DATE_EPOCH} environment variable is set, it wins over
+\code{timestamp}, so that builds are reproducible, and a note says so.}
 
 \item{overrides}{Values to assert where \code{sbom} found none, or found
 something different. \code{NULL}, a data frame or the path to a CSV file, with
@@ -59,7 +63,9 @@ Asserting \code{"version"} or \code{"purl"} changes only that field, not the \co
 An unknown component or field, or a missing column, is an error.}
 
 \item{pkgs}{Names of the installed packages to list. \code{NULL} lists every
-package in \code{lib}. The dependencies of the listed packages are listed too.}
+package in \code{lib}, and an issue is recorded when there are none. The
+dependencies of the listed packages are listed too. A name that is not
+installed in \code{lib}, other than a base package, is an error.}
 
 \item{name}{The name of the library, used for its root component.}
 }

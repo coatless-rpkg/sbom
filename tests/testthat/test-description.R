@@ -89,3 +89,38 @@ test_that("read_description() tolerates an unsupported Encoding", {
   expect_equal(d[["Title"]], "Café")
   expect_true(all(validUTF8(d)))
 })
+
+test_that("an undeclared encoding is UTF-8 when valid, otherwise latin1", {
+  d <- read_description(local_latin1_pkg(declare = FALSE))
+  expect_equal(d[["Maintainer"]], "Gábor Csárdi <g@example.org>")
+  expect_true(all(validUTF8(d)))
+  utf8 <- write_description_bytes(withr::local_tempdir(), c(
+    "Package: u", "Version: 1", "Maintainer: Gábor Csárdi <g@example.org>", "Title: Café"
+  ))
+  d <- read_description(utf8)
+  expect_equal(d[["Maintainer"]], "Gábor Csárdi <g@example.org>")
+  expect_equal(Encoding(d[["Title"]]), "UTF-8")
+})
+
+test_that("DESCRIPTION text is decoded by its bytes, not by the locale", {
+  local_c_ctype()
+  utf8 <- write_description_bytes(withr::local_tempdir(), c(
+    "Package: u", "Version: 1", "Encoding: UTF-8", "Maintainer: Gábor Csárdi <g@example.org>"
+  ))
+  bogus <- write_description_bytes(withr::local_tempdir(), c(
+    "Package: odd", "Version: 1", "Encoding: bogus", "Maintainer: Gábor Csárdi <g@example.org>"
+  ), "latin1")
+  paths <- list(
+    utf8 = utf8, latin1 = local_latin1_pkg(), undeclared = local_latin1_pkg(declare = FALSE),
+    bogus = bogus
+  )
+  for (kind in names(paths)) {
+    d <- read_description(paths[[kind]])
+    expect_equal(d[["Maintainer"]], "Gábor Csárdi <g@example.org>", label = kind)
+    expect_true(all(validUTF8(d)), label = kind)
+    expect_equal(
+      desc_maintainer(d), c(name = "Gábor Csárdi", email = "g@example.org"),
+      label = kind
+    )
+  }
+})

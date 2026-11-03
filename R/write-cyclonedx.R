@@ -110,12 +110,18 @@ cdx_component <- function(row, version, children = NULL) {
   out
 }
 
+# One entry per component whose own dependencies were read. Unknown
+# components and packages reached only through Suggests get none, since an
+# empty dependsOn would claim they have no dependencies.
 cdx_dependencies <- function(x) {
   comps <- x$components
   rel <- x$relationships
   rel <- rel[rel$field != "contains", , drop = FALSE]
+  suggests_only <- comps$scope %in% "optional" &
+    !comps$ref %in% rel$to[rel$field != "Suggests"]
   listed <- comps$is_root |
-    (comps$ref != "R" & is.na(comps$parent_ref) & comps$evidence != "unknown")
+    (comps$ref != "R" & is.na(comps$parent_ref) & comps$evidence != "unknown" &
+      !suggests_only)
   refs <- sort(comps$ref[listed], method = "radix")
   unname(lapply(refs, function(ref) {
     targets <- sort(unique(rel$to[rel$from == ref]), method = "radix")
@@ -154,19 +160,26 @@ cdx_document <- function(x, version = "1.6") {
   } else {
     list(components = list(tool))
   }
-  if (cdx_is_set(x$metadata$author)) {
-    meta$authors <- list(list(name = x$metadata$author))
+  authors <- x$metadata$author[!is.na(x$metadata$author) & nzchar(x$metadata$author)]
+  if (length(authors) > 0L) {
+    meta$authors <- unname(lapply(authors, function(a) list(name = a)))
   }
   meta$component <- build(which(is_root))
+  # In 1.4 and 1.5, `manufacture` is the maker of the described component, so
+  # the SBOM's organization goes in a property there instead.
+  props <- list()
   if (cdx_is_set(x$metadata$organization)) {
-    key <- if (version %in% c("1.4", "1.5")) "manufacture" else "manufacturer"
-    meta[[key]] <- list(name = x$metadata$organization)
+    if (version %in% c("1.4", "1.5")) {
+      props <- list(cdx_property("sbom:organization", x$metadata$organization))
+    } else {
+      meta$manufacturer <- list(name = x$metadata$organization)
+    }
   }
-  notes <- document_notes(x)
-  if (length(notes) > 0L) {
-    meta$properties <- unname(lapply(notes, function(n) {
-      cdx_property("sbom:note", n)
-    }))
+  props <- c(props, lapply(document_notes(x), function(n) {
+    cdx_property("sbom:note", n)
+  }))
+  if (length(props) > 0L) {
+    meta$properties <- unname(props)
   }
 
   list(

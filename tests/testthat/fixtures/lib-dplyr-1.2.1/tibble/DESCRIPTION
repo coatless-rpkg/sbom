@@ -1,0 +1,9 @@
+Package: tibble
+Version: 3.3.1
+License: MIT + file LICENSE
+Maintainer: Kirill Müller <maintainer@example.invalid>
+Imports: cli, lifecycle (>= 1.0.0), magrittr, methods, pillar (>= 1.8.1), pkgconfig, rlang (>= 1.0.2), utils, vctrs (>= 0.5.0)
+URL: https://github.com/tidyverse/tibble
+Date/Publication: 2026-01-11 00:00:00 UTC
+Repository: CRAN
+Encoding: UTF-8

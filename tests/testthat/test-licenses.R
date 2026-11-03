@@ -9,6 +9,11 @@ test_that("license_spdx() follows R's licence database and R Observatory's rule"
   # R's licence db marks GPL-2 as not extensible (a file may add terms) but GPL-3 as extensible.
   expect_true(is.na(license_spdx("GPL-2 + file LICENSE")))
   expect_equal(license_spdx("GPL-3 + file LICENSE"), "GPL-3.0-only")
+  # The other licences R's db marks extensible keep their expression too.
+  expect_equal(license_spdx("LGPL-3 + file LICENSE"), "LGPL-3.0-only")
+  expect_equal(license_spdx("AGPL-3 + file LICENSE"), "AGPL-3.0-only")
+  expect_equal(license_spdx("CC BY-SA 4.0 + file LICENSE"), "CC-BY-SA-4.0")
+  expect_true(is.na(license_spdx("Apache License (== 2.0) + file LICENSE")))
   expect_true(is.na(license_spdx("GPL-3 | Unlimited")))
   expect_true(is.na(license_spdx("Unlimited")))
   expect_true(is.na(license_spdx("Some Custom Licence v9")))

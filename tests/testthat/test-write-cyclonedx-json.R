@@ -18,8 +18,21 @@ test_that("version-specific metadata", {
   x <- fixture_sbom()
   expect_null(names(cdx_document(x, "1.4")$metadata$tools))
   expect_named(cdx_document(x, "1.5")$metadata$tools, "components")
-  expect_true("manufacture" %in% names(cdx_document(x, "1.5")$metadata))
-  expect_true("manufacturer" %in% names(cdx_document(x, "1.7")$metadata))
+  # 1.4 and 1.5 have no field for the SBOM's organization: their manufacture
+  # is the maker of the described component.
+  for (v in c("1.4", "1.5")) {
+    meta <- cdx_document(x, v)$metadata
+    expect_false(any(c("manufacture", "manufacturer") %in% names(meta)), label = v)
+    props <- vapply(meta$properties, `[[`, "", "name")
+    expect_equal(props[[1]], "sbom:organization", label = v)
+    expect_equal(meta$properties[[1]]$value, "Test Org", label = v)
+    expect_true(all(props[-1] == "sbom:note"), label = v)
+  }
+  for (v in c("1.6", "1.7")) {
+    meta <- cdx_document(x, v)$metadata
+    expect_equal(meta$manufacturer, list(name = "Test Org"), label = v)
+    expect_false("sbom:organization" %in% vapply(meta$properties, `[[`, "", "name"), label = v)
+  }
 })
 
 test_that("every supported version passes its schema", {
@@ -67,6 +80,28 @@ test_that("licences, platform type, part-of and dependencies follow the rulings"
 
 test_that("an empty dependsOn is an empty array and bad versions abort", {
   x <- fixture_sbom()
-  expect_match(cdx_json(x), "\"ref\": \"pkg:cran/suggestpkg@2.0.0\",\n\\s+\"dependsOn\": \\[\\]")
+  expect_match(cdx_json(x), "\"ref\": \"local/localpkg\",\n\\s+\"dependsOn\": \\[\\]")
   expect_error(cdx_document(x, "2.0"), "version")
+})
+
+test_that("a package reached only through Suggests gets no dependencies entry", {
+  note <- "Packages listed only under Suggests are included, but their own dependencies were not read."
+  d <- cdx_document(fixture_sbom())
+  refs <- vapply(d$dependencies, `[[`, "", "ref")
+  expect_false("pkg:cran/suggestpkg@2.0.0" %in% refs)
+  root <- d$dependencies[[which(refs == "local/srcpkg")]]
+  expect_true("pkg:cran/suggestpkg@2.0.0" %in% unlist(root$dependsOn))
+  notes <- Filter(function(p) p$name == "sbom:note", d$metadata$properties)
+  expect_true(note %in% vapply(notes, `[[`, "", "value"))
+
+  # Suggested and also required: its dependencies were read, so it is listed.
+  lib <- local_fake_lib(list(
+    b = c(Version = "1", Repository = "CRAN", Imports = "s"),
+    s = c(Version = "1", Repository = "CRAN")
+  ))
+  top <- withr::local_tempdir()
+  writeLines(c("Package: top", "Version: 1", "Imports: b", "Suggests: s"), file.path(top, "DESCRIPTION"))
+  x <- sbom_package(top, lib = lib)
+  expect_true("pkg:cran/s@1" %in% vapply(cdx_document(x)$dependencies, `[[`, "", "ref"))
+  expect_false(note %in% x$metadata$notes)
 })

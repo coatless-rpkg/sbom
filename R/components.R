@@ -46,6 +46,11 @@ component_row <- function(...) {
   out[component_columns()]
 }
 
+# "name version" for issue messages, or the name alone without a version.
+pkg_label <- function(name, version) {
+  ifelse(is.na(version), name, paste(name, version))
+}
+
 desc_field <- function(desc, field) {
   if (field %in% names(desc) && !is.na(desc[[field]]) && nzchar(trimws(desc[[field]]))) {
     trimws(desc[[field]])
@@ -69,7 +74,24 @@ github_repo_url <- function(text) {
   sub("\\.git$", "", m)
 }
 
+# The host of a GitHub Enterprise server named by RemoteHost, or NA for
+# github.com. remotes records the API address, such as
+# https://github.acme.com/api/v3, so the scheme and API path are dropped.
+github_enterprise_host <- function(remote_host) {
+  if (is.na(remote_host)) {
+    return(NA_character_)
+  }
+  host <- sub("^[A-Za-z][A-Za-z0-9+.-]*://", "", remote_host)
+  host <- sub("/api(/v3)?$", "", sub("/+$", "", host))
+  if (!nzchar(host) || tolower(host) %in% c("api.github.com", "github.com")) {
+    return(NA_character_)
+  }
+  host
+}
+
 # Ecosystem, purl, supplier and homepage, by the first rule that matches.
+# `purl_inferred` is TRUE when the purl assumes a CRAN package of that name
+# because no repository URL was recorded.
 package_ecosystem <- function(desc) {
   f <- function(field) desc_field(desc, field)
   name <- f("Package")
@@ -77,9 +99,10 @@ package_ecosystem <- function(desc) {
   repository <- f("Repository")
   result <- function(ecosystem, purl, supplier_name = NA_character_,
                      supplier_url = NA_character_, homepage = NA_character_,
-                     bioc_release = NA_character_) {
+                     bioc_release = NA_character_, purl_inferred = FALSE) {
     list(ecosystem = ecosystem, purl = purl, supplier_name = supplier_name,
-      supplier_url = supplier_url, homepage = homepage, bioc_release = bioc_release)
+      supplier_url = supplier_url, homepage = homepage, bioc_release = bioc_release,
+      purl_inferred = purl_inferred)
   }
   git_url <- f("git_url")
 
@@ -101,13 +124,16 @@ package_ecosystem <- function(desc) {
   if (identical(f("RemoteType"), "github")) {
     user <- f("RemoteUsername")
     repo <- f("RemoteRepo")
+    host <- github_enterprise_host(f("RemoteHost"))
+    site <- if (is.na(host)) "https://github.com" else paste0("https://", host)
     url <- if (is.na(user) || is.na(repo)) {
       NA_character_
     } else {
-      paste0("https://github.com/", user, "/", repo)
+      paste0(site, "/", user, "/", repo)
     }
-    return(result("github", purl(repo, f("RemoteSha"), "github", user),
-      "GitHub", url, url))
+    id <- purl(repo, f("RemoteSha"), "github", user,
+      repository_url = if (is.na(host)) NULL else site)
+    return(result("github", id, if (is.na(host)) "GitHub" else host, url, url))
   }
   if (!is.na(repository)) {
     remote <- f("RemoteRepos")
@@ -120,7 +146,7 @@ package_ecosystem <- function(desc) {
     }
     supplier <- if (identical(repository, "RSPM")) "Posit Package Manager" else repository
     return(result("repository", purl(name, version, repository_url = repo_url),
-      supplier, remote))
+      supplier, remote, purl_inferred = is.null(repo_url)))
   }
   result("local", NA_character_)
 }
@@ -153,6 +179,8 @@ package_component <- function(desc, evidence, source_input, is_root = FALSE,
   )))
 
   spdx <- if (is.na(license)) NA_character_ else license_spdx(license)
+  # Only repositories name their files <name>_<version>.tar.gz.
+  has_file_name <- eco$ecosystem %in% c("cran", "bioconductor", "repository") && !is.na(version)
   component <- component_row(
     ref = ref, name = name, version = version, version_is = "exact",
     type = "library", ecosystem = eco$ecosystem, is_root = is_root,
@@ -163,14 +191,18 @@ package_component <- function(desc, evidence, source_input, is_root = FALSE,
     license_comment = if (is.na(license)) NA_character_ else license_comment(license),
     published = if (is.na(published)) NA_character_ else substr(published, 1L, 10L),
     homepage = eco$homepage, vcs_url = vcs_url,
-    package_file_name = paste0(name, "_", version, ".tar.gz"),
+    package_file_name = if (has_file_name) paste0(name, "_", version, ".tar.gz") else NA_character_,
     doi = if (eco$ecosystem == "cran") cran_doi(name) else NA_character_,
     bioc_release = eco$bioc_release, evidence = evidence,
     source_input = source_input, deps = deps
   )
 
-  label <- paste(name, version)
+  label <- pkg_label(name, version)
   issues <- empty_issues()
+  if (is.na(version)) {
+    issues <- add_issue(issues, ref, "version", "version-missing",
+      paste0(name, " declares no version."))
+  }
   if (is.na(license)) {
     issues <- add_issue(issues, ref, "license", "license-missing",
       paste0(label, " declares no licence."))
@@ -182,6 +214,11 @@ package_component <- function(desc, evidence, source_input, is_root = FALSE,
   if (eco$ecosystem == "local") {
     issues <- add_issue(issues, ref, "supplier", "supplier-unknown",
       paste0(label, " was installed from a local source, so it has no supplier on record."))
+  }
+  if (isTRUE(eco$purl_inferred)) {
+    issues <- add_issue(issues, ref, "purl", "purl-inferred",
+      paste0(label, " came from ", eco$supplier_name, " without a recorded repository URL, ",
+        "so its package URL assumes it is the CRAN package of that name."))
   }
   if (is.na(maintainer)) {
     issues <- add_issue(issues, ref, "maintainer", "maintainer-missing",

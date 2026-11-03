@@ -94,8 +94,8 @@ xml_metadata <- function(bom, meta) {
     })
   }
   xml_component(node, meta$component)
-  for (key in intersect(c("manufacture", "manufacturer"), names(meta))) {
-    xml_element(node, key, meta[[key]])
+  if (!is.null(meta$manufacturer)) {
+    xml_element(node, "manufacturer", meta$manufacturer)
   }
   if (!is.null(meta$properties)) xml_properties(node, meta$properties)
   invisible(node)

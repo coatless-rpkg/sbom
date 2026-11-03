@@ -10,12 +10,17 @@ test_that("sbom_package() builds the fixture tree", {
   expect_true(any(rel$field == "LinkingTo"))
   expect_true(all(c("R/utils", "R/methods") %in% rel$to[rel$field == "contains"]))
   expect_false(any(grepl("deeppkg", c(comps$ref, sbom_issues(x)$message))))
+  expect_true(
+    "Packages listed only under Suggests are included, but their own dependencies were not read." %in%
+      x$metadata$notes
+  )
 })
 
 test_that("dropping Suggests drops suggested packages", {
   x <- sbom_package(test_path("fixtures/pkgs/srcpkg"), dependencies = c("Depends", "Imports", "LinkingTo"),
                     lib = fixture_lib())
   expect_false("pkg:cran/suggestpkg@2.0.0" %in% sbom_components(x)$ref)
+  expect_false(any(grepl("Suggests", x$metadata$notes)))
 })
 
 test_that("missing and unsatisfied dependencies become issues", {
@@ -68,10 +73,11 @@ test_that("the same tree built from two libraries is identical, with no paths in
 })
 
 test_that("metadata records the author, notes, and the missing-author issue", {
+  withr::local_envvar(SOURCE_DATE_EPOCH = NA)
   x <- fixture_sbom()
   expect_equal(x$metadata$author, "Test Author")
   expect_equal(x$metadata$notes[[1]], "R is listed at the lowest version stated, R (>= 4.1.0).")
-  expect_length(x$metadata$notes, 3)
+  expect_length(x$metadata$notes, 4)
   expect_false("no-sbom-author" %in% sbom_issues(x)$code)
   y <- sbom_package(test_path("fixtures/pkgs/srcpkg"), lib = fixture_lib())
   iss <- sbom_issues(y)
@@ -100,15 +106,15 @@ test_that("a missing suggested package is an optional unknown component", {
   expect_equal(comps$scope[comps$ref == "unknown/nothere"], "optional")
 })
 
-test_that("sbom_installed() handles explicit, unknown and base packages", {
+test_that("sbom_installed() handles explicit, missing-dependency and base packages", {
   lib <- fixture_lib()
-  x <- sbom_installed(c("suggestpkg", "zzz"), lib = lib, name = "mylib")
+  x <- sbom_installed("suggestpkg", lib = lib, name = "mylib")
   comps <- sbom_components(x)
   expect_equal(comps$name[comps$is_root], "mylib")
-  expect_true(all(c("unknown/zzz", "unknown/deeppkg") %in% comps$ref))
+  expect_true("unknown/deeppkg" %in% comps$ref)
   expect_false("pkg:cran/cranpkg@1.2.0" %in% comps$ref)
   iss <- sbom_issues(x)
-  expect_true("zzz is named as a dependency of mylib but is not installed in the library sbom read, so its version and source are unknown." %in% iss$message)
+  expect_true("deeppkg is named as a dependency of suggestpkg but is not installed in the library sbom read, so its version and source are unknown." %in% iss$message)
   base_lib <- local_fake_lib(list(utils = c(Version = "4.6.2", Priority = "base"),
                                   other = c(Version = "1.0", Repository = "CRAN")))
   y <- sbom_installed(lib = base_lib)
@@ -133,4 +139,113 @@ test_that("explicit pkgs list only the base packages they reach", {
   # pkgs = NULL lists every base package found in lib.
   all <- sbom_components(sbom_installed(lib = lib))$ref
   expect_true(all(c("R/utils", "R/stats") %in% all))
+})
+
+test_that("an undeclared latin1 DESCRIPTION builds, with a UTF-8 maintainer", {
+  pkg <- local_latin1_pkg(declare = FALSE)
+  x <- sbom_package(pkg, lib = local_fake_lib(list()))
+  y <- sbom_installed(lib = dirname(pkg))
+  for (s in list(x, y)) {
+    comps <- sbom_components(s)
+    maintainer <- comps$maintainer[comps$name == "latin1pkg"]
+    expect_equal(maintainer, "Gábor Csárdi")
+    expect_true(validUTF8(maintainer))
+    expect_true(validUTF8(cdx_json(s)))
+  }
+})
+
+test_that("explicit pkgs that are not installed are an error", {
+  lib <- fixture_lib()
+  err <- expect_error(sbom_installed(c("suggestpkg", "zzz", "yyy"), lib = lib))
+  expect_match(conditionMessage(err), "zzz")
+  expect_match(conditionMessage(err), "yyy")
+  expect_match(conditionMessage(err), "not installed in")
+  expect_false(grepl("suggestpkg", conditionMessage(err)))
+  # Base packages need not be in lib.
+  expect_true("R/stats" %in% sbom_components(sbom_installed(c("suggestpkg", "stats"), lib = lib))$ref)
+})
+
+test_that("a library path that does not exist is an error", {
+  nope <- file.path(withr::local_tempdir(), "nope")
+  expect_error(sbom_installed(lib = nope), "nope")
+  expect_error(sbom_installed(lib = c(fixture_lib(), nope)), "does not exist")
+  expect_error(sbom_package(test_path("fixtures/pkgs/srcpkg"), lib = nope), "does not exist")
+})
+
+test_that("a library with no packages is recorded as an issue", {
+  x <- sbom_installed(lib = withr::local_tempdir())
+  iss <- sbom_issues(x)
+  row <- iss[iss$code == "library-empty", , drop = FALSE]
+  expect_equal(nrow(row), 1L)
+  expect_equal(row$severity, "warning")
+  expect_equal(row$ref, "r-library")
+  expect_equal(row$field, "library")
+  expect_equal(row$message, "The library sbom read holds no installed packages.")
+  expect_false("library-empty" %in% sbom_issues(sbom_installed(lib = fixture_lib()))$code)
+})
+
+test_that("SOURCE_DATE_EPOCH wins over the timestamp argument, and a note says so", {
+  note <- "The timestamp comes from the SOURCE_DATE_EPOCH environment variable."
+  withr::local_envvar(SOURCE_DATE_EPOCH = "1700000000")
+  x <- fixture_sbom()
+  expect_equal(format_timestamp(x$metadata$timestamp), "2023-11-14T22:13:20Z")
+  expect_true(note %in% x$metadata$notes)
+  expect_true(note %in% sbom_installed(lib = fixture_lib())$metadata$notes)
+  withr::local_envvar(SOURCE_DATE_EPOCH = NA)
+  y <- fixture_sbom()
+  expect_equal(format_timestamp(y$metadata$timestamp), "2026-11-04T00:00:00Z")
+  expect_false(note %in% y$metadata$notes)
+})
+
+test_that("a root without Version gets no invented version or file name", {
+  tmp <- withr::local_tempdir()
+  writeLines("Package: myanalysis", file.path(tmp, "DESCRIPTION"))
+  x <- sbom_package(tmp, lib = fixture_lib())
+  iss <- sbom_issues(x)
+  expect_false(any(grepl("\\bNA\\b", iss$message)))
+  expect_true("myanalysis declares no version." %in% iss$message)
+  root <- Find(function(p) p$SPDXID == "SPDXRef-local-myanalysis", spdx_document(x)$packages)
+  expect_null(root$packageFileName)
+  expect_false(grepl("_NA", spdx_json(x), fixed = TRUE))
+})
+
+test_that("a tarball root records the tarball's own file name", {
+  tmp <- withr::local_tempdir()
+  tarball <- file.path(tmp, "build-output.tar.gz")
+  withr::with_dir(test_path("fixtures/pkgs"), utils::tar(tarball, "srcpkg", compression = "gzip"))
+  x <- sbom_package(tarball, lib = fixture_lib())
+  comps <- sbom_components(x)
+  expect_equal(comps$package_file_name[comps$is_root], "build-output.tar.gz")
+  y <- sbom_package(test_path("fixtures/pkgs/srcpkg"), lib = fixture_lib())
+  expect_true(is.na(sbom_components(y)$package_file_name[sbom_components(y)$is_root]))
+})
+
+test_that("author takes several people and drops NA and empty ones", {
+  build <- function(author, organization = NULL) {
+    sbom_package(test_path("fixtures/pkgs/srcpkg"), lib = fixture_lib(),
+                 author = author, organization = organization)
+  }
+  x <- build(c("Ada Lovelace", NA, "", "Grace Hopper"))
+  expect_equal(x$metadata$author, c("Ada Lovelace", "Grace Hopper"))
+  expect_false("no-sbom-author" %in% sbom_issues(x)$code)
+  expect_equal(cdx_document(x)$metadata$authors,
+               list(list(name = "Ada Lovelace"), list(name = "Grace Hopper")))
+  creators <- unlist(spdx_document(x)$creationInfo$creators)
+  expect_equal(creators[startsWith(creators, "Person: ")],
+               c("Person: Ada Lovelace", "Person: Grace Hopper"))
+  doc <- xml2::read_xml(cdx_xml(x))
+  xml2::xml_ns_strip(doc)
+  expect_equal(xml2::xml_text(xml2::xml_find_all(doc, "/bom/metadata/authors/author/name")),
+               c("Ada Lovelace", "Grace Hopper"))
+
+  y <- build(c(NA, ""))
+  expect_true(is.na(y$metadata$author))
+  expect_true("no-sbom-author" %in% sbom_issues(y)$code)
+  expect_false("no-sbom-author" %in% sbom_issues(build(c(NA, ""), "Org"))$code)
+})
+
+test_that("a numeric timestamp is seconds since 1970-01-01 UTC", {
+  withr::local_envvar(SOURCE_DATE_EPOCH = NA)
+  x <- sbom_package(test_path("fixtures/pkgs/srcpkg"), lib = fixture_lib(), timestamp = 1700000000)
+  expect_equal(format_timestamp(x$metadata$timestamp), "2023-11-14T22:13:20Z")
 })

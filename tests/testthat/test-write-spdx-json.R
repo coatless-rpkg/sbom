@@ -18,6 +18,9 @@ test_that("the SPDX document follows R Observatory's layout and passes its schem
   expect_equal(local$licenseDeclared, "NOASSERTION")
   sug <- Filter(function(r) r$relationshipType == "OPTIONAL_DEPENDENCY_OF", d$relationships)
   expect_equal(sug[[1]]$spdxElementId, "SPDXRef-cran-suggestpkg")
+  # Its own dependencies were not read, so no other relationship starts there.
+  from_sug <- Filter(function(r) r$spdxElementId == "SPDXRef-cran-suggestpkg", d$relationships)
+  expect_equal(vapply(from_sug, `[[`, "", "relationshipType"), "OPTIONAL_DEPENDENCY_OF")
   tf <- withr::local_tempfile(fileext = ".spdx.json")
   writeLines(spdx_json(x), tf, sep = "")
   expect_equal(schema_validate(tf, "spdx-json")$status, "pass")

@@ -10,9 +10,8 @@ Roxygen: list(markdown = TRUE)
 Depends:
     R (>= 4.1.0)
 Imports:
-    cli,
+    cli (>= 3.6.0),
     jsonlite,
-    tools,
     utils,
     xml2
 Suggests:

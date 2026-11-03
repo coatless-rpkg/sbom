@@ -1,0 +1,8 @@
+Package: magrittr
+Version: 2.0.5
+License: MIT + file LICENSE
+Maintainer: Lionel Henry <maintainer@example.invalid>
+URL: https://github.com/tidyverse/magrittr
+Date/Publication: 2026-04-04 00:00:00 UTC
+Repository: CRAN
+Encoding: UTF-8

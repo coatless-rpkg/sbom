@@ -15,7 +15,7 @@
 #'   `"github"`.
 #' @param repository_url Optional repository URL, written unencoded as a
 #'   `repository_url` qualifier. Use this for packages from repositories other
-#'   than CRAN, such as Bioconductor.
+#'   than CRAN, such as Bioconductor, or from a GitHub Enterprise server.
 #' @param pkg Package names, as a character vector.
 #'
 #' @return A character vector. `purl()` recycles `name`, `version`,

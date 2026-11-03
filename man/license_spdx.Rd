@@ -15,12 +15,14 @@ no SPDX expression.
 }
 \description{
 Looks up \code{License} strings from \code{DESCRIPTION} files in a table precomputed
-from R's own licence analysis (\code{tools::analyze_license()} and R's licence
+from R's own license analysis (\code{tools::analyze_license()} and R's license
 database). An expression is returned only when every alternative maps to
-SPDX, no alternative is \verb{file LICENSE} alone, and no \verb{+ file LICENSE} is
-attached to a licence that is not a template (MIT and BSD are templates).
-R expands version ranges, so \verb{GPL (>= 2)} becomes
-\verb{GPL-2.0-only OR GPL-3.0-only}.
+SPDX, no alternative is \verb{file LICENSE} alone, and every \verb{+ file LICENSE}
+is attached to a license that R's license database marks extensible: MIT,
+BSD, GPL-3, LGPL-3, AGPL-3 and the CC BY 4.0 family. So
+\verb{GPL-3 + file LICENSE} becomes \code{GPL-3.0-only}, while
+\verb{GPL-2 + file LICENSE} has no expression. R expands version ranges, so
+\verb{GPL (>= 2)} becomes \verb{GPL-2.0-only OR GPL-3.0-only}.
 }
 \examples{
 license_spdx(c("MIT + file LICENSE", "GPL (>= 2)", "file LICENSE"))

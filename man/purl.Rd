@@ -28,7 +28,7 @@ version.}
 
 \item{repository_url}{Optional repository URL, written unencoded as a
 \code{repository_url} qualifier. Use this for packages from repositories other
-than CRAN, such as Bioconductor.}
+than CRAN, such as Bioconductor, or from a GitHub Enterprise server.}
 
 \item{pkg}{Package names, as a character vector.}
 }
