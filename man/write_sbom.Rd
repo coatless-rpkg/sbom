@@ -16,8 +16,11 @@ missing).}
 When \code{NULL}, the format is taken from the longest matching extension of
 \code{path}.}
 
-\item{version}{Specification version. Applies to CycloneDX only; \code{NULL}
-uses the default. With \code{format = "all"} it applies to the CycloneDX files.
+\item{version}{Specification version. It applies to every format being
+written whose versions (see \code{\link[=sbom_formats]{sbom_formats()}}) include it; the others use
+their default, so \code{format = "all"} with \code{version = "2.2"} writes SPDX 2.2
+and the default of each other format. It is an error when no format being
+written lists the version. \code{NULL} uses each format's default.
 CycloneDX 1.4 and 1.5 have no field for the organization that made the
 SBOM (their \code{manufacture} is the maker of the described component), so
 there it is written as the metadata property \code{sbom:organization}.}

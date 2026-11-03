@@ -66,7 +66,8 @@ minimal_sbom <- function() {
       organization = NA_character_,
       tool_version = as.character(utils::packageVersion("sbom")),
       notes = character(),
-      inputs = data.frame(kind = character(), path = character())
+      inputs = data.frame(kind = character(), path = character()),
+      regid = NA_character_
     ),
     rows, rels, empty_issues()
   )

@@ -1,0 +1,498 @@
+SPDXVersion: SPDX-2.3
+DataLicense: CC0-1.0
+SPDXID: SPDXRef-DOCUMENT
+DocumentName: dplyr-1.2.1
+DocumentNamespace: https://r-observatory.thecoatlessprofessor.com/spdx/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a
+DocumentComment: <text>Each dependency is at its current release on 2026-10-20, the release an install gets that day. Built by R Observatory from CRAN's own records, data release v2026-10-20, not by the package's maintainer. R is listed at the lowest version stated, R (>= 4.1.0). Checksums are only those CRAN and Bioconductor listed, and a component without one has none on record. Advisories are those OSV lists for these exact versions. Page https://r-observatory.thecoatlessprofessor.com/cran/dplyr/sbom</text>
+
+## Creation Information
+Creator: Organization: R Observatory
+Creator: Tool: R Observatory
+Created: 2026-10-20T20:28:02Z
+CreatorComment: <text>Built by R Observatory from CRAN's own records, data release v2026-10-20, not by the package's maintainer.</text>
+
+## Package Information
+PackageName: dplyr
+SPDXID: SPDXRef-cran-dplyr
+PackageVersion: 1.2.1
+PackageFileName: dplyr_1.2.1.tar.gz
+PackageSupplier: Organization: CRAN
+PackageOriginator: Person: Hadley Wickham
+PackageDownloadLocation: https://cran.r-project.org/src/contrib/dplyr_1.2.1.tar.gz
+FilesAnalyzed: false
+PackageChecksum: MD5: 1c6ba2499c7a08d081bdb530423ab22c
+PackageHomePage: https://cran.r-project.org/package=dplyr
+PackageSourceInfo: <text>Source repository https://github.com/tidyverse/dplyr</text>
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: MIT
+PackageLicenseComments: <text>Declared in DESCRIPTION as MIT + file LICENSE.</text>
+PackageCopyrightText: NOASSERTION
+PackageComment: <text>Maintainer Hadley Wickham. Published 2026-04-03.</text>
+ExternalRef: PACKAGE-MANAGER purl pkg:cran/dplyr@1.2.1
+ExternalRef: OTHER vcs https://github.com/tidyverse/dplyr
+PrimaryPackagePurpose: LIBRARY
+
+## Package Information
+PackageName: cli
+SPDXID: SPDXRef-cran-cli
+PackageVersion: 3.6.6
+PackageFileName: cli_3.6.6.tar.gz
+PackageSupplier: Organization: CRAN
+PackageOriginator: Person: Gábor Csárdi
+PackageDownloadLocation: https://cran.r-project.org/src/contrib/cli_3.6.6.tar.gz
+FilesAnalyzed: false
+PackageChecksum: MD5: eedc08ba864ae6cd640b05eff1a607ee
+PackageHomePage: https://cran.r-project.org/package=cli
+PackageSourceInfo: <text>Source repository https://github.com/r-lib/cli</text>
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: MIT
+PackageLicenseComments: <text>Declared in DESCRIPTION as MIT + file LICENSE.</text>
+PackageCopyrightText: NOASSERTION
+PackageComment: <text>Maintainer Gábor Csárdi. Published 2026-04-09.</text>
+ExternalRef: PACKAGE-MANAGER purl pkg:cran/cli@3.6.6
+ExternalRef: OTHER vcs https://github.com/r-lib/cli
+PrimaryPackagePurpose: LIBRARY
+
+## Package Information
+PackageName: generics
+SPDXID: SPDXRef-cran-generics
+PackageVersion: 0.1.4
+PackageFileName: generics_0.1.4.tar.gz
+PackageSupplier: Organization: CRAN
+PackageOriginator: Person: Hadley Wickham
+PackageDownloadLocation: https://cran.r-project.org/src/contrib/generics_0.1.4.tar.gz
+FilesAnalyzed: false
+PackageChecksum: MD5: dda54b65216fe3c53571d2adaddc7461
+PackageHomePage: https://cran.r-project.org/package=generics
+PackageSourceInfo: <text>Source repository https://github.com/r-lib/generics</text>
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: MIT
+PackageLicenseComments: <text>Declared in DESCRIPTION as MIT + file LICENSE.</text>
+PackageCopyrightText: NOASSERTION
+PackageComment: <text>Maintainer Hadley Wickham. Published 2025-05-10.</text>
+ExternalRef: PACKAGE-MANAGER purl pkg:cran/generics@0.1.4
+ExternalRef: OTHER vcs https://github.com/r-lib/generics
+PrimaryPackagePurpose: LIBRARY
+
+## Package Information
+PackageName: glue
+SPDXID: SPDXRef-cran-glue
+PackageVersion: 1.8.1
+PackageFileName: glue_1.8.1.tar.gz
+PackageSupplier: Organization: CRAN
+PackageOriginator: Person: Jennifer Bryan
+PackageDownloadLocation: https://cran.r-project.org/src/contrib/glue_1.8.1.tar.gz
+FilesAnalyzed: false
+PackageChecksum: MD5: 24e3cd382f52015c929538a5208d11aa
+PackageHomePage: https://cran.r-project.org/package=glue
+PackageSourceInfo: <text>Source repository https://github.com/tidyverse/glue</text>
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: MIT
+PackageLicenseComments: <text>Declared in DESCRIPTION as MIT + file LICENSE.</text>
+PackageCopyrightText: NOASSERTION
+PackageComment: <text>Maintainer Jennifer Bryan. Published 2026-04-17.</text>
+ExternalRef: PACKAGE-MANAGER purl pkg:cran/glue@1.8.1
+ExternalRef: OTHER vcs https://github.com/tidyverse/glue
+PrimaryPackagePurpose: LIBRARY
+
+## Package Information
+PackageName: lifecycle
+SPDXID: SPDXRef-cran-lifecycle
+PackageVersion: 1.0.5
+PackageFileName: lifecycle_1.0.5.tar.gz
+PackageSupplier: Organization: CRAN
+PackageOriginator: Person: Lionel Henry
+PackageDownloadLocation: https://cran.r-project.org/src/contrib/lifecycle_1.0.5.tar.gz
+FilesAnalyzed: false
+PackageChecksum: MD5: bce35a7a89fe4108f262db3e441cccae
+PackageHomePage: https://cran.r-project.org/package=lifecycle
+PackageSourceInfo: <text>Source repository https://github.com/r-lib/lifecycle</text>
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: MIT
+PackageLicenseComments: <text>Declared in DESCRIPTION as MIT + file LICENSE.</text>
+PackageCopyrightText: NOASSERTION
+PackageComment: <text>Maintainer Lionel Henry. Published 2026-01-08.</text>
+ExternalRef: PACKAGE-MANAGER purl pkg:cran/lifecycle@1.0.5
+ExternalRef: OTHER vcs https://github.com/r-lib/lifecycle
+PrimaryPackagePurpose: LIBRARY
+
+## Package Information
+PackageName: magrittr
+SPDXID: SPDXRef-cran-magrittr
+PackageVersion: 2.0.5
+PackageFileName: magrittr_2.0.5.tar.gz
+PackageSupplier: Organization: CRAN
+PackageOriginator: Person: Lionel Henry
+PackageDownloadLocation: https://cran.r-project.org/src/contrib/magrittr_2.0.5.tar.gz
+FilesAnalyzed: false
+PackageChecksum: MD5: 4ee23a88bc1589527696d777d7e68dfc
+PackageHomePage: https://cran.r-project.org/package=magrittr
+PackageSourceInfo: <text>Source repository https://github.com/tidyverse/magrittr</text>
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: MIT
+PackageLicenseComments: <text>Declared in DESCRIPTION as MIT + file LICENSE.</text>
+PackageCopyrightText: NOASSERTION
+PackageComment: <text>Maintainer Lionel Henry. Published 2026-04-04.</text>
+ExternalRef: PACKAGE-MANAGER purl pkg:cran/magrittr@2.0.5
+ExternalRef: OTHER vcs https://github.com/tidyverse/magrittr
+PrimaryPackagePurpose: LIBRARY
+
+## Package Information
+PackageName: pillar
+SPDXID: SPDXRef-cran-pillar
+PackageVersion: 1.11.1
+PackageFileName: pillar_1.11.1.tar.gz
+PackageSupplier: Organization: CRAN
+PackageOriginator: Person: Kirill Müller
+PackageDownloadLocation: https://cran.r-project.org/src/contrib/pillar_1.11.1.tar.gz
+FilesAnalyzed: false
+PackageChecksum: MD5: eb84af558b1ac0d743a4790e99acad6e
+PackageHomePage: https://cran.r-project.org/package=pillar
+PackageSourceInfo: <text>Source repository https://github.com/r-lib/pillar</text>
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: MIT
+PackageLicenseComments: <text>Declared in DESCRIPTION as MIT + file LICENSE.</text>
+PackageCopyrightText: NOASSERTION
+PackageComment: <text>Maintainer Kirill Müller. Published 2025-09-17.</text>
+ExternalRef: PACKAGE-MANAGER purl pkg:cran/pillar@1.11.1
+ExternalRef: OTHER vcs https://github.com/r-lib/pillar
+PrimaryPackagePurpose: LIBRARY
+
+## Package Information
+PackageName: R6
+SPDXID: SPDXRef-cran-R6
+PackageVersion: 2.6.1
+PackageFileName: R6_2.6.1.tar.gz
+PackageSupplier: Organization: CRAN
+PackageOriginator: Person: Winston Chang
+PackageDownloadLocation: https://cran.r-project.org/src/contrib/R6_2.6.1.tar.gz
+FilesAnalyzed: false
+PackageChecksum: MD5: f01b1787f12797c29194d63c9afd5d70
+PackageHomePage: https://cran.r-project.org/package=R6
+PackageSourceInfo: <text>Source repository https://github.com/r-lib/R6</text>
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: MIT
+PackageLicenseComments: <text>Declared in DESCRIPTION as MIT + file LICENSE.</text>
+PackageCopyrightText: NOASSERTION
+PackageComment: <text>Maintainer Winston Chang. Published 2025-02-15.</text>
+ExternalRef: PACKAGE-MANAGER purl pkg:cran/R6@2.6.1
+ExternalRef: OTHER vcs https://github.com/r-lib/R6
+PrimaryPackagePurpose: LIBRARY
+
+## Package Information
+PackageName: rlang
+SPDXID: SPDXRef-cran-rlang
+PackageVersion: 1.3.0
+PackageFileName: rlang_1.3.0.tar.gz
+PackageSupplier: Organization: CRAN
+PackageOriginator: Person: Lionel Henry
+PackageDownloadLocation: https://cran.r-project.org/src/contrib/rlang_1.3.0.tar.gz
+FilesAnalyzed: false
+PackageChecksum: MD5: b52c165e43f4d7fe5cfa15c5c9467ff4
+PackageHomePage: https://cran.r-project.org/package=rlang
+PackageSourceInfo: <text>Source repository https://github.com/r-lib/rlang</text>
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: MIT
+PackageLicenseComments: <text>Declared in DESCRIPTION as MIT + file LICENSE.</text>
+PackageCopyrightText: NOASSERTION
+PackageComment: <text>Maintainer Lionel Henry. Published 2026-07-05.</text>
+ExternalRef: PACKAGE-MANAGER purl pkg:cran/rlang@1.3.0
+ExternalRef: OTHER vcs https://github.com/r-lib/rlang
+PrimaryPackagePurpose: LIBRARY
+
+## Package Information
+PackageName: tibble
+SPDXID: SPDXRef-cran-tibble
+PackageVersion: 3.3.1
+PackageFileName: tibble_3.3.1.tar.gz
+PackageSupplier: Organization: CRAN
+PackageOriginator: Person: Kirill Müller
+PackageDownloadLocation: https://cran.r-project.org/src/contrib/tibble_3.3.1.tar.gz
+FilesAnalyzed: false
+PackageChecksum: MD5: 97ff25ebdd1460ec152d48e9bb54fa43
+PackageHomePage: https://cran.r-project.org/package=tibble
+PackageSourceInfo: <text>Source repository https://github.com/tidyverse/tibble</text>
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: MIT
+PackageLicenseComments: <text>Declared in DESCRIPTION as MIT + file LICENSE.</text>
+PackageCopyrightText: NOASSERTION
+PackageComment: <text>Maintainer Kirill Müller. Published 2026-01-11.</text>
+ExternalRef: PACKAGE-MANAGER purl pkg:cran/tibble@3.3.1
+ExternalRef: OTHER vcs https://github.com/tidyverse/tibble
+PrimaryPackagePurpose: LIBRARY
+
+## Package Information
+PackageName: tidyselect
+SPDXID: SPDXRef-cran-tidyselect
+PackageVersion: 1.2.1
+PackageFileName: tidyselect_1.2.1.tar.gz
+PackageSupplier: Organization: CRAN
+PackageOriginator: Person: Lionel Henry
+PackageDownloadLocation: https://cran.r-project.org/src/contrib/tidyselect_1.2.1.tar.gz
+FilesAnalyzed: false
+PackageChecksum: MD5: 49c581292e819a2a39aac321f27ab0a8
+PackageHomePage: https://cran.r-project.org/package=tidyselect
+PackageSourceInfo: <text>Source repository https://github.com/r-lib/tidyselect</text>
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: MIT
+PackageLicenseComments: <text>Declared in DESCRIPTION as MIT + file LICENSE.</text>
+PackageCopyrightText: NOASSERTION
+PackageComment: <text>Maintainer Lionel Henry. Published 2024-03-11.</text>
+ExternalRef: PACKAGE-MANAGER purl pkg:cran/tidyselect@1.2.1
+ExternalRef: OTHER vcs https://github.com/r-lib/tidyselect
+PrimaryPackagePurpose: LIBRARY
+
+## Package Information
+PackageName: vctrs
+SPDXID: SPDXRef-cran-vctrs
+PackageVersion: 0.7.3
+PackageFileName: vctrs_0.7.3.tar.gz
+PackageSupplier: Organization: CRAN
+PackageOriginator: Person: Davis Vaughan
+PackageDownloadLocation: https://cran.r-project.org/src/contrib/vctrs_0.7.3.tar.gz
+FilesAnalyzed: false
+PackageChecksum: MD5: d99218820f353c359ff59fd46b52ddb3
+PackageHomePage: https://cran.r-project.org/package=vctrs
+PackageSourceInfo: <text>Source repository https://github.com/r-lib/vctrs</text>
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: MIT
+PackageLicenseComments: <text>Declared in DESCRIPTION as MIT + file LICENSE.</text>
+PackageCopyrightText: NOASSERTION
+PackageComment: <text>Maintainer Davis Vaughan. Published 2026-04-11.</text>
+ExternalRef: PACKAGE-MANAGER purl pkg:cran/vctrs@0.7.3
+ExternalRef: OTHER vcs https://github.com/r-lib/vctrs
+PrimaryPackagePurpose: LIBRARY
+
+## Package Information
+PackageName: pkgconfig
+SPDXID: SPDXRef-cran-pkgconfig
+PackageVersion: 2.0.3
+PackageFileName: pkgconfig_2.0.3.tar.gz
+PackageSupplier: Organization: CRAN
+PackageOriginator: Person: Gábor Csárdi
+PackageDownloadLocation: https://cran.r-project.org/src/contrib/pkgconfig_2.0.3.tar.gz
+FilesAnalyzed: false
+PackageChecksum: MD5: 7b9ca1d45d941238381cb55d13ff4d68
+PackageHomePage: https://cran.r-project.org/package=pkgconfig
+PackageSourceInfo: <text>Source repository https://github.com/r-lib/pkgconfig#readme</text>
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: MIT
+PackageLicenseComments: <text>Declared in DESCRIPTION as MIT + file LICENSE.</text>
+PackageCopyrightText: NOASSERTION
+PackageComment: <text>Maintainer Gábor Csárdi. Published 2019-09-22.</text>
+ExternalRef: PACKAGE-MANAGER purl pkg:cran/pkgconfig@2.0.3
+ExternalRef: OTHER vcs https://github.com/r-lib/pkgconfig#readme
+PrimaryPackagePurpose: LIBRARY
+
+## Package Information
+PackageName: utf8
+SPDXID: SPDXRef-cran-utf8
+PackageVersion: 1.2.6
+PackageFileName: utf8_1.2.6.tar.gz
+PackageSupplier: Organization: CRAN
+PackageOriginator: Person: Kirill Müller
+PackageDownloadLocation: https://cran.r-project.org/src/contrib/utf8_1.2.6.tar.gz
+FilesAnalyzed: false
+PackageChecksum: MD5: 12037c186ddded4d9b289762b69fc435
+PackageHomePage: https://cran.r-project.org/package=utf8
+PackageSourceInfo: <text>Source repository https://github.com/krlmlr/utf8</text>
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageLicenseComments: <text>Declared in DESCRIPTION as Apache License (== 2.0) | file LICENSE, which has no SPDX expression in R's licence database.</text>
+PackageCopyrightText: NOASSERTION
+PackageComment: <text>Maintainer Kirill Müller. Published 2025-06-08.</text>
+ExternalRef: PACKAGE-MANAGER purl pkg:cran/utf8@1.2.6
+ExternalRef: OTHER vcs https://github.com/krlmlr/utf8
+PrimaryPackagePurpose: LIBRARY
+
+## Package Information
+PackageName: withr
+SPDXID: SPDXRef-cran-withr
+PackageVersion: 3.0.3
+PackageFileName: withr_3.0.3.tar.gz
+PackageSupplier: Organization: CRAN
+PackageOriginator: Person: Lionel Henry
+PackageDownloadLocation: https://cran.r-project.org/src/contrib/withr_3.0.3.tar.gz
+FilesAnalyzed: false
+PackageChecksum: MD5: 121bf3699aadb9d1b47d648964b934f8
+PackageHomePage: https://cran.r-project.org/package=withr
+PackageSourceInfo: <text>Source repository https://github.com/r-lib/withr#readme</text>
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: MIT
+PackageLicenseComments: <text>Declared in DESCRIPTION as MIT + file LICENSE.</text>
+PackageCopyrightText: NOASSERTION
+PackageComment: <text>Maintainer Lionel Henry. Published 2026-06-19.</text>
+ExternalRef: PACKAGE-MANAGER purl pkg:cran/withr@3.0.3
+ExternalRef: OTHER vcs https://github.com/r-lib/withr#readme
+PrimaryPackagePurpose: LIBRARY
+
+## Package Information
+PackageName: R
+SPDXID: SPDXRef-R
+PackageVersion: 4.1.0
+PackageDownloadLocation: NOASSERTION
+FilesAnalyzed: false
+PackageHomePage: https://www.r-project.org
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: GPL-2.0-only OR GPL-3.0-only
+PackageLicenseComments: <text>Declared in DESCRIPTION as GPL-2 | GPL-3.</text>
+PackageCopyrightText: NOASSERTION
+PackageComment: <text>The lowest R version stated, R (>= 4.1.0).</text>
+PrimaryPackagePurpose: APPLICATION
+
+## Package Information
+PackageName: methods
+SPDXID: SPDXRef-R-methods
+PackageDownloadLocation: NONE
+FilesAnalyzed: false
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageLicenseComments: <text>Part of R, under R's own licence.</text>
+PackageCopyrightText: NOASSERTION
+PackageComment: <text>Part of R. It comes with R and has no file of its own.</text>
+PrimaryPackagePurpose: LIBRARY
+
+## Package Information
+PackageName: utils
+SPDXID: SPDXRef-R-utils
+PackageDownloadLocation: NONE
+FilesAnalyzed: false
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageLicenseComments: <text>Part of R, under R's own licence.</text>
+PackageCopyrightText: NOASSERTION
+PackageComment: <text>Part of R. It comes with R and has no file of its own.</text>
+PrimaryPackagePurpose: LIBRARY
+
+## Package Information
+PackageName: graphics
+SPDXID: SPDXRef-R-graphics
+PackageDownloadLocation: NONE
+FilesAnalyzed: false
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageLicenseComments: <text>Part of R, under R's own licence.</text>
+PackageCopyrightText: NOASSERTION
+PackageComment: <text>Part of R. It comes with R and has no file of its own.</text>
+PrimaryPackagePurpose: LIBRARY
+
+## Package Information
+PackageName: grDevices
+SPDXID: SPDXRef-R-grDevices
+PackageDownloadLocation: NONE
+FilesAnalyzed: false
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageLicenseComments: <text>Part of R, under R's own licence.</text>
+PackageCopyrightText: NOASSERTION
+PackageComment: <text>Part of R. It comes with R and has no file of its own.</text>
+PrimaryPackagePurpose: LIBRARY
+
+## Relationships
+Relationship: SPDXRef-DOCUMENT DESCRIBES SPDXRef-cran-dplyr
+Relationship: SPDXRef-cran-dplyr DEPENDS_ON SPDXRef-cran-cli
+RelationshipComment: <text>Imports: cli (>= 3.6.2)</text>
+Relationship: SPDXRef-cran-dplyr DEPENDS_ON SPDXRef-cran-generics
+RelationshipComment: <text>Imports: generics</text>
+Relationship: SPDXRef-cran-dplyr DEPENDS_ON SPDXRef-cran-glue
+RelationshipComment: <text>Imports: glue (>= 1.3.2)</text>
+Relationship: SPDXRef-cran-dplyr DEPENDS_ON SPDXRef-cran-lifecycle
+RelationshipComment: <text>Imports: lifecycle (>= 1.0.5)</text>
+Relationship: SPDXRef-cran-dplyr DEPENDS_ON SPDXRef-cran-magrittr
+RelationshipComment: <text>Imports: magrittr (>= 1.5)</text>
+Relationship: SPDXRef-cran-dplyr DEPENDS_ON SPDXRef-R-methods
+RelationshipComment: <text>Imports: methods</text>
+Relationship: SPDXRef-cran-dplyr DEPENDS_ON SPDXRef-cran-pillar
+RelationshipComment: <text>Imports: pillar (>= 1.9.0)</text>
+Relationship: SPDXRef-cran-dplyr DEPENDS_ON SPDXRef-cran-R6
+RelationshipComment: <text>Imports: R6</text>
+Relationship: SPDXRef-cran-dplyr DEPENDS_ON SPDXRef-cran-rlang
+RelationshipComment: <text>Imports: rlang (>= 1.1.7)</text>
+Relationship: SPDXRef-cran-dplyr DEPENDS_ON SPDXRef-cran-tibble
+RelationshipComment: <text>Imports: tibble (>= 3.2.0)</text>
+Relationship: SPDXRef-cran-dplyr DEPENDS_ON SPDXRef-cran-tidyselect
+RelationshipComment: <text>Imports: tidyselect (>= 1.2.0)</text>
+Relationship: SPDXRef-cran-dplyr DEPENDS_ON SPDXRef-R-utils
+RelationshipComment: <text>Imports: utils</text>
+Relationship: SPDXRef-cran-dplyr DEPENDS_ON SPDXRef-cran-vctrs
+RelationshipComment: <text>Imports: vctrs (>= 0.7.1)</text>
+Relationship: SPDXRef-cran-cli DEPENDS_ON SPDXRef-R-utils
+RelationshipComment: <text>Imports: utils</text>
+Relationship: SPDXRef-cran-generics DEPENDS_ON SPDXRef-R-methods
+RelationshipComment: <text>Imports: methods</text>
+Relationship: SPDXRef-cran-glue DEPENDS_ON SPDXRef-R-methods
+RelationshipComment: <text>Imports: methods</text>
+Relationship: SPDXRef-cran-lifecycle DEPENDS_ON SPDXRef-cran-cli
+RelationshipComment: <text>Imports: cli (>= 3.4.0)</text>
+Relationship: SPDXRef-cran-lifecycle DEPENDS_ON SPDXRef-cran-rlang
+RelationshipComment: <text>Imports: rlang (>= 1.1.0)</text>
+Relationship: SPDXRef-cran-pillar DEPENDS_ON SPDXRef-cran-cli
+RelationshipComment: <text>Imports: cli (>= 2.3.0)</text>
+Relationship: SPDXRef-cran-pillar DEPENDS_ON SPDXRef-cran-glue
+RelationshipComment: <text>Imports: glue</text>
+Relationship: SPDXRef-cran-pillar DEPENDS_ON SPDXRef-cran-lifecycle
+RelationshipComment: <text>Imports: lifecycle</text>
+Relationship: SPDXRef-cran-pillar DEPENDS_ON SPDXRef-cran-rlang
+RelationshipComment: <text>Imports: rlang (>= 1.0.2)</text>
+Relationship: SPDXRef-cran-pillar DEPENDS_ON SPDXRef-cran-utf8
+RelationshipComment: <text>Imports: utf8 (>= 1.1.0)</text>
+Relationship: SPDXRef-cran-pillar DEPENDS_ON SPDXRef-R-utils
+RelationshipComment: <text>Imports: utils</text>
+Relationship: SPDXRef-cran-pillar DEPENDS_ON SPDXRef-cran-vctrs
+RelationshipComment: <text>Imports: vctrs (>= 0.5.0)</text>
+Relationship: SPDXRef-cran-rlang DEPENDS_ON SPDXRef-R-utils
+RelationshipComment: <text>Imports: utils</text>
+Relationship: SPDXRef-cran-tibble DEPENDS_ON SPDXRef-cran-cli
+RelationshipComment: <text>Imports: cli</text>
+Relationship: SPDXRef-cran-tibble DEPENDS_ON SPDXRef-cran-lifecycle
+RelationshipComment: <text>Imports: lifecycle (>= 1.0.0)</text>
+Relationship: SPDXRef-cran-tibble DEPENDS_ON SPDXRef-cran-magrittr
+RelationshipComment: <text>Imports: magrittr</text>
+Relationship: SPDXRef-cran-tibble DEPENDS_ON SPDXRef-R-methods
+RelationshipComment: <text>Imports: methods</text>
+Relationship: SPDXRef-cran-tibble DEPENDS_ON SPDXRef-cran-pillar
+RelationshipComment: <text>Imports: pillar (>= 1.8.1)</text>
+Relationship: SPDXRef-cran-tibble DEPENDS_ON SPDXRef-cran-pkgconfig
+RelationshipComment: <text>Imports: pkgconfig</text>
+Relationship: SPDXRef-cran-tibble DEPENDS_ON SPDXRef-cran-rlang
+RelationshipComment: <text>Imports: rlang (>= 1.0.2)</text>
+Relationship: SPDXRef-cran-tibble DEPENDS_ON SPDXRef-R-utils
+RelationshipComment: <text>Imports: utils</text>
+Relationship: SPDXRef-cran-tibble DEPENDS_ON SPDXRef-cran-vctrs
+RelationshipComment: <text>Imports: vctrs (>= 0.5.0)</text>
+Relationship: SPDXRef-cran-tidyselect DEPENDS_ON SPDXRef-cran-cli
+RelationshipComment: <text>Imports: cli (>= 3.3.0)</text>
+Relationship: SPDXRef-cran-tidyselect DEPENDS_ON SPDXRef-cran-glue
+RelationshipComment: <text>Imports: glue (>= 1.3.0)</text>
+Relationship: SPDXRef-cran-tidyselect DEPENDS_ON SPDXRef-cran-lifecycle
+RelationshipComment: <text>Imports: lifecycle (>= 1.0.3)</text>
+Relationship: SPDXRef-cran-tidyselect DEPENDS_ON SPDXRef-cran-rlang
+RelationshipComment: <text>Imports: rlang (>= 1.0.4)</text>
+Relationship: SPDXRef-cran-tidyselect DEPENDS_ON SPDXRef-cran-vctrs
+RelationshipComment: <text>Imports: vctrs (>= 0.5.2)</text>
+Relationship: SPDXRef-cran-tidyselect DEPENDS_ON SPDXRef-cran-withr
+RelationshipComment: <text>Imports: withr</text>
+Relationship: SPDXRef-cran-vctrs DEPENDS_ON SPDXRef-cran-cli
+RelationshipComment: <text>Imports: cli (>= 3.4.0)</text>
+Relationship: SPDXRef-cran-vctrs DEPENDS_ON SPDXRef-cran-glue
+RelationshipComment: <text>Imports: glue</text>
+Relationship: SPDXRef-cran-vctrs DEPENDS_ON SPDXRef-cran-lifecycle
+RelationshipComment: <text>Imports: lifecycle (>= 1.0.3)</text>
+Relationship: SPDXRef-cran-vctrs DEPENDS_ON SPDXRef-cran-rlang
+RelationshipComment: <text>Imports: rlang (>= 1.1.7)</text>
+Relationship: SPDXRef-cran-pkgconfig DEPENDS_ON SPDXRef-R-utils
+RelationshipComment: <text>Imports: utils</text>
+Relationship: SPDXRef-cran-withr DEPENDS_ON SPDXRef-R-graphics
+RelationshipComment: <text>Imports: graphics</text>
+Relationship: SPDXRef-cran-withr DEPENDS_ON SPDXRef-R-grDevices
+RelationshipComment: <text>Imports: grDevices</text>
+Relationship: SPDXRef-cran-dplyr DEPENDS_ON SPDXRef-R
+RelationshipComment: <text>Depends: R (>= 4.1.0)</text>
+Relationship: SPDXRef-R CONTAINS SPDXRef-R-methods
+RelationshipComment: <text>Part of R</text>
+Relationship: SPDXRef-R CONTAINS SPDXRef-R-utils
+RelationshipComment: <text>Part of R</text>
+Relationship: SPDXRef-R CONTAINS SPDXRef-R-graphics
+RelationshipComment: <text>Part of R</text>
+Relationship: SPDXRef-R CONTAINS SPDXRef-R-grDevices
+RelationshipComment: <text>Part of R</text>

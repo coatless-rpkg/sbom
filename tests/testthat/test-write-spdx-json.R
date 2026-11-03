@@ -52,3 +52,17 @@ test_that("colliding SPDXIDs are made unique with the version", {
   expect_equal(ids, c("SPDXRef-cran-a-b-1.0", "SPDXRef-cran-a-b-2.0", "SPDXRef-local-x"))
   expect_equal(anyDuplicated(ids), 0L)
 })
+
+test_that("SPDX 2.2 drops 2.3-only fields and passes the 2.2 schema", {
+  skip_if_not_installed("jsonvalidate")
+  x <- fixture_sbom()
+  d <- spdx_document(x, "2.2")
+  expect_equal(d$spdxVersion, "SPDX-2.2")
+  expect_false(any(vapply(d$packages, function(p) "primaryPackagePurpose" %in% names(p), TRUE)))
+  cran <- Find(function(p) p$SPDXID == "SPDXRef-cran-cranpkg", d$packages)
+  expect_equal(cran$externalRefs[[1]]$referenceCategory, "PACKAGE_MANAGER")
+  tf <- withr::local_tempfile(fileext = ".spdx.json")
+  writeLines(spdx_json(x, "2.2"), tf, sep = "")
+  expect_equal(schema_validate(tf, "spdx-json", "2.2")$status, "pass")
+  expect_error(spdx_document(x, "2.1"), "2.2")
+})

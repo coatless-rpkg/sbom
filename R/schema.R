@@ -1,8 +1,16 @@
-schema_formats <- c("cyclonedx-json", "cyclonedx-xml", "spdx-json")
+schema_formats <- c(
+  "cyclonedx-json", "cyclonedx-xml", "spdx-json", "spdx-yaml", "spdx-xml",
+  "spdx-tv", "spdx3-jsonld", "swid"
+)
 schema_versions <- list(
   `cyclonedx-json` = c("1.4", "1.5", "1.6", "1.7"),
   `cyclonedx-xml` = c("1.4", "1.5", "1.6", "1.7"),
-  `spdx-json` = "2.3"
+  `spdx-json` = c("2.2", "2.3"),
+  `spdx-yaml` = c("2.2", "2.3"),
+  `spdx-xml` = c("2.2", "2.3"),
+  `spdx-tv` = c("2.2", "2.3"),
+  `spdx3-jsonld` = "3.0.1",
+  swid = "2015"
 )
 
 # Mockable, so tests can simulate a machine without jsonvalidate.
@@ -18,7 +26,11 @@ resolve_schema_version <- function(format, version) {
   }
   supported <- schema_versions[[format]]
   if (is.null(version)) {
-    return(if (format == "spdx-json") "2.3" else "1.6")
+    return(switch(format,
+      `spdx3-jsonld` = "3.0.1",
+      swid = "2015",
+      if (startsWith(format, "spdx")) "2.3" else "1.6"
+    ))
   }
   if (!is.character(version) || length(version) != 1L || !version %in% supported) {
     cli::cli_abort(
@@ -34,7 +46,12 @@ schema_file <- function(format, version) {
   file <- switch(format,
     `cyclonedx-json` = file.path("cyclonedx", sprintf("bom-%s.schema.json", version)),
     `cyclonedx-xml` = file.path("cyclonedx", sprintf("bom-%s.xsd", version)),
-    `spdx-json` = file.path("spdx", "spdx-2.3.schema.json")
+    swid = file.path("swid", sprintf("swid-%s.xsd", version)),
+    `spdx-json` = ,
+    `spdx-yaml` = ,
+    `spdx-xml` = ,
+    `spdx-tv` = ,
+    `spdx3-jsonld` = file.path("spdx", sprintf("spdx-%s.schema.json", version))
   )
   path <- system.file("schemas", file, package = "sbom")
   if (!nzchar(path)) {
@@ -114,8 +131,120 @@ validate_json <- function(path, format, version) {
   validation_result("fail", findings)
 }
 
-validate_xml <- function(path, version) {
-  schema_path <- schema_file("cyclonedx-xml", version)
+has_yaml <- function() {
+  requireNamespace("yaml", quietly = TRUE)
+}
+
+# Parses the YAML, writes it as JSON and applies the SPDX JSON schema.
+validate_yaml <- function(path, version) {
+  if (!has_yaml()) {
+    return(validation_result(
+      "skipped",
+      data.frame(
+        location = "",
+        message = "yaml is not installed, so the YAML document was not checked.",
+        stringsAsFactors = FALSE
+      )
+    ))
+  }
+  doc <- tryCatch(
+    spdx_yaml_read(path),
+    error = function(e) parse_failure("valid YAML", e)
+  )
+  if (is.list(doc) && identical(names(doc), c("status", "findings"))) {
+    return(doc)
+  }
+  json <- tempfile(fileext = ".json")
+  on.exit(unlink(json), add = TRUE)
+  write_text(jsonlite::toJSON(doc, auto_unbox = TRUE, null = "null"), json)
+  validate_json(json, "spdx-json", version)
+}
+
+# SPDX has no official XML schema. Reads the XML back into the JSON model and
+# applies the SPDX JSON schema; a pass is only "partial".
+validate_spdx_xml <- function(path, version) {
+  doc <- tryCatch(
+    xml2::read_xml(readBin(path, "raw", n = file.size(path))),
+    error = function(e) parse_failure("well-formed XML", e)
+  )
+  if (is.list(doc) && identical(names(doc), c("status", "findings"))) {
+    return(doc)
+  }
+  root <- xml2::xml_name(xml2::xml_root(doc))
+  if (root != "Document") {
+    return(validation_result(
+      "fail",
+      data.frame(
+        location = "",
+        message = sprintf("The root element is <%s>, not <Document>.", root),
+        stringsAsFactors = FALSE
+      )
+    ))
+  }
+  doc <- spdx_xml_node(xml2::xml_root(doc))
+  json <- tempfile(fileext = ".json")
+  on.exit(unlink(json), add = TRUE)
+  write_text(jsonlite::toJSON(doc, auto_unbox = TRUE, null = "null"), json)
+  res <- validate_json(json, "spdx-json", version)
+  if (res$status != "pass") {
+    return(res)
+  }
+  validation_result(
+    "partial",
+    data.frame(
+      location = "",
+      message = "SPDX has no official XML schema, so the document was checked after conversion to the JSON model.",
+      stringsAsFactors = FALSE
+    )
+  )
+}
+
+# Tag-value has no schema either. Reads the file back into the JSON model and
+# applies the SPDX JSON schema; a pass is only "partial".
+validate_spdx_tv <- function(path, version) {
+  doc <- tryCatch(
+    spdx_tv_read(path),
+    error = function(e) parse_failure("valid SPDX tag-value", e)
+  )
+  if (is.list(doc) && identical(names(doc), c("status", "findings"))) {
+    return(doc)
+  }
+  json <- tempfile(fileext = ".json")
+  on.exit(unlink(json), add = TRUE)
+  write_text(jsonlite::toJSON(doc, auto_unbox = TRUE, null = "null"), json)
+  res <- validate_json(json, "spdx-json", version)
+  if (res$status != "pass") {
+    return(res)
+  }
+  validation_result(
+    "partial",
+    data.frame(
+      location = "",
+      message = "Tag-value has no schema, so the document was checked after conversion to the JSON model.",
+      stringsAsFactors = FALSE
+    )
+  )
+}
+
+# The SPDX 3 JSON schema checks structure and vocabularies; SPDX also defines
+# SHACL rules, which are not checked, so a pass is only "partial".
+validate_spdx3 <- function(path, version) {
+  res <- validate_json(path, "spdx3-jsonld", version)
+  if (res$status != "pass") {
+    return(res)
+  }
+  validation_result(
+    "partial",
+    data.frame(
+      location = "",
+      message = "The SPDX 3 JSON schema was checked; SPDX's SHACL rules were not.",
+      stringsAsFactors = FALSE
+    )
+  )
+}
+
+validate_xml <- function(path, format, version) {
+  schema_path <- schema_file(format, version)
   doc <- tryCatch(
     xml2::read_xml(path),
     error = function(e) parse_failure("well-formed XML", e)
@@ -123,8 +252,9 @@ validate_xml <- function(path, version) {
   if (is.list(doc) && identical(names(doc), c("status", "findings"))) {
     return(doc)
   }
-  # The XSD imports spdx.xsd by a relative schemaLocation, which libxml2
-  # resolves against the XSD's own URL, not the working directory.
+  # The XSDs import their companions (spdx.xsd, xmldsig-core-schema.xsd,
+  # xml.xsd) by a relative schemaLocation, which libxml2 resolves against the
+  # XSD's own URL, not the working directory.
   schema <- xml2::read_xml(schema_path)
   ok <- xml2::xml_validate(doc, schema)
   if (isTRUE(ok)) {
@@ -143,15 +273,35 @@ validate_xml <- function(path, version) {
   )
 }
 
-# Validates a written document against the bundled schema. Returns
-# list(status = "pass" | "fail" | "skipped", findings = data.frame(location, message)).
+#' Validate a written document against the bundled schema
+#'
+#' Returns `list(status, findings)`, where `findings` is a data frame with
+#' columns `location` and `message`. `status` is one of:
+#'
+#' * `"pass"`: the document satisfies the schema.
+#' * `"fail"`: it does not, or it could not be parsed; `findings` says why.
+#' * `"skipped"`: the package needed to check it is not installed.
+#' * `"partial"`: the format has no official schema (SPDX XML and tag-value),
+#'   so the document was read back into the SPDX JSON model and that passed;
+#'   or the schema covers only part of the rules (SPDX 3, whose SHACL rules are
+#'   not checked). `findings` holds one note saying which.
+#'
+#' @param path Path of the document.
+#' @param format One of the formats with a bundled schema.
+#' @param version The format version; `NULL` for the default.
+#' @noRd
 schema_validate <- function(path, format, version = NULL) {
   version <- resolve_schema_version(format, version)
   if (!is.character(path) || length(path) != 1L || !file.exists(path)) {
     cli::cli_abort("{.arg path} must be an existing file, not {.val {path}}.")
   }
   switch(format,
-    `cyclonedx-xml` = validate_xml(path, version),
+    `cyclonedx-xml` = ,
+    swid = validate_xml(path, format, version),
+    `spdx-yaml` = validate_yaml(path, version),
+    `spdx-xml` = validate_spdx_xml(path, version),
+    `spdx-tv` = validate_spdx_tv(path, version),
+    `spdx3-jsonld` = validate_spdx3(path, version),
     validate_json(path, format, version)
   )
 }

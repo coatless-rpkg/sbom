@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<SoftwareIdentity xmlns="http://standards.iso.org/iso/19770/-2/2015/schema.xsd" xmlns:ro="https://r-observatory.thecoatlessprofessor.com/ns/sbom" name="dplyr" version="1.2.1" versionScheme="multipartnumeric" tagId="r-observatory.thecoatlessprofessor.com/cran/dplyr/1.2.1" tagVersion="20261020">
+  <Entity name="R Observatory" regid="https://r-observatory.thecoatlessprofessor.com" role="tagCreator"/>
+  <Entity name="CRAN" regid="https://cran.r-project.org" role="distributor"/>
+  <Entity name="Hadley Wickham" role="maintainer"/>
+  <Meta generator="R Observatory" product="dplyr" description="Built by R Observatory from CRAN's own records, data release v2026-10-20, not by the package's maintainer. Each dependency is at its current release on 2026-10-20, the release an install gets that day." ro:dependencyRule="current-release" ro:dependencyDay="2026-10-20" ro:dataRelease="v2026-10-20" ro:purl="pkg:cran/dplyr@1.2.1" ro:license="MIT + file LICENSE"/>
+  <Link rel="describedby" href="https://cran.r-project.org/package=dplyr"/>
+  <Link rel="installationmedia" href="https://cran.r-project.org/src/contrib/dplyr_1.2.1.tar.gz" artifact="dplyr_1.2.1.tar.gz" type="application/gzip"/>
+  <Link rel="related" href="https://github.com/tidyverse/dplyr"/>
+  <Link rel="requires" use="required" href="swid:r-observatory.thecoatlessprofessor.com/cran/cli/3.6.6" ro:name="cli" ro:version="3.6.6" ro:purl="pkg:cran/cli@3.6.6"/>
+  <Link rel="requires" use="required" href="swid:r-observatory.thecoatlessprofessor.com/cran/generics/0.1.4" ro:name="generics" ro:version="0.1.4" ro:purl="pkg:cran/generics@0.1.4"/>
+  <Link rel="requires" use="required" href="swid:r-observatory.thecoatlessprofessor.com/cran/glue/1.8.1" ro:name="glue" ro:version="1.8.1" ro:purl="pkg:cran/glue@1.8.1"/>
+  <Link rel="requires" use="required" href="swid:r-observatory.thecoatlessprofessor.com/cran/lifecycle/1.0.5" ro:name="lifecycle" ro:version="1.0.5" ro:purl="pkg:cran/lifecycle@1.0.5"/>
+  <Link rel="requires" use="required" href="swid:r-observatory.thecoatlessprofessor.com/cran/magrittr/2.0.5" ro:name="magrittr" ro:version="2.0.5" ro:purl="pkg:cran/magrittr@2.0.5"/>
+  <Link rel="requires" use="required" href="swid:r-observatory.thecoatlessprofessor.com/cran/pillar/1.11.1" ro:name="pillar" ro:version="1.11.1" ro:purl="pkg:cran/pillar@1.11.1"/>
+  <Link rel="requires" use="required" href="swid:r-observatory.thecoatlessprofessor.com/cran/R6/2.6.1" ro:name="R6" ro:version="2.6.1" ro:purl="pkg:cran/R6@2.6.1"/>
+  <Link rel="requires" use="required" href="swid:r-observatory.thecoatlessprofessor.com/cran/rlang/1.3.0" ro:name="rlang" ro:version="1.3.0" ro:purl="pkg:cran/rlang@1.3.0"/>
+  <Link rel="requires" use="required" href="swid:r-observatory.thecoatlessprofessor.com/cran/tibble/3.3.1" ro:name="tibble" ro:version="3.3.1" ro:purl="pkg:cran/tibble@3.3.1"/>
+  <Link rel="requires" use="required" href="swid:r-observatory.thecoatlessprofessor.com/cran/tidyselect/1.2.1" ro:name="tidyselect" ro:version="1.2.1" ro:purl="pkg:cran/tidyselect@1.2.1"/>
+  <Link rel="requires" use="required" href="swid:r-observatory.thecoatlessprofessor.com/cran/vctrs/0.7.3" ro:name="vctrs" ro:version="0.7.3" ro:purl="pkg:cran/vctrs@0.7.3"/>
+  <Link rel="requires" use="required" href="swid:r-observatory.thecoatlessprofessor.com/cran/pkgconfig/2.0.3" ro:name="pkgconfig" ro:version="2.0.3" ro:purl="pkg:cran/pkgconfig@2.0.3"/>
+  <Link rel="requires" use="required" href="swid:r-observatory.thecoatlessprofessor.com/cran/utf8/1.2.6" ro:name="utf8" ro:version="1.2.6" ro:purl="pkg:cran/utf8@1.2.6"/>
+  <Link rel="requires" use="required" href="swid:r-observatory.thecoatlessprofessor.com/cran/withr/3.0.3" ro:name="withr" ro:version="3.0.3" ro:purl="pkg:cran/withr@3.0.3"/>
+  <Link rel="requires" use="required" href="swid:r-observatory.thecoatlessprofessor.com/R/4.1.0" ro:name="R" ro:version="4.1.0" ro:versionIs="minimum"/>
+  <Link rel="requires" use="required" href="swid:r-observatory.thecoatlessprofessor.com/R/methods" ro:name="methods" ro:partOf="R"/>
+  <Link rel="requires" use="required" href="swid:r-observatory.thecoatlessprofessor.com/R/utils" ro:name="utils" ro:partOf="R"/>
+  <Link rel="requires" use="required" href="swid:r-observatory.thecoatlessprofessor.com/R/graphics" ro:name="graphics" ro:partOf="R"/>
+  <Link rel="requires" use="required" href="swid:r-observatory.thecoatlessprofessor.com/R/grDevices" ro:name="grDevices" ro:partOf="R"/>
+</SoftwareIdentity>

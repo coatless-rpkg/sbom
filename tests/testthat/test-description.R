@@ -124,3 +124,11 @@ test_that("DESCRIPTION text is decoded by its bytes, not by the locale", {
     )
   }
 })
+
+test_that("parse_authors() keeps non-ASCII names under a C locale", {
+  local_c_ctype()
+  a <- parse_authors('person("Gábor", "Csárdi", role = c("aut", "cre"))')
+  expect_equal(a$name, "Gábor Csárdi")
+  expect_true(validUTF8(a$name))
+  expect_equal(Encoding(a$name), "UTF-8")
+})

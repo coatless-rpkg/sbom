@@ -30,6 +30,13 @@
 #' @param author,organization Who made the SBOM, recorded in its metadata.
 #'   `author` may name several people; `NA` and empty names are dropped.
 #'   Without either, an issue is recorded.
+#' @param regid The registration id of `organization`: the domain name, or URL,
+#'   of the organization, under which it registers SWID tags (ISO/IEC
+#'   19770-2). A SWID tag names the organization as its creator with this
+#'   regid. `NA` and the empty string mean none; then the tag uses the
+#'   placeholder `http://invalid.unavailable`, and when an `organization` was
+#'   given, an issue is recorded. The default is the `sbom.regid` option, as
+#'   `author` and `organization` read `sbom.author` and `sbom.organization`.
 #' @param timestamp The creation time, as a date-time or as seconds since
 #'   1970-01-01 UTC. `NULL` means now. When the
 #'   `SOURCE_DATE_EPOCH` environment variable is set, it wins over
@@ -54,6 +61,7 @@ sbom_package <- function(path = ".",
                          lib = .libPaths(), r_version = NULL,
                          author = getOption("sbom.author"),
                          organization = getOption("sbom.organization"),
+                         regid = getOption("sbom.regid"),
                          timestamp = NULL, overrides = NULL) {
   dependencies <- match.arg(dependencies, several.ok = TRUE)
   check_lib(lib)
@@ -79,7 +87,7 @@ sbom_package <- function(path = ".",
     fields = intersect(c("Depends", "Imports", "LinkingTo"), dependencies),
     root_suggests = "Suggests" %in% dependencies, lib = lib,
     r_version = r_version, author = author, organization = organization,
-    timestamp = timestamp, inputs = inputs
+    regid = regid, timestamp = timestamp, inputs = inputs
   )
   apply_overrides(x, overrides)
 }
@@ -96,6 +104,7 @@ sbom_package <- function(path = ".",
 sbom_installed <- function(pkgs = NULL, lib = .libPaths(), name = "R library",
                            r_version = NULL, author = getOption("sbom.author"),
                            organization = getOption("sbom.organization"),
+                           regid = getOption("sbom.regid"),
                            timestamp = NULL, overrides = NULL) {
   check_lib(lib)
   db <- read_library(lib)
@@ -136,8 +145,8 @@ sbom_installed <- function(pkgs = NULL, lib = .libPaths(), name = "R library",
     root = root, db = db, root_desc = root_desc,
     fields = c("Depends", "Imports", "LinkingTo"), root_suggests = FALSE,
     lib = lib, r_version = r_version, author = author,
-    organization = organization, timestamp = timestamp, inputs = inputs,
-    extra_base = listed_base
+    organization = organization, regid = regid, timestamp = timestamp,
+    inputs = inputs, extra_base = listed_base
   )
   apply_overrides(x, overrides)
 }
@@ -161,8 +170,8 @@ check_lib <- function(lib, call = parent.frame()) {
 # issues). For a library root, `root_desc` is a stand-in whose Imports are the
 # listed packages. They are all installed, so no issue names the stand-in.
 build_sbom <- function(root, db, root_desc, fields, root_suggests, lib,
-                       r_version, author, organization, timestamp, inputs,
-                       extra_base = character()) {
+                       r_version, author, organization, regid, timestamp,
+                       inputs, extra_base = character()) {
   root_row <- root$component
   root_is_library <- identical(root_row$ecosystem, "library")
   root_name <- root_desc[["Package"]]
@@ -288,6 +297,16 @@ build_sbom <- function(root, db, root_desc, fields, root_suggests, lib,
       severity = "info"
     )
   }
+  if (has_value(organization) && !has_value(regid)) {
+    issues <- add_issue(
+      issues, root_row$ref, "regid", "regid-missing",
+      paste0(
+        "No regid was given for ", organization, ", so a SWID tag names it ",
+        "with the placeholder http://invalid.unavailable."
+      ),
+      severity = "info"
+    )
+  }
   rownames(issues) <- NULL
 
   suggests_only <- vapply(c(res$packages, res$missing), scope_of, "") == "optional"
@@ -315,7 +334,8 @@ build_sbom <- function(root, db, root_desc, fields, root_suggests, lib,
       organization = if (has_value(organization)) as.character(organization) else NA_character_,
       tool_version = as.character(utils::packageVersion("sbom")),
       notes = notes,
-      inputs = inputs
+      inputs = inputs,
+      regid = if (has_value(regid)) as.character(regid) else NA_character_
     ),
     all_comps, rels, issues
   )

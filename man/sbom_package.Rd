@@ -12,6 +12,7 @@ sbom_package(
   r_version = NULL,
   author = getOption("sbom.author"),
   organization = getOption("sbom.organization"),
+  regid = getOption("sbom.regid"),
   timestamp = NULL,
   overrides = NULL
 )
@@ -23,6 +24,7 @@ sbom_installed(
   r_version = NULL,
   author = getOption("sbom.author"),
   organization = getOption("sbom.organization"),
+  regid = getOption("sbom.regid"),
   timestamp = NULL,
   overrides = NULL
 )
@@ -45,6 +47,14 @@ picks it as described in Details.}
 \item{author, organization}{Who made the SBOM, recorded in its metadata.
 \code{author} may name several people; \code{NA} and empty names are dropped.
 Without either, an issue is recorded.}
+
+\item{regid}{The registration id of \code{organization}: the domain name, or URL,
+of the organization, under which it registers SWID tags (ISO/IEC
+19770-2). A SWID tag names the organization as its creator with this
+regid. \code{NA} and the empty string mean none; then the tag uses the
+placeholder \verb{http://invalid.unavailable}, and when an \code{organization} was
+given, an issue is recorded. The default is the \code{sbom.regid} option, as
+\code{author} and \code{organization} read \code{sbom.author} and \code{sbom.organization}.}
 
 \item{timestamp}{The creation time, as a date-time or as seconds since
 1970-01-01 UTC. \code{NULL} means now. When the

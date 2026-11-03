@@ -1,4 +1,4 @@
-# SPDX 2.3 JSON writer, following R Observatory's layout.
+# SPDX 2.2 and 2.3 JSON writer, following R Observatory's layout.
 
 spdx_prefixes <- c(
   cran = "cran", bioconductor = "bioc", github = "github",
@@ -38,7 +38,18 @@ spdx_is_set <- function(v) {
   length(v) == 1L && !is.na(v) && nzchar(v)
 }
 
-spdx_package <- function(row, id) {
+# One provenance sentence per asserted override of a component row; SPDX 2
+# and SPDX 3 both put them in the package comment.
+spdx_asserted_sentences <- function(row) {
+  asserted <- row$asserted[[1]]
+  if (is.null(asserted) || nrow(asserted) == 0L) return(character())
+  sprintf(
+    "Asserted by %s: %s is %s (%s).",
+    asserted$asserted_by, asserted$field, asserted$value, asserted$reason
+  )
+}
+
+spdx_package <- function(row, id, version = "2.3") {
   is_r <- row$ecosystem == "r"
   is_base <- !is.na(row$parent_ref)
   p <- list(name = row$name, SPDXID = id)
@@ -100,13 +111,7 @@ spdx_package <- function(row, id) {
       parts <- c(parts, paste0("Published ", row$published, "."))
     }
   }
-  asserted <- row$asserted[[1]]
-  if (!is.null(asserted) && nrow(asserted) > 0L) {
-    parts <- c(parts, sprintf(
-      "Asserted by %s: %s is %s (%s).",
-      asserted$asserted_by, asserted$field, asserted$value, asserted$reason
-    ))
-  }
+  parts <- c(parts, spdx_asserted_sentences(row))
   if (length(parts) > 0L) p$comment <- paste(parts, collapse = " ")
 
   refs <- list()
@@ -116,13 +121,16 @@ spdx_package <- function(row, id) {
       referenceLocator = locator
     )
   }
-  if (spdx_is_set(row$purl)) add_ref("PACKAGE-MANAGER", "purl", row$purl)
+  category <- if (version == "2.2") "PACKAGE_MANAGER" else "PACKAGE-MANAGER"
+  if (spdx_is_set(row$purl)) add_ref(category, "purl", row$purl)
   if (spdx_is_set(row$vcs_url)) add_ref("OTHER", "vcs", row$vcs_url)
   if (spdx_is_set(row$doi)) add_ref("OTHER", "doi", row$doi)
   if (length(refs) > 0L) p$externalRefs <- refs
 
-  p$primaryPackagePurpose <-
-    if (is_r || row$type == "application") "APPLICATION" else "LIBRARY"
+  if (version != "2.2") {
+    p$primaryPackagePurpose <-
+      if (is_r || row$type == "application") "APPLICATION" else "LIBRARY"
+  }
   p
 }
 
@@ -163,12 +171,19 @@ spdx_relationships <- function(x, ids) {
   c(list(describes), rows)
 }
 
-spdx_document <- function(x) {
+spdx_versions <- c("2.2", "2.3")
+
+spdx_document <- function(x, version = "2.3") {
+  if (!is.character(version) || length(version) != 1L || !version %in% spdx_versions) {
+    cli::cli_abort(
+      "{.arg version} must be one of {.val {spdx_versions}} for SPDX, not {.val {version}}."
+    )
+  }
   comps <- x$components
   ids <- spdx_ids(comps)
   ord <- order(ids, method = "radix")
   packages <- lapply(ord, function(i) {
-    spdx_package(comps[i, , drop = FALSE], ids[i])
+    spdx_package(comps[i, , drop = FALSE], ids[i], version)
   })
 
   tool <- if (spdx_is_set(x$metadata$tool_version)) {
@@ -191,7 +206,7 @@ spdx_document <- function(x) {
     root$name
   }
   list(
-    spdxVersion = "SPDX-2.3",
+    spdxVersion = paste0("SPDX-", version),
     dataLicense = "CC0-1.0",
     SPDXID = "SPDXRef-DOCUMENT",
     name = name,
@@ -206,9 +221,9 @@ spdx_document <- function(x) {
   )
 }
 
-spdx_json <- function(x) {
+spdx_json <- function(x, version = "2.3") {
   json <- jsonlite::toJSON(
-    spdx_document(x), auto_unbox = TRUE, pretty = TRUE, null = "null"
+    spdx_document(x, version), auto_unbox = TRUE, pretty = TRUE, null = "null"
   )
   enc2utf8(paste0(json, "\n"))
 }

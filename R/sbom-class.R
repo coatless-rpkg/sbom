@@ -17,7 +17,8 @@ relationship_columns <- function() c("from", "to", "field", "spec", "evidence")
 issue_columns <- function() c("ref", "field", "severity", "code", "message")
 
 metadata_names <- function() {
-  c("root", "timestamp", "author", "organization", "tool_version", "notes", "inputs")
+  c("root", "timestamp", "author", "organization", "tool_version", "notes", "inputs",
+    "regid")
 }
 
 empty_df <- function(cols, logical = character(), list = character()) {

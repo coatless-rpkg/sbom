@@ -249,3 +249,13 @@ test_that("a numeric timestamp is seconds since 1970-01-01 UTC", {
   x <- sbom_package(test_path("fixtures/pkgs/srcpkg"), lib = fixture_lib(), timestamp = 1700000000)
   expect_equal(format_timestamp(x$metadata$timestamp), "2023-11-14T22:13:20Z")
 })
+
+test_that("a maintainer taken from Authors@R survives a C locale", {
+  local_c_ctype()
+  dir <- withr::local_tempdir()
+  writeLines(enc2utf8(c("Package: authpkg", "Version: 1.0", "License: MIT + file LICENSE",
+    'Authors@R: person("Gábor", "Csárdi", email = "g@example.org", role = c("aut", "cre"))')),
+    file.path(dir, "DESCRIPTION"), useBytes = TRUE)
+  x <- sbom_package(dir, lib = local_fake_lib(list()))
+  expect_equal(sbom_components(x)$maintainer[sbom_components(x)$is_root], "Gábor Csárdi")
+})

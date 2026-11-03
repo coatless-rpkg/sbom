@@ -4,17 +4,47 @@ format_registry <- function() {
     `cyclonedx-json` = list(
       name = "CycloneDX JSON", writer = cdx_json, extension = ".cdx.json",
       versions = cdx_versions, default_version = "1.6",
-      media_type = "application/vnd.cyclonedx+json"
+      media_type = "application/vnd.cyclonedx+json", all = TRUE
     ),
     `cyclonedx-xml` = list(
       name = "CycloneDX XML", writer = cdx_xml, extension = ".cdx.xml",
       versions = cdx_versions, default_version = "1.6",
-      media_type = "application/vnd.cyclonedx+xml"
+      media_type = "application/vnd.cyclonedx+xml", all = TRUE
     ),
     `spdx-json` = list(
-      name = "SPDX JSON", writer = function(x, version) spdx_json(x),
-      extension = ".spdx.json", versions = "2.3", default_version = "2.3",
-      media_type = "application/spdx+json"
+      name = "SPDX JSON", writer = spdx_json,
+      extension = ".spdx.json", versions = c("2.2", "2.3"),
+      default_version = "2.3", media_type = "application/spdx+json",
+      all = TRUE
+    ),
+    `spdx-yaml` = list(
+      name = "SPDX YAML", writer = spdx_yaml,
+      extension = ".spdx.yaml", versions = c("2.2", "2.3"),
+      default_version = "2.3", media_type = "application/spdx+yaml",
+      all = TRUE
+    ),
+    `spdx-xml` = list(
+      name = "SPDX XML", writer = spdx_xml,
+      extension = ".spdx.xml", versions = c("2.2", "2.3"),
+      default_version = "2.3", media_type = "application/spdx+xml",
+      all = TRUE
+    ),
+    `spdx-tv` = list(
+      name = "SPDX tag-value", writer = spdx_tv,
+      extension = ".spdx", versions = c("2.2", "2.3"),
+      default_version = "2.3", media_type = "text/spdx",
+      all = TRUE
+    ),
+    `spdx3-jsonld` = list(
+      name = "SPDX 3 JSON-LD", writer = spdx3_jsonld,
+      extension = ".spdx3.jsonld", versions = "3.0.1",
+      default_version = "3.0.1", media_type = "application/spdx+json",
+      all = TRUE
+    ),
+    swid = list(
+      name = "SWID tag", writer = swid_tag, extension = ".swidtag",
+      versions = "2015", default_version = "2015",
+      media_type = "application/swid+xml", all = TRUE
     )
   )
 }
@@ -34,7 +64,7 @@ sbom_formats <- function() {
     name = vapply(reg, function(r) r$name, character(1)),
     extension = vapply(reg, function(r) r$extension, character(1)),
     versions = vapply(reg, function(r) paste(r$versions, collapse = ", "), character(1)),
-    default_version = vapply(reg, function(r) r$default_version, character(1)),
+    default_version = vapply(reg, function(r) as.character(r$default_version), character(1)),
     media_type = vapply(reg, function(r) r$media_type, character(1)),
     row.names = NULL,
     stringsAsFactors = FALSE

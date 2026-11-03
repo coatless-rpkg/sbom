@@ -122,7 +122,7 @@ parse_authors <- function(x) {
     ),
     parent = emptyenv()
   )
-  people <- tryCatch(eval(parse(text = x), env), error = function(e) NULL)
+  people <- tryCatch(eval(parse(text = x, encoding = "UTF-8"), env), error = function(e) NULL)
   if (!inherits(people, "person") || length(people) == 0L) {
     return(NULL)
   }
@@ -142,7 +142,18 @@ parse_authors <- function(x) {
   if (is.null(rows)) {
     return(NULL)
   }
-  do.call(rbind, rows)
+  out <- do.call(rbind, rows)
+  # person() strings can come back marked native; the text is UTF-8.
+  out[] <- lapply(out, enc2utf8_bytes)
+  out
+}
+
+# Marks text as UTF-8 when its bytes are valid UTF-8, and leaves NA alone.
+# Never converts through the locale.
+enc2utf8_bytes <- function(x) {
+  ok <- !is.na(x) & validUTF8(x)
+  Encoding(x)[ok] <- "UTF-8"
+  x
 }
 
 # Maintainer, else the cre in Authors@R, else NAs.

@@ -9,7 +9,7 @@ test_that("format comes from the extension", {
 test_that("format = 'all' writes every format with R Observatory's names", {
   x <- fixture_sbom(); dir <- withr::local_tempdir()
   write_sbom(x, dir, format = "all")
-  expect_setequal(list.files(dir), c("srcpkg-0.1.0.cdx.json", "srcpkg-0.1.0.cdx.xml", "srcpkg-0.1.0.spdx.json"))
+  expect_setequal(list.files(dir), c("srcpkg-0.1.0.cdx.json", "srcpkg-0.1.0.cdx.xml", "srcpkg-0.1.0.spdx.json", "srcpkg-0.1.0.spdx.yaml", "srcpkg-0.1.0.spdx.xml", "srcpkg-0.1.0.spdx", "srcpkg-0.1.0.spdx3.jsonld", "srcpkg-0.1.0.swidtag"))
 })
 
 test_that("format = 'all' creates a missing directory and sanitizes the stem", {
@@ -29,10 +29,10 @@ test_that("bad input is rejected", {
 
 test_that("sbom_formats() lists the registry", {
   f <- sbom_formats()
-  expect_equal(f$format, c("cyclonedx-json", "cyclonedx-xml", "spdx-json"))
-  expect_equal(f$extension, c(".cdx.json", ".cdx.xml", ".spdx.json"))
-  expect_equal(f$versions, c(rep("1.4, 1.5, 1.6, 1.7", 2), "2.3"))
-  expect_equal(f$default_version, c("1.6", "1.6", "2.3"))
+  expect_equal(f$format, c("cyclonedx-json", "cyclonedx-xml", "spdx-json", "spdx-yaml", "spdx-xml", "spdx-tv", "spdx3-jsonld", "swid"))
+  expect_equal(f$extension, c(".cdx.json", ".cdx.xml", ".spdx.json", ".spdx.yaml", ".spdx.xml", ".spdx", ".spdx3.jsonld", ".swidtag"))
+  expect_equal(f$versions, c(rep("1.4, 1.5, 1.6, 1.7", 2), rep("2.2, 2.3", 4), "3.0.1", "2015"))
+  expect_equal(f$default_version, c("1.6", "1.6", "2.3", "2.3", "2.3", "2.3", "3.0.1", "2015"))
 })
 
 test_that("output is byte-identical across runs with SOURCE_DATE_EPOCH", {
@@ -91,4 +91,13 @@ test_that("a failing writer leaves existing files untouched and writes nothing",
   dir.create(out)
   expect_error(write_sbom(x, out, format = "all"), "boom")
   expect_length(list.files(out), 0L)
+})
+
+test_that("version applies to every format that lists it", {
+  x <- fixture_sbom(); dir <- withr::local_tempdir()
+  write_sbom(x, dir, format = "all", version = "2.2")
+  expect_match(paste(readLines(file.path(dir, "srcpkg-0.1.0.spdx.json")), collapse = ""), "SPDX-2.2")
+  expect_match(readLines(file.path(dir, "srcpkg-0.1.0.cdx.xml"), n = 2)[2], "bom/1.6")
+  expect_error(write_sbom(x, file.path(dir, "a.spdx.json"), version = "1.6"), "2.2")
+  expect_error(write_sbom(x, dir, format = "all", version = "9.9"), "version")
 })

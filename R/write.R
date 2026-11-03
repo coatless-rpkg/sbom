@@ -9,8 +9,11 @@
 #' @param format One of the `format` values in [sbom_formats()], or `"all"`.
 #'   When `NULL`, the format is taken from the longest matching extension of
 #'   `path`.
-#' @param version Specification version. Applies to CycloneDX only; `NULL`
-#'   uses the default. With `format = "all"` it applies to the CycloneDX files.
+#' @param version Specification version. It applies to every format being
+#'   written whose versions (see [sbom_formats()]) include it; the others use
+#'   their default, so `format = "all"` with `version = "2.2"` writes SPDX 2.2
+#'   and the default of each other format. It is an error when no format being
+#'   written lists the version. `NULL` uses each format's default.
 #'   CycloneDX 1.4 and 1.5 have no field for the organization that made the
 #'   SBOM (their `manufacture` is the maker of the described component), so
 #'   there it is written as the metadata property `sbom:organization`.
@@ -43,7 +46,7 @@ write_sbom <- function(x, path, format = NULL, version = NULL) {
   }
 
   if (identical(format, "all")) {
-    keys <- names(reg)
+    keys <- names(reg)[vapply(reg, function(r) isTRUE(r$all), logical(1))]
   } else {
     if (is.null(format)) {
       hit <- names(reg)[endsWith(tolower(path), exts)]
@@ -60,19 +63,22 @@ write_sbom <- function(x, path, format = NULL, version = NULL) {
   }
 
   if (!is.null(version)) {
-    cdx_keys <- keys[!keys %in% "spdx-json"]
-    if (length(cdx_keys) == 0L) {
-      cli::cli_abort("{.arg version} applies only to CycloneDX formats, not {.val {keys}}.")
-    }
-    allowed <- unique(unlist(lapply(reg[cdx_keys], function(r) r$versions)))
-    if (!version %in% allowed) {
-      cli::cli_abort("{.arg version} must be one of {.val {allowed}}, not {.val {version}}.")
+    listed <- vapply(reg[keys], function(r) version %in% r$versions, logical(1))
+    if (!any(listed)) {
+      each <- vapply(reg[keys], function(r) {
+        paste0(r$name, " (", paste(r$versions, collapse = ", "), ")")
+      }, character(1))
+      names(each) <- rep("*", length(each))
+      cli::cli_abort(c(
+        "{.arg version} {.val {version}} is not a version of any format being written.",
+        each
+      ))
     }
   }
 
   docs <- vapply(keys, function(key) {
     entry <- reg[[key]]
-    v <- if (key == "spdx-json" || is.null(version)) entry$default_version else version
+    v <- if (!is.null(version) && version %in% entry$versions) version else entry$default_version
     entry$writer(x, v)
   }, character(1))
 

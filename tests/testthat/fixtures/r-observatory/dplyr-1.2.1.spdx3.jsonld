@@ -1,0 +1,1574 @@
+{
+    "@context": "https://spdx.org/rdf/3.0.1/spdx-context.jsonld",
+    "@graph": [
+        {
+            "type": "CreationInfo",
+            "@id": "_:creationinfo",
+            "specVersion": "3.0.1",
+            "created": "2026-10-20T20:28:02Z",
+            "createdBy": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#R-Observatory"
+            ],
+            "createdUsing": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#R-Observatory-tool"
+            ],
+            "comment": "Built by R Observatory from CRAN's own records, data release v2026-10-20, not by the package's maintainer."
+        },
+        {
+            "type": "Organization",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#R-Observatory",
+            "creationInfo": "_:creationinfo",
+            "name": "R Observatory",
+            "externalIdentifier": [
+                {
+                    "type": "ExternalIdentifier",
+                    "externalIdentifierType": "urlScheme",
+                    "identifier": "https://r-observatory.thecoatlessprofessor.com"
+                }
+            ]
+        },
+        {
+            "type": "Tool",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#R-Observatory-tool",
+            "creationInfo": "_:creationinfo",
+            "name": "R Observatory"
+        },
+        {
+            "type": "Organization",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#supplier-CRAN",
+            "creationInfo": "_:creationinfo",
+            "name": "CRAN"
+        },
+        {
+            "type": "Person",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#person-816975a158df",
+            "creationInfo": "_:creationinfo",
+            "name": "Hadley Wickham"
+        },
+        {
+            "type": "software_Package",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-dplyr",
+            "creationInfo": "_:creationinfo",
+            "name": "dplyr",
+            "suppliedBy": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#supplier-CRAN",
+            "originatedBy": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#person-816975a158df"
+            ],
+            "comment": "Maintainer Hadley Wickham.",
+            "verifiedUsing": [
+                {
+                    "type": "Hash",
+                    "algorithm": "md5",
+                    "hashValue": "1c6ba2499c7a08d081bdb530423ab22c"
+                }
+            ],
+            "externalRef": [
+                {
+                    "type": "ExternalRef",
+                    "externalRefType": "vcs",
+                    "locator": [
+                        "https://github.com/tidyverse/dplyr"
+                    ]
+                }
+            ],
+            "releaseTime": "2026-04-03T00:00:00Z",
+            "software_primaryPurpose": "library",
+            "software_downloadLocation": "https://cran.r-project.org/src/contrib/dplyr_1.2.1.tar.gz",
+            "software_homePage": "https://cran.r-project.org/package=dplyr",
+            "software_packageUrl": "pkg:cran/dplyr@1.2.1",
+            "software_packageVersion": "1.2.1"
+        },
+        {
+            "type": "simplelicensing_LicenseExpression",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#license-89690ac571dc",
+            "creationInfo": "_:creationinfo",
+            "simplelicensing_licenseExpression": "MIT"
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-lic-SPDXRef-cran-dplyr",
+            "creationInfo": "_:creationinfo",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-dplyr",
+            "relationshipType": "hasDeclaredLicense",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#license-89690ac571dc"
+            ]
+        },
+        {
+            "type": "Person",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#person-e74c3b810c98",
+            "creationInfo": "_:creationinfo",
+            "name": "Gábor Csárdi"
+        },
+        {
+            "type": "software_Package",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-cli",
+            "creationInfo": "_:creationinfo",
+            "name": "cli",
+            "suppliedBy": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#supplier-CRAN",
+            "originatedBy": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#person-e74c3b810c98"
+            ],
+            "comment": "Maintainer Gábor Csárdi.",
+            "verifiedUsing": [
+                {
+                    "type": "Hash",
+                    "algorithm": "md5",
+                    "hashValue": "eedc08ba864ae6cd640b05eff1a607ee"
+                }
+            ],
+            "externalRef": [
+                {
+                    "type": "ExternalRef",
+                    "externalRefType": "vcs",
+                    "locator": [
+                        "https://github.com/r-lib/cli"
+                    ]
+                }
+            ],
+            "releaseTime": "2026-04-09T00:00:00Z",
+            "software_primaryPurpose": "library",
+            "software_downloadLocation": "https://cran.r-project.org/src/contrib/cli_3.6.6.tar.gz",
+            "software_homePage": "https://cran.r-project.org/package=cli",
+            "software_packageUrl": "pkg:cran/cli@3.6.6",
+            "software_packageVersion": "3.6.6"
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-lic-SPDXRef-cran-cli",
+            "creationInfo": "_:creationinfo",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-cli",
+            "relationshipType": "hasDeclaredLicense",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#license-89690ac571dc"
+            ]
+        },
+        {
+            "type": "software_Package",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-generics",
+            "creationInfo": "_:creationinfo",
+            "name": "generics",
+            "suppliedBy": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#supplier-CRAN",
+            "originatedBy": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#person-816975a158df"
+            ],
+            "comment": "Maintainer Hadley Wickham.",
+            "verifiedUsing": [
+                {
+                    "type": "Hash",
+                    "algorithm": "md5",
+                    "hashValue": "dda54b65216fe3c53571d2adaddc7461"
+                }
+            ],
+            "externalRef": [
+                {
+                    "type": "ExternalRef",
+                    "externalRefType": "vcs",
+                    "locator": [
+                        "https://github.com/r-lib/generics"
+                    ]
+                }
+            ],
+            "releaseTime": "2025-05-10T00:00:00Z",
+            "software_primaryPurpose": "library",
+            "software_downloadLocation": "https://cran.r-project.org/src/contrib/generics_0.1.4.tar.gz",
+            "software_homePage": "https://cran.r-project.org/package=generics",
+            "software_packageUrl": "pkg:cran/generics@0.1.4",
+            "software_packageVersion": "0.1.4"
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-lic-SPDXRef-cran-generics",
+            "creationInfo": "_:creationinfo",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-generics",
+            "relationshipType": "hasDeclaredLicense",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#license-89690ac571dc"
+            ]
+        },
+        {
+            "type": "Person",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#person-763111857fed",
+            "creationInfo": "_:creationinfo",
+            "name": "Jennifer Bryan"
+        },
+        {
+            "type": "software_Package",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-glue",
+            "creationInfo": "_:creationinfo",
+            "name": "glue",
+            "suppliedBy": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#supplier-CRAN",
+            "originatedBy": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#person-763111857fed"
+            ],
+            "comment": "Maintainer Jennifer Bryan.",
+            "verifiedUsing": [
+                {
+                    "type": "Hash",
+                    "algorithm": "md5",
+                    "hashValue": "24e3cd382f52015c929538a5208d11aa"
+                }
+            ],
+            "externalRef": [
+                {
+                    "type": "ExternalRef",
+                    "externalRefType": "vcs",
+                    "locator": [
+                        "https://github.com/tidyverse/glue"
+                    ]
+                }
+            ],
+            "releaseTime": "2026-04-17T00:00:00Z",
+            "software_primaryPurpose": "library",
+            "software_downloadLocation": "https://cran.r-project.org/src/contrib/glue_1.8.1.tar.gz",
+            "software_homePage": "https://cran.r-project.org/package=glue",
+            "software_packageUrl": "pkg:cran/glue@1.8.1",
+            "software_packageVersion": "1.8.1"
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-lic-SPDXRef-cran-glue",
+            "creationInfo": "_:creationinfo",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-glue",
+            "relationshipType": "hasDeclaredLicense",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#license-89690ac571dc"
+            ]
+        },
+        {
+            "type": "Person",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#person-00b74998ba68",
+            "creationInfo": "_:creationinfo",
+            "name": "Lionel Henry"
+        },
+        {
+            "type": "software_Package",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-lifecycle",
+            "creationInfo": "_:creationinfo",
+            "name": "lifecycle",
+            "suppliedBy": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#supplier-CRAN",
+            "originatedBy": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#person-00b74998ba68"
+            ],
+            "comment": "Maintainer Lionel Henry.",
+            "verifiedUsing": [
+                {
+                    "type": "Hash",
+                    "algorithm": "md5",
+                    "hashValue": "bce35a7a89fe4108f262db3e441cccae"
+                }
+            ],
+            "externalRef": [
+                {
+                    "type": "ExternalRef",
+                    "externalRefType": "vcs",
+                    "locator": [
+                        "https://github.com/r-lib/lifecycle"
+                    ]
+                }
+            ],
+            "releaseTime": "2026-01-08T00:00:00Z",
+            "software_primaryPurpose": "library",
+            "software_downloadLocation": "https://cran.r-project.org/src/contrib/lifecycle_1.0.5.tar.gz",
+            "software_homePage": "https://cran.r-project.org/package=lifecycle",
+            "software_packageUrl": "pkg:cran/lifecycle@1.0.5",
+            "software_packageVersion": "1.0.5"
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-lic-SPDXRef-cran-lifecycle",
+            "creationInfo": "_:creationinfo",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-lifecycle",
+            "relationshipType": "hasDeclaredLicense",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#license-89690ac571dc"
+            ]
+        },
+        {
+            "type": "software_Package",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-magrittr",
+            "creationInfo": "_:creationinfo",
+            "name": "magrittr",
+            "suppliedBy": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#supplier-CRAN",
+            "originatedBy": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#person-00b74998ba68"
+            ],
+            "comment": "Maintainer Lionel Henry.",
+            "verifiedUsing": [
+                {
+                    "type": "Hash",
+                    "algorithm": "md5",
+                    "hashValue": "4ee23a88bc1589527696d777d7e68dfc"
+                }
+            ],
+            "externalRef": [
+                {
+                    "type": "ExternalRef",
+                    "externalRefType": "vcs",
+                    "locator": [
+                        "https://github.com/tidyverse/magrittr"
+                    ]
+                }
+            ],
+            "releaseTime": "2026-04-04T00:00:00Z",
+            "software_primaryPurpose": "library",
+            "software_downloadLocation": "https://cran.r-project.org/src/contrib/magrittr_2.0.5.tar.gz",
+            "software_homePage": "https://cran.r-project.org/package=magrittr",
+            "software_packageUrl": "pkg:cran/magrittr@2.0.5",
+            "software_packageVersion": "2.0.5"
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-lic-SPDXRef-cran-magrittr",
+            "creationInfo": "_:creationinfo",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-magrittr",
+            "relationshipType": "hasDeclaredLicense",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#license-89690ac571dc"
+            ]
+        },
+        {
+            "type": "Person",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#person-5029ae5aee18",
+            "creationInfo": "_:creationinfo",
+            "name": "Kirill Müller"
+        },
+        {
+            "type": "software_Package",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-pillar",
+            "creationInfo": "_:creationinfo",
+            "name": "pillar",
+            "suppliedBy": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#supplier-CRAN",
+            "originatedBy": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#person-5029ae5aee18"
+            ],
+            "comment": "Maintainer Kirill Müller.",
+            "verifiedUsing": [
+                {
+                    "type": "Hash",
+                    "algorithm": "md5",
+                    "hashValue": "eb84af558b1ac0d743a4790e99acad6e"
+                }
+            ],
+            "externalRef": [
+                {
+                    "type": "ExternalRef",
+                    "externalRefType": "vcs",
+                    "locator": [
+                        "https://github.com/r-lib/pillar"
+                    ]
+                }
+            ],
+            "releaseTime": "2025-09-17T00:00:00Z",
+            "software_primaryPurpose": "library",
+            "software_downloadLocation": "https://cran.r-project.org/src/contrib/pillar_1.11.1.tar.gz",
+            "software_homePage": "https://cran.r-project.org/package=pillar",
+            "software_packageUrl": "pkg:cran/pillar@1.11.1",
+            "software_packageVersion": "1.11.1"
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-lic-SPDXRef-cran-pillar",
+            "creationInfo": "_:creationinfo",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-pillar",
+            "relationshipType": "hasDeclaredLicense",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#license-89690ac571dc"
+            ]
+        },
+        {
+            "type": "Person",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#person-3b2382968419",
+            "creationInfo": "_:creationinfo",
+            "name": "Winston Chang"
+        },
+        {
+            "type": "software_Package",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-R6",
+            "creationInfo": "_:creationinfo",
+            "name": "R6",
+            "suppliedBy": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#supplier-CRAN",
+            "originatedBy": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#person-3b2382968419"
+            ],
+            "comment": "Maintainer Winston Chang.",
+            "verifiedUsing": [
+                {
+                    "type": "Hash",
+                    "algorithm": "md5",
+                    "hashValue": "f01b1787f12797c29194d63c9afd5d70"
+                }
+            ],
+            "externalRef": [
+                {
+                    "type": "ExternalRef",
+                    "externalRefType": "vcs",
+                    "locator": [
+                        "https://github.com/r-lib/R6"
+                    ]
+                }
+            ],
+            "releaseTime": "2025-02-15T00:00:00Z",
+            "software_primaryPurpose": "library",
+            "software_downloadLocation": "https://cran.r-project.org/src/contrib/R6_2.6.1.tar.gz",
+            "software_homePage": "https://cran.r-project.org/package=R6",
+            "software_packageUrl": "pkg:cran/R6@2.6.1",
+            "software_packageVersion": "2.6.1"
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-lic-SPDXRef-cran-R6",
+            "creationInfo": "_:creationinfo",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-R6",
+            "relationshipType": "hasDeclaredLicense",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#license-89690ac571dc"
+            ]
+        },
+        {
+            "type": "software_Package",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-rlang",
+            "creationInfo": "_:creationinfo",
+            "name": "rlang",
+            "suppliedBy": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#supplier-CRAN",
+            "originatedBy": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#person-00b74998ba68"
+            ],
+            "comment": "Maintainer Lionel Henry.",
+            "verifiedUsing": [
+                {
+                    "type": "Hash",
+                    "algorithm": "md5",
+                    "hashValue": "b52c165e43f4d7fe5cfa15c5c9467ff4"
+                }
+            ],
+            "externalRef": [
+                {
+                    "type": "ExternalRef",
+                    "externalRefType": "vcs",
+                    "locator": [
+                        "https://github.com/r-lib/rlang"
+                    ]
+                }
+            ],
+            "releaseTime": "2026-07-05T00:00:00Z",
+            "software_primaryPurpose": "library",
+            "software_downloadLocation": "https://cran.r-project.org/src/contrib/rlang_1.3.0.tar.gz",
+            "software_homePage": "https://cran.r-project.org/package=rlang",
+            "software_packageUrl": "pkg:cran/rlang@1.3.0",
+            "software_packageVersion": "1.3.0"
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-lic-SPDXRef-cran-rlang",
+            "creationInfo": "_:creationinfo",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-rlang",
+            "relationshipType": "hasDeclaredLicense",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#license-89690ac571dc"
+            ]
+        },
+        {
+            "type": "software_Package",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-tibble",
+            "creationInfo": "_:creationinfo",
+            "name": "tibble",
+            "suppliedBy": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#supplier-CRAN",
+            "originatedBy": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#person-5029ae5aee18"
+            ],
+            "comment": "Maintainer Kirill Müller.",
+            "verifiedUsing": [
+                {
+                    "type": "Hash",
+                    "algorithm": "md5",
+                    "hashValue": "97ff25ebdd1460ec152d48e9bb54fa43"
+                }
+            ],
+            "externalRef": [
+                {
+                    "type": "ExternalRef",
+                    "externalRefType": "vcs",
+                    "locator": [
+                        "https://github.com/tidyverse/tibble"
+                    ]
+                }
+            ],
+            "releaseTime": "2026-01-11T00:00:00Z",
+            "software_primaryPurpose": "library",
+            "software_downloadLocation": "https://cran.r-project.org/src/contrib/tibble_3.3.1.tar.gz",
+            "software_homePage": "https://cran.r-project.org/package=tibble",
+            "software_packageUrl": "pkg:cran/tibble@3.3.1",
+            "software_packageVersion": "3.3.1"
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-lic-SPDXRef-cran-tibble",
+            "creationInfo": "_:creationinfo",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-tibble",
+            "relationshipType": "hasDeclaredLicense",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#license-89690ac571dc"
+            ]
+        },
+        {
+            "type": "software_Package",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-tidyselect",
+            "creationInfo": "_:creationinfo",
+            "name": "tidyselect",
+            "suppliedBy": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#supplier-CRAN",
+            "originatedBy": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#person-00b74998ba68"
+            ],
+            "comment": "Maintainer Lionel Henry.",
+            "verifiedUsing": [
+                {
+                    "type": "Hash",
+                    "algorithm": "md5",
+                    "hashValue": "49c581292e819a2a39aac321f27ab0a8"
+                }
+            ],
+            "externalRef": [
+                {
+                    "type": "ExternalRef",
+                    "externalRefType": "vcs",
+                    "locator": [
+                        "https://github.com/r-lib/tidyselect"
+                    ]
+                }
+            ],
+            "releaseTime": "2024-03-11T00:00:00Z",
+            "software_primaryPurpose": "library",
+            "software_downloadLocation": "https://cran.r-project.org/src/contrib/tidyselect_1.2.1.tar.gz",
+            "software_homePage": "https://cran.r-project.org/package=tidyselect",
+            "software_packageUrl": "pkg:cran/tidyselect@1.2.1",
+            "software_packageVersion": "1.2.1"
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-lic-SPDXRef-cran-tidyselect",
+            "creationInfo": "_:creationinfo",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-tidyselect",
+            "relationshipType": "hasDeclaredLicense",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#license-89690ac571dc"
+            ]
+        },
+        {
+            "type": "Person",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#person-ad57ba7feb0b",
+            "creationInfo": "_:creationinfo",
+            "name": "Davis Vaughan"
+        },
+        {
+            "type": "software_Package",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-vctrs",
+            "creationInfo": "_:creationinfo",
+            "name": "vctrs",
+            "suppliedBy": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#supplier-CRAN",
+            "originatedBy": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#person-ad57ba7feb0b"
+            ],
+            "comment": "Maintainer Davis Vaughan.",
+            "verifiedUsing": [
+                {
+                    "type": "Hash",
+                    "algorithm": "md5",
+                    "hashValue": "d99218820f353c359ff59fd46b52ddb3"
+                }
+            ],
+            "externalRef": [
+                {
+                    "type": "ExternalRef",
+                    "externalRefType": "vcs",
+                    "locator": [
+                        "https://github.com/r-lib/vctrs"
+                    ]
+                }
+            ],
+            "releaseTime": "2026-04-11T00:00:00Z",
+            "software_primaryPurpose": "library",
+            "software_downloadLocation": "https://cran.r-project.org/src/contrib/vctrs_0.7.3.tar.gz",
+            "software_homePage": "https://cran.r-project.org/package=vctrs",
+            "software_packageUrl": "pkg:cran/vctrs@0.7.3",
+            "software_packageVersion": "0.7.3"
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-lic-SPDXRef-cran-vctrs",
+            "creationInfo": "_:creationinfo",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-vctrs",
+            "relationshipType": "hasDeclaredLicense",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#license-89690ac571dc"
+            ]
+        },
+        {
+            "type": "software_Package",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-pkgconfig",
+            "creationInfo": "_:creationinfo",
+            "name": "pkgconfig",
+            "suppliedBy": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#supplier-CRAN",
+            "originatedBy": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#person-e74c3b810c98"
+            ],
+            "comment": "Maintainer Gábor Csárdi.",
+            "verifiedUsing": [
+                {
+                    "type": "Hash",
+                    "algorithm": "md5",
+                    "hashValue": "7b9ca1d45d941238381cb55d13ff4d68"
+                }
+            ],
+            "externalRef": [
+                {
+                    "type": "ExternalRef",
+                    "externalRefType": "vcs",
+                    "locator": [
+                        "https://github.com/r-lib/pkgconfig#readme"
+                    ]
+                }
+            ],
+            "releaseTime": "2019-09-22T00:00:00Z",
+            "software_primaryPurpose": "library",
+            "software_downloadLocation": "https://cran.r-project.org/src/contrib/pkgconfig_2.0.3.tar.gz",
+            "software_homePage": "https://cran.r-project.org/package=pkgconfig",
+            "software_packageUrl": "pkg:cran/pkgconfig@2.0.3",
+            "software_packageVersion": "2.0.3"
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-lic-SPDXRef-cran-pkgconfig",
+            "creationInfo": "_:creationinfo",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-pkgconfig",
+            "relationshipType": "hasDeclaredLicense",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#license-89690ac571dc"
+            ]
+        },
+        {
+            "type": "software_Package",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-utf8",
+            "creationInfo": "_:creationinfo",
+            "name": "utf8",
+            "suppliedBy": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#supplier-CRAN",
+            "originatedBy": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#person-5029ae5aee18"
+            ],
+            "comment": "Maintainer Kirill Müller. Licence declared in DESCRIPTION as Apache License (== 2.0) | file LICENSE, which has no SPDX expression in R's licence database.",
+            "verifiedUsing": [
+                {
+                    "type": "Hash",
+                    "algorithm": "md5",
+                    "hashValue": "12037c186ddded4d9b289762b69fc435"
+                }
+            ],
+            "externalRef": [
+                {
+                    "type": "ExternalRef",
+                    "externalRefType": "vcs",
+                    "locator": [
+                        "https://github.com/krlmlr/utf8"
+                    ]
+                }
+            ],
+            "releaseTime": "2025-06-08T00:00:00Z",
+            "software_primaryPurpose": "library",
+            "software_downloadLocation": "https://cran.r-project.org/src/contrib/utf8_1.2.6.tar.gz",
+            "software_homePage": "https://cran.r-project.org/package=utf8",
+            "software_packageUrl": "pkg:cran/utf8@1.2.6",
+            "software_packageVersion": "1.2.6"
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-lic-SPDXRef-cran-utf8",
+            "creationInfo": "_:creationinfo",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-utf8",
+            "relationshipType": "hasDeclaredLicense",
+            "to": [
+                "expandedlicensing_NoAssertionLicense"
+            ]
+        },
+        {
+            "type": "software_Package",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-withr",
+            "creationInfo": "_:creationinfo",
+            "name": "withr",
+            "suppliedBy": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#supplier-CRAN",
+            "originatedBy": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#person-00b74998ba68"
+            ],
+            "comment": "Maintainer Lionel Henry.",
+            "verifiedUsing": [
+                {
+                    "type": "Hash",
+                    "algorithm": "md5",
+                    "hashValue": "121bf3699aadb9d1b47d648964b934f8"
+                }
+            ],
+            "externalRef": [
+                {
+                    "type": "ExternalRef",
+                    "externalRefType": "vcs",
+                    "locator": [
+                        "https://github.com/r-lib/withr#readme"
+                    ]
+                }
+            ],
+            "releaseTime": "2026-06-19T00:00:00Z",
+            "software_primaryPurpose": "library",
+            "software_downloadLocation": "https://cran.r-project.org/src/contrib/withr_3.0.3.tar.gz",
+            "software_homePage": "https://cran.r-project.org/package=withr",
+            "software_packageUrl": "pkg:cran/withr@3.0.3",
+            "software_packageVersion": "3.0.3"
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-lic-SPDXRef-cran-withr",
+            "creationInfo": "_:creationinfo",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-withr",
+            "relationshipType": "hasDeclaredLicense",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#license-89690ac571dc"
+            ]
+        },
+        {
+            "type": "software_Package",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-R",
+            "creationInfo": "_:creationinfo",
+            "name": "R",
+            "comment": "The lowest R version stated, R (>= 4.1.0).",
+            "software_primaryPurpose": "platform",
+            "software_homePage": "https://www.r-project.org",
+            "software_packageVersion": "4.1.0"
+        },
+        {
+            "type": "simplelicensing_LicenseExpression",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#license-63b4929c6fb1",
+            "creationInfo": "_:creationinfo",
+            "simplelicensing_licenseExpression": "GPL-2.0-only OR GPL-3.0-only"
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-lic-SPDXRef-R",
+            "creationInfo": "_:creationinfo",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-R",
+            "relationshipType": "hasDeclaredLicense",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#license-63b4929c6fb1"
+            ]
+        },
+        {
+            "type": "software_Package",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-R-methods",
+            "creationInfo": "_:creationinfo",
+            "name": "methods",
+            "comment": "Part of R. It comes with R and has no file of its own.",
+            "software_primaryPurpose": "library"
+        },
+        {
+            "type": "software_Package",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-R-utils",
+            "creationInfo": "_:creationinfo",
+            "name": "utils",
+            "comment": "Part of R. It comes with R and has no file of its own.",
+            "software_primaryPurpose": "library"
+        },
+        {
+            "type": "software_Package",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-R-graphics",
+            "creationInfo": "_:creationinfo",
+            "name": "graphics",
+            "comment": "Part of R. It comes with R and has no file of its own.",
+            "software_primaryPurpose": "library"
+        },
+        {
+            "type": "software_Package",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-R-grDevices",
+            "creationInfo": "_:creationinfo",
+            "name": "grDevices",
+            "comment": "Part of R. It comes with R and has no file of its own.",
+            "software_primaryPurpose": "library"
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-1",
+            "creationInfo": "_:creationinfo",
+            "comment": "Imports: cli (>= 3.6.2)",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-dplyr",
+            "relationshipType": "dependsOn",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-cli"
+            ]
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-2",
+            "creationInfo": "_:creationinfo",
+            "comment": "Imports: generics",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-dplyr",
+            "relationshipType": "dependsOn",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-generics"
+            ]
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-3",
+            "creationInfo": "_:creationinfo",
+            "comment": "Imports: glue (>= 1.3.2)",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-dplyr",
+            "relationshipType": "dependsOn",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-glue"
+            ]
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-4",
+            "creationInfo": "_:creationinfo",
+            "comment": "Imports: lifecycle (>= 1.0.5)",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-dplyr",
+            "relationshipType": "dependsOn",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-lifecycle"
+            ]
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-5",
+            "creationInfo": "_:creationinfo",
+            "comment": "Imports: magrittr (>= 1.5)",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-dplyr",
+            "relationshipType": "dependsOn",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-magrittr"
+            ]
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-6",
+            "creationInfo": "_:creationinfo",
+            "comment": "Imports: methods",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-dplyr",
+            "relationshipType": "dependsOn",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-R-methods"
+            ]
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-7",
+            "creationInfo": "_:creationinfo",
+            "comment": "Imports: pillar (>= 1.9.0)",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-dplyr",
+            "relationshipType": "dependsOn",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-pillar"
+            ]
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-8",
+            "creationInfo": "_:creationinfo",
+            "comment": "Imports: R6",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-dplyr",
+            "relationshipType": "dependsOn",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-R6"
+            ]
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-9",
+            "creationInfo": "_:creationinfo",
+            "comment": "Imports: rlang (>= 1.1.7)",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-dplyr",
+            "relationshipType": "dependsOn",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-rlang"
+            ]
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-10",
+            "creationInfo": "_:creationinfo",
+            "comment": "Imports: tibble (>= 3.2.0)",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-dplyr",
+            "relationshipType": "dependsOn",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-tibble"
+            ]
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-11",
+            "creationInfo": "_:creationinfo",
+            "comment": "Imports: tidyselect (>= 1.2.0)",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-dplyr",
+            "relationshipType": "dependsOn",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-tidyselect"
+            ]
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-12",
+            "creationInfo": "_:creationinfo",
+            "comment": "Imports: utils",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-dplyr",
+            "relationshipType": "dependsOn",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-R-utils"
+            ]
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-13",
+            "creationInfo": "_:creationinfo",
+            "comment": "Imports: vctrs (>= 0.7.1)",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-dplyr",
+            "relationshipType": "dependsOn",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-vctrs"
+            ]
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-14",
+            "creationInfo": "_:creationinfo",
+            "comment": "Imports: utils",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-cli",
+            "relationshipType": "dependsOn",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-R-utils"
+            ]
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-15",
+            "creationInfo": "_:creationinfo",
+            "comment": "Imports: methods",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-generics",
+            "relationshipType": "dependsOn",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-R-methods"
+            ]
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-16",
+            "creationInfo": "_:creationinfo",
+            "comment": "Imports: methods",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-glue",
+            "relationshipType": "dependsOn",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-R-methods"
+            ]
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-17",
+            "creationInfo": "_:creationinfo",
+            "comment": "Imports: cli (>= 3.4.0)",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-lifecycle",
+            "relationshipType": "dependsOn",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-cli"
+            ]
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-18",
+            "creationInfo": "_:creationinfo",
+            "comment": "Imports: rlang (>= 1.1.0)",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-lifecycle",
+            "relationshipType": "dependsOn",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-rlang"
+            ]
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-19",
+            "creationInfo": "_:creationinfo",
+            "comment": "Imports: cli (>= 2.3.0)",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-pillar",
+            "relationshipType": "dependsOn",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-cli"
+            ]
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-20",
+            "creationInfo": "_:creationinfo",
+            "comment": "Imports: glue",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-pillar",
+            "relationshipType": "dependsOn",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-glue"
+            ]
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-21",
+            "creationInfo": "_:creationinfo",
+            "comment": "Imports: lifecycle",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-pillar",
+            "relationshipType": "dependsOn",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-lifecycle"
+            ]
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-22",
+            "creationInfo": "_:creationinfo",
+            "comment": "Imports: rlang (>= 1.0.2)",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-pillar",
+            "relationshipType": "dependsOn",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-rlang"
+            ]
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-23",
+            "creationInfo": "_:creationinfo",
+            "comment": "Imports: utf8 (>= 1.1.0)",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-pillar",
+            "relationshipType": "dependsOn",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-utf8"
+            ]
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-24",
+            "creationInfo": "_:creationinfo",
+            "comment": "Imports: utils",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-pillar",
+            "relationshipType": "dependsOn",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-R-utils"
+            ]
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-25",
+            "creationInfo": "_:creationinfo",
+            "comment": "Imports: vctrs (>= 0.5.0)",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-pillar",
+            "relationshipType": "dependsOn",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-vctrs"
+            ]
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-26",
+            "creationInfo": "_:creationinfo",
+            "comment": "Imports: utils",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-rlang",
+            "relationshipType": "dependsOn",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-R-utils"
+            ]
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-27",
+            "creationInfo": "_:creationinfo",
+            "comment": "Imports: cli",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-tibble",
+            "relationshipType": "dependsOn",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-cli"
+            ]
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-28",
+            "creationInfo": "_:creationinfo",
+            "comment": "Imports: lifecycle (>= 1.0.0)",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-tibble",
+            "relationshipType": "dependsOn",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-lifecycle"
+            ]
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-29",
+            "creationInfo": "_:creationinfo",
+            "comment": "Imports: magrittr",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-tibble",
+            "relationshipType": "dependsOn",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-magrittr"
+            ]
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-30",
+            "creationInfo": "_:creationinfo",
+            "comment": "Imports: methods",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-tibble",
+            "relationshipType": "dependsOn",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-R-methods"
+            ]
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-31",
+            "creationInfo": "_:creationinfo",
+            "comment": "Imports: pillar (>= 1.8.1)",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-tibble",
+            "relationshipType": "dependsOn",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-pillar"
+            ]
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-32",
+            "creationInfo": "_:creationinfo",
+            "comment": "Imports: pkgconfig",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-tibble",
+            "relationshipType": "dependsOn",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-pkgconfig"
+            ]
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-33",
+            "creationInfo": "_:creationinfo",
+            "comment": "Imports: rlang (>= 1.0.2)",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-tibble",
+            "relationshipType": "dependsOn",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-rlang"
+            ]
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-34",
+            "creationInfo": "_:creationinfo",
+            "comment": "Imports: utils",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-tibble",
+            "relationshipType": "dependsOn",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-R-utils"
+            ]
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-35",
+            "creationInfo": "_:creationinfo",
+            "comment": "Imports: vctrs (>= 0.5.0)",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-tibble",
+            "relationshipType": "dependsOn",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-vctrs"
+            ]
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-36",
+            "creationInfo": "_:creationinfo",
+            "comment": "Imports: cli (>= 3.3.0)",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-tidyselect",
+            "relationshipType": "dependsOn",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-cli"
+            ]
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-37",
+            "creationInfo": "_:creationinfo",
+            "comment": "Imports: glue (>= 1.3.0)",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-tidyselect",
+            "relationshipType": "dependsOn",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-glue"
+            ]
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-38",
+            "creationInfo": "_:creationinfo",
+            "comment": "Imports: lifecycle (>= 1.0.3)",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-tidyselect",
+            "relationshipType": "dependsOn",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-lifecycle"
+            ]
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-39",
+            "creationInfo": "_:creationinfo",
+            "comment": "Imports: rlang (>= 1.0.4)",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-tidyselect",
+            "relationshipType": "dependsOn",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-rlang"
+            ]
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-40",
+            "creationInfo": "_:creationinfo",
+            "comment": "Imports: vctrs (>= 0.5.2)",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-tidyselect",
+            "relationshipType": "dependsOn",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-vctrs"
+            ]
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-41",
+            "creationInfo": "_:creationinfo",
+            "comment": "Imports: withr",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-tidyselect",
+            "relationshipType": "dependsOn",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-withr"
+            ]
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-42",
+            "creationInfo": "_:creationinfo",
+            "comment": "Imports: cli (>= 3.4.0)",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-vctrs",
+            "relationshipType": "dependsOn",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-cli"
+            ]
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-43",
+            "creationInfo": "_:creationinfo",
+            "comment": "Imports: glue",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-vctrs",
+            "relationshipType": "dependsOn",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-glue"
+            ]
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-44",
+            "creationInfo": "_:creationinfo",
+            "comment": "Imports: lifecycle (>= 1.0.3)",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-vctrs",
+            "relationshipType": "dependsOn",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-lifecycle"
+            ]
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-45",
+            "creationInfo": "_:creationinfo",
+            "comment": "Imports: rlang (>= 1.1.7)",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-vctrs",
+            "relationshipType": "dependsOn",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-rlang"
+            ]
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-46",
+            "creationInfo": "_:creationinfo",
+            "comment": "Imports: utils",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-pkgconfig",
+            "relationshipType": "dependsOn",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-R-utils"
+            ]
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-47",
+            "creationInfo": "_:creationinfo",
+            "comment": "Imports: graphics",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-withr",
+            "relationshipType": "dependsOn",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-R-graphics"
+            ]
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-48",
+            "creationInfo": "_:creationinfo",
+            "comment": "Imports: grDevices",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-withr",
+            "relationshipType": "dependsOn",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-R-grDevices"
+            ]
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-49",
+            "creationInfo": "_:creationinfo",
+            "comment": "Depends: R (>= 4.1.0)",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-dplyr",
+            "relationshipType": "dependsOn",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-R"
+            ]
+        },
+        {
+            "type": "Relationship",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-part-of-R",
+            "creationInfo": "_:creationinfo",
+            "comment": "R's own packages are part of R",
+            "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-R",
+            "relationshipType": "contains",
+            "to": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-R-methods",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-R-utils",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-R-graphics",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-R-grDevices"
+            ]
+        },
+        {
+            "type": "software_Sbom",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#sbom",
+            "creationInfo": "_:creationinfo",
+            "name": "dplyr-1.2.1",
+            "rootElement": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-dplyr"
+            ],
+            "element": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#R-Observatory",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#R-Observatory-tool",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#supplier-CRAN",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#person-816975a158df",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-dplyr",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#license-89690ac571dc",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-lic-SPDXRef-cran-dplyr",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#person-e74c3b810c98",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-cli",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-lic-SPDXRef-cran-cli",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-generics",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-lic-SPDXRef-cran-generics",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#person-763111857fed",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-glue",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-lic-SPDXRef-cran-glue",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#person-00b74998ba68",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-lifecycle",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-lic-SPDXRef-cran-lifecycle",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-magrittr",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-lic-SPDXRef-cran-magrittr",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#person-5029ae5aee18",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-pillar",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-lic-SPDXRef-cran-pillar",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#person-3b2382968419",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-R6",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-lic-SPDXRef-cran-R6",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-rlang",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-lic-SPDXRef-cran-rlang",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-tibble",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-lic-SPDXRef-cran-tibble",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-tidyselect",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-lic-SPDXRef-cran-tidyselect",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#person-ad57ba7feb0b",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-vctrs",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-lic-SPDXRef-cran-vctrs",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-pkgconfig",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-lic-SPDXRef-cran-pkgconfig",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-utf8",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-lic-SPDXRef-cran-utf8",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-withr",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-lic-SPDXRef-cran-withr",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-R",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#license-63b4929c6fb1",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-lic-SPDXRef-R",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-R-methods",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-R-utils",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-R-graphics",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-R-grDevices",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-1",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-2",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-3",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-4",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-5",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-6",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-7",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-8",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-9",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-10",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-11",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-12",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-13",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-14",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-15",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-16",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-17",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-18",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-19",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-20",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-21",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-22",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-23",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-24",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-25",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-26",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-27",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-28",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-29",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-30",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-31",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-32",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-33",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-34",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-35",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-36",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-37",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-38",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-39",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-40",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-41",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-42",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-43",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-44",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-45",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-46",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-47",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-48",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-49",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-part-of-R"
+            ]
+        },
+        {
+            "type": "SpdxDocument",
+            "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#document",
+            "creationInfo": "_:creationinfo",
+            "name": "dplyr-1.2.1",
+            "comment": "Each dependency is at its current release on 2026-10-20, the release an install gets that day. Built by R Observatory from CRAN's own records, data release v2026-10-20, not by the package's maintainer. R is listed at the lowest version stated, R (>= 4.1.0). Checksums are only those CRAN and Bioconductor listed, and a component without one has none on record. Advisories are those OSV lists for these exact versions. Page https://r-observatory.thecoatlessprofessor.com/cran/dplyr/sbom",
+            "dataLicense": "https://spdx.org/licenses/CC0-1.0",
+            "profileConformance": [
+                "core",
+                "software",
+                "simpleLicensing",
+                "security"
+            ],
+            "rootElement": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#sbom"
+            ],
+            "element": [
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#R-Observatory",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#R-Observatory-tool",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#supplier-CRAN",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#person-816975a158df",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-dplyr",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#license-89690ac571dc",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-lic-SPDXRef-cran-dplyr",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#person-e74c3b810c98",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-cli",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-lic-SPDXRef-cran-cli",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-generics",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-lic-SPDXRef-cran-generics",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#person-763111857fed",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-glue",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-lic-SPDXRef-cran-glue",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#person-00b74998ba68",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-lifecycle",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-lic-SPDXRef-cran-lifecycle",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-magrittr",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-lic-SPDXRef-cran-magrittr",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#person-5029ae5aee18",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-pillar",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-lic-SPDXRef-cran-pillar",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#person-3b2382968419",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-R6",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-lic-SPDXRef-cran-R6",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-rlang",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-lic-SPDXRef-cran-rlang",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-tibble",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-lic-SPDXRef-cran-tibble",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-tidyselect",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-lic-SPDXRef-cran-tidyselect",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#person-ad57ba7feb0b",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-vctrs",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-lic-SPDXRef-cran-vctrs",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-pkgconfig",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-lic-SPDXRef-cran-pkgconfig",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-utf8",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-lic-SPDXRef-cran-utf8",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-cran-withr",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-lic-SPDXRef-cran-withr",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-R",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#license-63b4929c6fb1",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-lic-SPDXRef-R",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-R-methods",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-R-utils",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-R-graphics",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#SPDXRef-R-grDevices",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-1",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-2",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-3",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-4",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-5",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-6",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-7",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-8",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-9",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-10",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-11",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-12",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-13",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-14",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-15",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-16",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-17",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-18",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-19",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-20",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-21",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-22",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-23",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-24",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-25",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-26",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-27",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-28",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-29",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-30",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-31",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-32",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-33",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-34",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-35",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-36",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-37",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-38",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-39",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-40",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-41",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-42",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-43",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-44",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-45",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-46",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-47",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-48",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-dep-49",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#rel-part-of-R",
+                "https://r-observatory.thecoatlessprofessor.com/spdx3/cran/dplyr/1.2.1/2026-10-20/0243d3fa-27b2-5457-b62c-7957704f0c6a#sbom"
+            ]
+        }
+    ]
+}

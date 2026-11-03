@@ -77,7 +77,7 @@ test_that("compiled schemas are cached", {
 
 test_that("unsupported versions and formats are errors", {
   expect_error(schema_validate(fx("dplyr-1.2.1.cdx.json"), "cyclonedx-json", "1.3"), "not supported")
-  expect_error(schema_validate(fx("dplyr-1.2.1.spdx.json"), "spdx-json", "2.2"), "not supported")
+  expect_error(schema_validate(fx("dplyr-1.2.1.spdx.json"), "spdx-json", "2.1"), "not supported")
   expect_error(schema_validate(fx("dplyr-1.2.1.cdx.json"), "yaml"), "format")
 })
 

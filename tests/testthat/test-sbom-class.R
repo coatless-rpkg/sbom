@@ -37,7 +37,7 @@ test_that("empty frames have the object-model types", {
 test_that("minimal_sbom() fills metadata", {
   x <- minimal_sbom()
   expect_named(x$metadata, c("root", "timestamp", "author", "organization",
-    "tool_version", "notes", "inputs"))
+    "tool_version", "notes", "inputs", "regid"))
   expect_equal(sum(x$components$is_root), 1L)
 })
 
