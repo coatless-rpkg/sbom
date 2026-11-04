@@ -111,8 +111,9 @@ cdx_component <- function(row, version, children = NULL) {
 }
 
 # One entry per component whose own dependencies were read. Unknown
-# components and packages reached only through Suggests get none, since an
-# empty dependsOn would claim they have no dependencies.
+# components, app files, packages reached only through Suggests and those
+# whose source does not record their dependencies (`deps_known` FALSE) get
+# none, since an empty dependsOn would claim they have no dependencies.
 cdx_dependencies <- function(x) {
   comps <- x$components
   rel <- x$relationships
@@ -121,7 +122,7 @@ cdx_dependencies <- function(x) {
     !comps$ref %in% rel$to[rel$field != "Suggests"]
   listed <- comps$is_root |
     (comps$ref != "R" & is.na(comps$parent_ref) & comps$evidence != "unknown" &
-      !suggests_only)
+      comps$type != "file" & !suggests_only & !comps$deps_known %in% FALSE)
   refs <- sort(comps$ref[listed], method = "radix")
   unname(lapply(refs, function(ref) {
     targets <- sort(unique(rel$to[rel$from == ref]), method = "radix")

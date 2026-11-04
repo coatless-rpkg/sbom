@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "locale": "en_US",
+  "platform": "4.6.2",
+  "metadata": {
+    "appmode": "shiny",
+    "primary_rmd": null,
+    "primary_html": null,
+    "content_category": null,
+    "has_parameters": false
+  },
+  "packages": {
+    "cli": {
+      "Source": "CRAN",
+      "Repository": "https://cloud.r-project.org",
+      "description": {
+        "Package": "cli",
+        "Title": "Helpers for Developing Command Line Interfaces",
+        "Version": "3.6.6",
+        "License": "MIT + file LICENSE",
+        "Depends": "R (>= 3.4)",
+        "Imports": "utils",
+        "Maintainer": "Gábor Csárdi <gabor@posit.co>",
+        "Repository": "CRAN"
+      }
+    },
+    "ghpkg": {
+      "Source": "github",
+      "description": {
+        "Package": "ghpkg",
+        "Title": "A GitHub Package",
+        "Version": "0.1.0",
+        "License": "GPL-3",
+        "Imports": "cli, notrecorded",
+        "Maintainer": "Example Person <person@example.org>",
+        "RemoteType": "github",
+        "RemoteHost": "api.github.com",
+        "RemoteRepo": "ghpkg",
+        "RemoteUsername": "example",
+        "RemoteRef": "HEAD",
+        "RemoteSha": "abc123"
+      }
+    },
+    "ppmpkg": {
+      "Source": "RSPM",
+      "Repository": "https://packagemanager.posit.co/cran/latest",
+      "description": {
+        "Package": "ppmpkg",
+        "Title": "A Package From Posit Package Manager",
+        "Version": "2.0.0",
+        "License": "MIT + file LICENSE",
+        "Imports": [
+          "utils"
+        ],
+        "Maintainer": "Another Person <another@example.org>",
+        "Repository": "RSPM"
+      }
+    }
+  },
+  "files": {
+    "app.R": {
+      "checksum": "df854542f3f6a0f98e9ac3eee21ffdea"
+    }
+  }
+}

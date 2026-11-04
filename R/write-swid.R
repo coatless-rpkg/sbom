@@ -102,7 +102,8 @@ swid_tag <- function(x, version = "2015") {
     artifact = root$package_file_name, type = "application/gzip"
   ))
   link(c(rel = "related", href = root$vcs_url))
-  deps <- comps[!comps$is_root, , drop = FALSE]
+  # App files are not dependencies, so they get no link.
+  deps <- comps[!comps$is_root & comps$type != "file", , drop = FALSE]
   deps <- deps[order(deps$ref, method = "radix"), , drop = FALSE]
   for (i in seq_len(nrow(deps))) {
     d <- deps[i, ]

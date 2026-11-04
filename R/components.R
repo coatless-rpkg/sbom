@@ -15,7 +15,8 @@ empty_asserted <- function() {
 }
 
 # One component row with exactly component_columns(), in order. Anything not
-# given is NA, or a typed empty data frame for the list columns.
+# given is NA, or a typed empty data frame for the list columns. Its
+# dependencies are known (`deps_known`) unless it says otherwise.
 component_row <- function(...) {
   given <- list(...)
   unknown <- setdiff(names(given), component_columns())
@@ -25,6 +26,8 @@ component_row <- function(...) {
   row <- lapply(component_columns(), function(col) {
     if (col == "is_root") {
       isTRUE(given[[col]])
+    } else if (col == "deps_known") {
+      !isFALSE(given[[col]])
     } else if (col %in% c("hashes", "deps", "asserted")) {
       list(switch(col, hashes = empty_hashes(), deps = empty_deps(),
         asserted = empty_asserted()))
@@ -78,20 +81,39 @@ github_repo_url <- function(text) {
 # github.com. remotes records the API address, such as
 # https://github.acme.com/api/v3, so the scheme and API path are dropped.
 github_enterprise_host <- function(remote_host) {
+  own_host(remote_host, c("api.github.com", "github.com"))
+}
+
+# The same for a GitLab server of one's own: NA for gitlab.com.
+gitlab_own_host <- function(remote_host) {
+  own_host(remote_host, "gitlab.com")
+}
+
+own_host <- function(remote_host, public) {
   if (is.na(remote_host)) {
     return(NA_character_)
   }
   host <- sub("^[A-Za-z][A-Za-z0-9+.-]*://", "", remote_host)
-  host <- sub("/api(/v3)?$", "", sub("/+$", "", host))
-  if (!nzchar(host) || tolower(host) %in% c("api.github.com", "github.com")) {
+  host <- sub("/api(/v[0-9]+)?$", "", sub("/+$", "", host))
+  if (!nzchar(host) || tolower(host) %in% public) {
     return(NA_character_)
   }
   host
 }
 
-# Ecosystem, purl, supplier and homepage, by the first rule that matches.
-# `purl_inferred` is TRUE when the purl assumes a CRAN package of that name
-# because no repository URL was recorded.
+# A Bioconductor release such as "3.12", or NA.
+bioc_version <- function(x) {
+  if (is.na(x) || !grepl("^[0-9]+\\.[0-9]+$", x)) NA_character_ else x
+}
+
+# Ecosystem, purl, supplier, homepage and source repository, by the first
+# rule that matches. `purl_inferred` is TRUE when the purl assumes a CRAN
+# package of that name because no repository URL was recorded.
+#
+# Besides DESCRIPTION fields, a record from a lockfile or manifest may carry
+# `Source` ("Bioconductor", or "unknown" when it does not say where the
+# package came from) and `Bioconductor.Version`, the Bioconductor release a
+# lockfile names for all of its Bioconductor packages.
 package_ecosystem <- function(desc) {
   f <- function(field) desc_field(desc, field)
   name <- f("Package")
@@ -99,19 +121,29 @@ package_ecosystem <- function(desc) {
   repository <- f("Repository")
   result <- function(ecosystem, purl, supplier_name = NA_character_,
                      supplier_url = NA_character_, homepage = NA_character_,
-                     bioc_release = NA_character_, purl_inferred = FALSE) {
+                     bioc_release = NA_character_, purl_inferred = FALSE,
+                     vcs_url = supplier_url) {
     list(ecosystem = ecosystem, purl = purl, supplier_name = supplier_name,
       supplier_url = supplier_url, homepage = homepage, bioc_release = bioc_release,
-      purl_inferred = purl_inferred)
+      purl_inferred = purl_inferred, vcs_url = vcs_url)
   }
   git_url <- f("git_url")
+  source <- tolower(f("Source"))
+  remote_type <- tolower(f("RemoteType"))
+  forge_url <- function(site) {
+    user <- f("RemoteUsername")
+    repo <- f("RemoteRepo")
+    if (is.na(user) || is.na(repo)) NA_character_ else paste0(site, "/", user, "/", repo)
+  }
 
   if (identical(repository, "CRAN")) {
     return(result("cran", purl(name, version), "CRAN", "https://cran.r-project.org",
-      paste0("https://cran.r-project.org/package=", name)))
+      paste0("https://cran.r-project.org/package=", name), vcs_url = NA_character_))
   }
-  if (!is.na(git_url) && startsWith(git_url, "https://git.bioconductor.org")) {
+  if ((!is.na(git_url) && startsWith(git_url, "https://git.bioconductor.org")) ||
+    identical(source, "bioconductor")) {
     rel <- bioc_release(f("git_branch"))
+    if (is.na(rel)) rel <- bioc_version(f("Bioconductor.Version"))
     base <- if (is.na(rel)) {
       "https://bioconductor.org"
     } else {
@@ -119,21 +151,29 @@ package_ecosystem <- function(desc) {
     }
     homepage <- if (is.na(rel)) NA_character_ else paste0(base, "/html/", name, ".html")
     return(result("bioconductor", purl(name, version, repository_url = base),
-      "Bioconductor", "https://bioconductor.org", homepage, rel))
+      "Bioconductor", "https://bioconductor.org", homepage, rel, vcs_url = NA_character_))
   }
-  if (identical(f("RemoteType"), "github")) {
-    user <- f("RemoteUsername")
-    repo <- f("RemoteRepo")
-    host <- github_enterprise_host(f("RemoteHost"))
-    site <- if (is.na(host)) "https://github.com" else paste0("https://", host)
-    url <- if (is.na(user) || is.na(repo)) {
-      NA_character_
+  if (identical(remote_type, "github") || identical(remote_type, "gitlab")) {
+    host <- if (remote_type == "github") {
+      github_enterprise_host(f("RemoteHost"))
     } else {
-      paste0(site, "/", user, "/", repo)
+      gitlab_own_host(f("RemoteHost"))
     }
-    id <- purl(repo, f("RemoteSha"), "github", user,
+    public <- if (remote_type == "github") "github.com" else "gitlab.com"
+    site <- paste0("https://", if (is.na(host)) public else host)
+    url <- forge_url(site)
+    id <- purl(f("RemoteRepo"), f("RemoteSha"), remote_type, f("RemoteUsername"),
       repository_url = if (is.na(host)) NULL else site)
-    return(result("github", id, if (is.na(host)) "GitHub" else host, url, url))
+    supplier <- if (!is.na(host)) host else if (remote_type == "github") "GitHub" else "GitLab"
+    return(result(remote_type, id, supplier, url, url))
+  }
+  if (identical(remote_type, "bitbucket")) {
+    url <- forge_url("https://bitbucket.org")
+    id <- purl(f("RemoteRepo"), f("RemoteSha"), "bitbucket", f("RemoteUsername"))
+    return(result("bitbucket", id, "Bitbucket", url, url))
+  }
+  if (remote_type %in% c("git", "git2r", "xgit")) {
+    return(result("git", NA_character_, vcs_url = f("RemoteUrl")))
   }
   if (!is.na(repository)) {
     remote <- f("RemoteRepos")
@@ -146,21 +186,28 @@ package_ecosystem <- function(desc) {
     }
     supplier <- if (identical(repository, "RSPM")) "Posit Package Manager" else repository
     return(result("repository", purl(name, version, repository_url = repo_url),
-      supplier, remote, purl_inferred = is.null(repo_url)))
+      supplier, remote, purl_inferred = is.null(repo_url), vcs_url = NA_character_))
+  }
+  if (identical(source, "unknown")) {
+    return(result("unknown", NA_character_))
   }
   result("local", NA_character_)
 }
 
 # Returns list(component = <1-row data.frame>, issues = <data.frame>).
+# `source_input` names where the record came from. A record from renv.lock or
+# manifest.json that lacks a licence or maintainer says that the file does
+# not record it, and, when `library_checked`, that no installed copy of that
+# version was found either.
 package_component <- function(desc, evidence, source_input, is_root = FALSE,
-                              scope = "required") {
+                              scope = "required", library_checked = FALSE) {
   name <- desc_field(desc, "Package")
   version <- desc_field(desc, "Version")
   eco <- package_ecosystem(desc)
   ref <- if (is.na(eco$purl)) paste0(eco$ecosystem, "/", name) else eco$purl
 
-  vcs_url <- if (eco$ecosystem == "github") {
-    eco$supplier_url
+  vcs_url <- if (eco$ecosystem %in% c("github", "gitlab", "bitbucket", "git")) {
+    eco$vcs_url
   } else {
     url <- github_repo_url(desc_field(desc, "URL"))
     if (is.na(url)) url <- github_repo_url(desc_field(desc, "BugReports"))
@@ -198,6 +245,13 @@ package_component <- function(desc, evidence, source_input, is_root = FALSE,
   )
 
   label <- pkg_label(name, version)
+  recorded_in <- if (source_input %in% c("renv.lock", "manifest.json")) source_input
+  unrecorded <- function(what) {
+    paste0(
+      recorded_in, " does not record the ", what, " of ", label,
+      if (library_checked) ", and no installed copy of that version was found", "."
+    )
+  }
   issues <- empty_issues()
   if (is.na(version)) {
     issues <- add_issue(issues, ref, "version", "version-missing",
@@ -205,7 +259,7 @@ package_component <- function(desc, evidence, source_input, is_root = FALSE,
   }
   if (is.na(license)) {
     issues <- add_issue(issues, ref, "license", "license-missing",
-      paste0(label, " declares no licence."))
+      if (is.null(recorded_in)) paste0(label, " declares no licence.") else unrecorded("licence"))
   } else if (is.na(spdx)) {
     issues <- add_issue(issues, ref, "license", "license-no-spdx",
       paste0("The licence of ", label, ", ", license_normalize(license),
@@ -215,6 +269,15 @@ package_component <- function(desc, evidence, source_input, is_root = FALSE,
     issues <- add_issue(issues, ref, "supplier", "supplier-unknown",
       paste0(label, " was installed from a local source, so it has no supplier on record."))
   }
+  if (eco$ecosystem == "git") {
+    issues <- add_issue(issues, ref, "purl", "source-git",
+      paste0(label, " was installed from a git repository, so it has no package URL."))
+  }
+  if (eco$ecosystem == "unknown") {
+    issues <- add_issue(issues, ref, "supplier", "source-unknown",
+      paste0(if (is.null(recorded_in)) "Its DESCRIPTION" else recorded_in,
+        " does not record where ", label, " came from."))
+  }
   if (isTRUE(eco$purl_inferred)) {
     issues <- add_issue(issues, ref, "purl", "purl-inferred",
       paste0(label, " came from ", eco$supplier_name, " without a recorded repository URL, ",
@@ -222,13 +285,13 @@ package_component <- function(desc, evidence, source_input, is_root = FALSE,
   }
   if (is.na(maintainer)) {
     issues <- add_issue(issues, ref, "maintainer", "maintainer-missing",
-      paste0(label, " names no maintainer."))
+      if (is.null(recorded_in)) paste0(label, " names no maintainer.") else unrecorded("maintainer"))
   }
   list(component = component, issues = issues)
 }
 
 # The R row, then one row per base package used. Sorted by ref, R first.
-r_components <- function(version, version_is, stated_spec, base_used) {
+r_components <- function(version, version_is, stated_spec, base_used, evidence = NULL) {
   have_version <- !is.na(version)
   r_license <- "GPL-2 | GPL-3"
   description <- if (!have_version) {
@@ -245,7 +308,15 @@ r_components <- function(version, version_is, stated_spec, base_used) {
     license_as_written = r_license, license_spdx = license_spdx(r_license),
     license_comment = license_comment(r_license),
     homepage = "https://www.r-project.org", description = description,
-    evidence = if (!have_version) "unknown" else if (version_is == "exact") "observed" else "declared",
+    evidence = if (!have_version) {
+      "unknown"
+    } else if (!is.null(evidence) && version_is == "exact") {
+      evidence
+    } else if (version_is == "exact") {
+      "observed"
+    } else {
+      "declared"
+    },
     source_input = "r"
   )
   base_used <- sort(unique(base_used[!is.na(base_used)]), method = "radix")

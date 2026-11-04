@@ -80,7 +80,7 @@ sbom_package <- function(path = ".",
     root$component$package_file_name <- basename(path)
   }
   inputs <- data.frame(
-    kind = c("package", rep("library", length(lib))),
+    kind = c("DESCRIPTION", rep("library", length(lib))),
     path = c(as.character(path), as.character(lib)),
     stringsAsFactors = FALSE
   )
@@ -188,29 +188,52 @@ check_regid <- function(regid, call = parent.frame()) {
   if (is.na(regid) || !nzchar(trimws(regid))) NA_character_ else regid
 }
 
-# Shared by sbom_package() and sbom_installed(). `root` is list(component,
-# issues). For a library root, `root_desc` is a stand-in whose Imports are the
-# listed packages. They are all installed, so no issue names the stand-in.
+# Shared by every builder. `root` is list(component, issues). For a library
+# root, `root_desc` is a stand-in whose Imports are the listed packages; an
+# issue that would name a stand-in names the root component instead.
+#
+# sbom_renv() already knows its packages, so it passes `resolved`, a list like
+# resolve_dependencies() returns whose edges may also have an `evidence`
+# column (default "declared"). Its records come from a lock file rather than
+# a library: `package_evidence` and `package_source` say so, `where` says
+# where a missing dependency is not and `missing_code` is its issue code, `r_evidence` overrides the
+# evidence for an exact R version, and `all_required` makes every package
+# required, since a lock file lists what the project needs. `not_installed`
+# names the records that lacked a field and that no installed copy of the
+# same version could fill.
 build_sbom <- function(root, lookup, root_desc, fields, root_suggests, lib,
                        r_version, author, organization, regid, timestamp,
-                       inputs, extra_base = character()) {
+                       inputs, extra_base = character(), resolved = NULL,
+                       package_evidence = "observed", package_source = "library",
+                       where = "installed in the library sbom read",
+                       missing_code = "dependency-not-installed", r_evidence = NULL,
+                       all_required = FALSE, not_installed = character()) {
   root_row <- root$component
   root_is_library <- identical(root_row$ecosystem, "library")
   root_name <- root_desc[["Package"]]
-  res <- resolve_dependencies(root_desc, lookup, fields, root_suggests)
+  res <- if (is.null(resolved)) {
+    resolve_dependencies(root_desc, lookup, fields, root_suggests)
+  } else {
+    resolved
+  }
   edges <- res$edges
   base <- base_packages()
 
   # Scope: optional when no non-Suggests edge reaches the target.
   required_to <- unique(edges$to[edges$field != "Suggests"])
-  scope_of <- function(name) if (name %in% required_to) "required" else "optional"
+  scope_of <- function(name) {
+    if (all_required || name %in% required_to) "required" else "optional"
+  }
 
   # Library packages and their issues.
   issues <- root$issues
   comps <- list(root_row)
   ref_of <- character()
   for (pkg in res$packages) {
-    out <- package_component(lookup$get(pkg), "observed", "library", scope = scope_of(pkg))
+    out <- package_component(
+      lookup$get(pkg), package_evidence, package_source,
+      scope = scope_of(pkg), library_checked = pkg %in% not_installed
+    )
     comps[[length(comps) + 1L]] <- out$component
     issues <- rbind(issues, out$issues)
     ref_of[[pkg]] <- out$component$ref
@@ -225,12 +248,14 @@ build_sbom <- function(root, lookup, root_desc, fields, root_suggests, lib,
   }
   gone <- edges[edges$to %in% res$missing, , drop = FALSE]
   gone <- gone[!duplicated(gone[c("from", "to")]), , drop = FALSE]
+  # A stand-in root is named by the root component's name.
+  gone$from[gone$from == root_name] <- root_row$name
   for (i in seq_len(nrow(gone))) {
     issues <- add_issue(
-      issues, ref_of[[gone$to[[i]]]], "dependencies", "dependency-not-installed",
+      issues, ref_of[[gone$to[[i]]]], "dependencies", missing_code,
       paste0(
         gone$to[[i]], " is named as a dependency of ", gone$from[[i]],
-        " but is not installed in the library sbom read, so its version and ",
+        " but is not ", where, ", so its version and ",
         "source are unknown."
       )
     )
@@ -255,7 +280,7 @@ build_sbom <- function(root, lookup, root_desc, fields, root_suggests, lib,
   base_edge <- unique(edges$to[edges$to %in% base])
   base_used <- sort(unique(c(base_edge, extra_base)), method = "radix")
   r <- resolve_r_version(lib, r_version, root_desc, lapply(res$packages, lookup$get))
-  r_rows <- r_components(r$version, r$version_is, r$stated_spec, base_used)
+  r_rows <- r_components(r$version, r$version_is, r$stated_spec, base_used, r_evidence)
   base_scope <- vapply(base_used, function(p) {
     if (p %in% edges$to && !p %in% required_to) "optional" else "required"
   }, "")
@@ -280,7 +305,8 @@ build_sbom <- function(root, lookup, root_desc, fields, root_suggests, lib,
   if (nrow(declared) > 0L) {
     rels <- rbind(rels, data.frame(
       from = ref_for(declared$from), to = ref_for(declared$to),
-      field = declared$field, spec = declared$spec, evidence = "declared",
+      field = declared$field, spec = declared$spec,
+      evidence = if (is.null(declared$evidence)) "declared" else declared$evidence,
       stringsAsFactors = FALSE
     ))
   }
@@ -342,7 +368,7 @@ build_sbom <- function(root, lookup, root_desc, fields, root_suggests, lib,
     if (any(suggests_only)) {
       "Packages listed only under Suggests are included, but their own dependencies were not read."
     },
-    "Checksums are only those of files sbom read itself, and a component without one has none on record.",
+    checksum_note(),
     "Download locations are not recorded, since sbom did not look up any package repository.",
     if (nzchar(source_date_epoch())) {
       "The timestamp comes from the SOURCE_DATE_EPOCH environment variable."
@@ -361,6 +387,10 @@ build_sbom <- function(root, lookup, root_desc, fields, root_suggests, lib,
     ),
     all_comps, rels, issues
   )
+}
+
+checksum_note <- function() {
+  "Checksums are only those of files sbom read itself, and a component without one has none on record."
 }
 
 # Exact when asked for, or when lib is the library search path. Otherwise the

@@ -7,3 +7,10 @@
   3.0.1 JSON-LD or a SWID tag, or as a CSV inventory, following R
   Observatory's output conventions. Values sbom could not determine are
   recorded by `sbom_issues()` and written into the document as notes.
+
+* `sbom()` builds an SBOM for a project folder from its `renv.lock`, Posit
+  Connect `manifest.json`, `DESCRIPTION` or code, and reports as issues the
+  packages that one of those sources lists and another does not, and those
+  they list at different versions. `sbom_renv()` and
+  `sbom_rsconnect()` read a lockfile or manifest directly, and `summary()`,
+  `sbom_tree()` and `sbom_diff()` inspect an SBOM.

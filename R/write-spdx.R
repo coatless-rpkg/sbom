@@ -1,8 +1,11 @@
 # SPDX 2.2 and 2.3 JSON writer, following R Observatory's layout.
 
+# The id prefix of each ecosystem. A project folder's root is of ecosystem
+# "local" but has its own prefix, "project", like its ref.
 spdx_prefixes <- c(
-  cran = "cran", bioconductor = "bioc", github = "github",
-  repository = "repository", local = "local", unknown = "unknown"
+  cran = "cran", bioconductor = "bioc", github = "github", gitlab = "gitlab",
+  bitbucket = "bitbucket", git = "git", repository = "repository",
+  local = "local", unknown = "unknown", file = "file"
 )
 
 spdx_sanitize <- function(x) {
@@ -15,6 +18,7 @@ spdx_ids <- function(components) {
   name <- spdx_sanitize(components$name)
   prefix <- unname(spdx_prefixes[eco])
   prefix[is.na(prefix)] <- "unknown"
+  prefix[startsWith(as.character(components$ref), "project/") %in% TRUE] <- "project"
   ids <- paste0("SPDXRef-", prefix, "-", name)
   ids[eco == "r"] <- "SPDXRef-R"
   ids[eco == "base-r"] <- paste0("SPDXRef-R-", name[eco == "base-r"])
@@ -128,8 +132,13 @@ spdx_package <- function(row, id, version = "2.3") {
   if (length(refs) > 0L) p$externalRefs <- refs
 
   if (version != "2.2") {
-    p$primaryPackagePurpose <-
-      if (is_r || row$type == "application") "APPLICATION" else "LIBRARY"
+    p$primaryPackagePurpose <- if (is_r || row$type == "application") {
+      "APPLICATION"
+    } else if (row$type == "file") {
+      "FILE"
+    } else {
+      "LIBRARY"
+    }
   }
   p
 }

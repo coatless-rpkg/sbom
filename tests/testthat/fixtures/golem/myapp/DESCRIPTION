@@ -1,0 +1,10 @@
+Package: myapp
+Title: An Application Built with golem
+Version: 0.1.0
+Authors@R: person("App", "Author", email = "app@example.org", role = c("aut", "cre"))
+Description: A Shiny application packaged with golem.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Imports:
+    cli,
+    golem

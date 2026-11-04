@@ -1,0 +1,9 @@
+---
+title: "Report"
+output: html_document
+---
+
+```{r}
+library(cli)
+cli::cli_h1("Report")
+```

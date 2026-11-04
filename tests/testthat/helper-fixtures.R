@@ -49,6 +49,8 @@ minimal_sbom <- function() {
   for (col in setdiff(component_columns(), names(rows))) {
     rows[[col]] <- if (col %in% c("hashes", "deps", "asserted")) {
       replicate(nrow(rows), data.frame(), simplify = FALSE)
+    } else if (col == "deps_known") {
+      TRUE
     } else {
       NA_character_
     }
@@ -119,4 +121,42 @@ fixture_sbom <- function(env = parent.frame()) {
     lib = fixture_lib(env = env), author = "Test Author",
     organization = "Test Org", timestamp = as.POSIXct("2026-11-04", tz = "UTC")
   )
+}
+
+# A copy of the fixture folder `fixture` in a new temporary folder, under the
+# name `name`, so that it is not inside this package's git repository.
+local_fixture_copy <- function(fixture, name = basename(fixture), env = parent.frame()) {
+  dir <- file.path(withr::local_tempdir(.local_envir = env), name)
+  dir.create(dir)
+  src <- test_path(fixture)
+  file.copy(list.files(src, full.names = TRUE, all.files = TRUE, no.. = TRUE), dir, recursive = TRUE)
+  dir
+}
+
+# Writes `x` in every format, and checks each against its schema.
+expect_valid_in_every_format <- function(x, label = "") {
+  ext <- stats::setNames(sbom_formats()$extension, sbom_formats()$format)
+  expected <- c(`cyclonedx-json` = "pass", `cyclonedx-xml` = "pass", `spdx-json` = "pass", `spdx-yaml` = "pass",
+                `spdx-xml` = "partial", `spdx-tv` = "partial", `spdx3-jsonld` = "partial", swid = "pass")
+  for (f in names(ext)) {
+    tf <- withr::local_tempfile(fileext = ext[[f]])
+    write_sbom(x, tf, format = f)
+    if (f %in% names(expected)) {
+      expect_identical(schema_validate(tf, f)$status, expected[[f]], label = paste(label, f))
+    } else {
+      expect_true(file.exists(tf), label = paste(label, f))
+    }
+  }
+}
+
+# Folder of a fake library, with one DESCRIPTION per element of `pkgs` (a
+# named list of named field vectors), written with write_text().
+write_fake_lib <- function(lib, pkgs) {
+  for (name in names(pkgs)) {
+    fields <- c(Package = name, pkgs[[name]])
+    dir.create(file.path(lib, name), recursive = TRUE, showWarnings = FALSE)
+    write_text(paste0(paste0(names(fields), ": ", unname(fields)), "\n", collapse = ""),
+               file.path(lib, name, "DESCRIPTION"))
+  }
+  lib
 }

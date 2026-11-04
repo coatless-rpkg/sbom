@@ -1,0 +1,59 @@
+{
+  "R": {
+    "Version": "4.6.2",
+    "Repositories": [
+      {
+        "Name": "CRAN",
+        "URL": "https://cloud.r-project.org"
+      }
+    ]
+  },
+  "Packages": {
+    "cli": {
+      "Package": "cli",
+      "Version": "3.6.6",
+      "Source": "Repository",
+      "Title": "Helpers for Developing Command Line Interfaces",
+      "License": "MIT + file LICENSE",
+      "Depends": [
+        "R (>= 3.4)"
+      ],
+      "Imports": [
+        "utils"
+      ],
+      "Maintainer": "Gábor Csárdi <gabor@posit.co>",
+      "Repository": "CRAN"
+    },
+    "golem": {
+      "Package": "golem",
+      "Version": "0.5.1",
+      "Source": "Repository",
+      "Title": "A Framework for Robust Shiny Applications",
+      "License": "MIT + file LICENSE",
+      "Depends": [
+        "R (>= 3.0)"
+      ],
+      "Imports": [
+        "cli",
+        "utils"
+      ],
+      "Maintainer": "Colin Fay <contact@colinfay.me>",
+      "Repository": "CRAN"
+    },
+    "myapp": {
+      "Package": "myapp",
+      "Version": "0.1.0",
+      "Source": "Local",
+      "RemoteType": "local",
+      "RemoteUrl": ".",
+      "Title": "An Application Built with golem",
+      "License": "MIT + file LICENSE",
+      "Imports": [
+        "cli",
+        "golem"
+      ],
+      "Authors@R": "person(\"App\", \"Author\", email = \"app@example.org\", role = c(\"aut\", \"cre\"))",
+      "Maintainer": "App Author <app@example.org>"
+    }
+  }
+}

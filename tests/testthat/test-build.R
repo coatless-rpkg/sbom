@@ -68,7 +68,7 @@ test_that("the same tree built from two libraries is identical, with no paths in
   expect_equal(sbom_dependencies(a), sbom_dependencies(b))
   expect_equal(sbom_issues(a), sbom_issues(b))
   expect_equal(a$metadata$notes, b$metadata$notes)
-  expect_equal(a$metadata$inputs$kind, c("package", "library"))
+  expect_equal(a$metadata$inputs$kind, c("DESCRIPTION", "library"))
   expect_identical(sbom_components(a)$ref, sort(sbom_components(a)$ref, method = "radix"))
 })
 

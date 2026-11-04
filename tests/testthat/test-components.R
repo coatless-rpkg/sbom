@@ -182,3 +182,42 @@ test_that("only repository packages with a version get a package file name", {
                               RemoteUsername = "o", RemoteRepo = "g", RemoteSha = "abc")))
   expect_true(is.na(file_name(Package = "z", Repository = "CRAN")))
 })
+
+test_that("a component's dependencies are known unless a reader says otherwise", {
+  expect_true(component_row(ref = "x", name = "x")$deps_known)
+  expect_false(component_row(ref = "x", name = "x", deps_known = FALSE)$deps_known)
+  expect_true(unknown_component("foo")$deps_known)
+})
+
+test_that("GitLab, Bitbucket and git sources are recognised in an installed DESCRIPTION", {
+  desc <- function(...) {
+    c(Package = "p", Version = "1.0", License = "MIT + file LICENSE", Maintainer = "A B <a@b.org>",
+      RemoteUsername = "team", RemoteRepo = "p", RemoteSha = "abc123", ...)
+  }
+  gl <- package_component(desc(RemoteType = "gitlab", RemoteHost = "gitlab.com"), "observed", "library")
+  expect_equal(gl$component$ecosystem, "gitlab")
+  expect_equal(gl$component$purl, "pkg:gitlab/team/p@abc123")
+  expect_equal(gl$component$supplier_name, "GitLab")
+  expect_equal(gl$component$supplier_url, "https://gitlab.com/team/p")
+  expect_equal(gl$component$vcs_url, "https://gitlab.com/team/p")
+  expect_equal(nrow(gl$issues), 0L)
+  own <- package_component(desc(RemoteType = "gitlab", RemoteHost = "https://gitlab.acme.com/"), "observed", "library")
+  expect_equal(own$component$purl, "pkg:gitlab/team/p@abc123?repository_url=https://gitlab.acme.com")
+  expect_equal(own$component$supplier_name, "gitlab.acme.com")
+  expect_equal(own$component$supplier_url, "https://gitlab.acme.com/team/p")
+  bb <- package_component(desc(RemoteType = "bitbucket"), "observed", "library")
+  expect_equal(bb$component$ecosystem, "bitbucket")
+  expect_equal(bb$component$purl, "pkg:bitbucket/team/p@abc123")
+  expect_equal(bb$component$supplier_name, "Bitbucket")
+  expect_equal(bb$component$vcs_url, "https://bitbucket.org/team/p")
+  for (type in c("git2r", "xgit")) {
+    g <- package_component(desc(RemoteType = type, RemoteUrl = "https://git.example.com/p.git"), "observed", "library")
+    expect_equal(g$component$ecosystem, "git", label = type)
+    expect_equal(g$component$ref, "git/p", label = type)
+    expect_true(is.na(g$component$purl), label = type)
+    expect_true(is.na(g$component$supplier_name), label = type)
+    expect_equal(g$component$vcs_url, "https://git.example.com/p.git", label = type)
+    expect_equal(g$issues$code, "source-git", label = type)
+    expect_equal(g$issues$message, "p 1.0 was installed from a git repository, so it has no package URL.")
+  }
+})

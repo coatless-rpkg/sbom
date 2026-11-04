@@ -2,7 +2,6 @@
 % Please edit documentation in R/sbom-package.R
 \docType{package}
 \name{sbom-package}
-\alias{sbom}
 \alias{sbom-package}
 \title{sbom: Software Bills of Materials for R Code}
 \description{

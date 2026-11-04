@@ -8,7 +8,7 @@ component_columns <- function() {
     "maintainer", "license_as_written", "license_spdx", "license_comment",
     "published", "homepage", "vcs_url", "download_location",
     "package_file_name", "doi", "description", "bioc_release", "evidence",
-    "source_input", "hashes", "deps", "asserted"
+    "source_input", "deps_known", "hashes", "deps", "asserted"
   )
 }
 
@@ -38,7 +38,7 @@ empty_df <- function(cols, logical = character(), list = character()) {
 empty_components <- function() {
   empty_df(
     component_columns(),
-    logical = "is_root",
+    logical = c("is_root", "deps_known"),
     list = c("hashes", "deps", "asserted")
   )
 }
@@ -69,6 +69,7 @@ new_sbom <- function(metadata, components, relationships, issues) {
     ))
   }
   check_columns(components, component_columns(), "components")
+  check_unique_refs(components$ref)
   check_columns(relationships, relationship_columns(), "relationships")
   check_columns(issues, issue_columns(), "issues")
   structure(
@@ -80,6 +81,18 @@ new_sbom <- function(metadata, components, relationships, issues) {
     ),
     class = "sbom"
   )
+}
+
+# Every component has its own ref, which the writers use as its id, so two
+# components that share one would make a broken document.
+check_unique_refs <- function(refs, call = parent.frame()) {
+  twice <- unique(refs[duplicated(refs)])
+  if (length(twice) > 0L) {
+    cli::cli_abort(
+      "More than one component has the ref {.val {twice}}, and each needs its own.",
+      call = call
+    )
+  }
 }
 
 add_issue <- function(issues, ref, field, code, message, severity = "warning") {
@@ -170,7 +183,7 @@ check_sbom <- function(x, arg = "x", call = parent.frame()) {
 print.sbom <- function(x, ...) {
   comps <- x$components
   root <- comps[comps$is_root %in% TRUE, , drop = FALSE][1, ]
-  label <- if (is.na(root$version)) root$name else paste(root$name, root$version)
+  label <- node_label(root)
   n_issues <- nrow(x$issues)
   cat("<sbom> ", label, "\n", sep = "")
   cat("Components: ", nrow(comps), "\n", sep = "")

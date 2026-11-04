@@ -21,14 +21,16 @@ cran_doi(pkg)
 \item{version}{Package versions, as a character vector. \code{NA} omits the
 version.}
 
-\item{source}{Where the package comes from: \code{"cran"} or \code{"github"}.}
+\item{source}{Where the package comes from: \code{"cran"}, \code{"github"},
+\code{"gitlab"} or \code{"bitbucket"}.}
 
 \item{namespace}{Owner of the source repository. Required when \code{source} is
-\code{"github"}.}
+\code{"github"}, \code{"gitlab"} or \code{"bitbucket"}.}
 
 \item{repository_url}{Optional repository URL, written unencoded as a
 \code{repository_url} qualifier. Use this for packages from repositories other
-than CRAN, such as Bioconductor, or from a GitHub Enterprise server.}
+than CRAN, such as Bioconductor, or from a GitHub Enterprise or GitLab
+server of one's own.}
 
 \item{pkg}{Package names, as a character vector.}
 }
@@ -42,7 +44,7 @@ the DataCite DOI that CRAN assigns to each package.
 }
 \details{
 Unknown values give \code{NA_character_} for that element. A package name that
-is \code{NA} or \code{""}, or a GitHub namespace that is \code{NA} or \code{""}, is unknown.
+is \code{NA} or \code{""}, or a namespace that is \code{NA} or \code{""}, is unknown.
 Other elements of the vector are unaffected.
 }
 \examples{

@@ -140,15 +140,17 @@ print.sbom_diff <- function(x, ...) {
 as.data.frame.sbom_diff <- function(x, ...) x$changes
 
 # Appends one issue per difference between `primary` and `other`. R and base
-# packages, and the root component, are never drift.
+# packages, and the root components, are never drift. They are set aside
+# before comparing, so that a root sharing a package's name hides nothing.
 drift_issues <- function(issues, primary, other, primary_label, other_label) {
+  compared <- function(comps) {
+    comps[!(comps$is_root %in% TRUE | comps$ecosystem %in% c("r", "base-r")), , drop = FALSE]
+  }
+  primary$components <- compared(primary$components)
+  other$components <- compared(other$components)
   oc <- primary$components
-  nc <- other$components
-  skip <- function(comps) comps$is_root %in% TRUE | comps$ecosystem %in% c("r", "base-r")
-  pk <- component_keys(oc)
   ch <- sbom_diff(primary, other)$changes
-  ch <- ch[ch$change %in% c("version", "added", "removed") &
-    !ch$name %in% c(oc$name[skip(oc)], nc$name[skip(nc)]), , drop = FALSE]
+  ch <- ch[ch$change %in% c("version", "added", "removed"), , drop = FALSE]
   pnames <- oc$name
   for (i in seq_len(nrow(ch))) {
     name <- ch$name[i]

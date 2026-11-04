@@ -6,6 +6,15 @@ test_that("new_sbom() requires every component column", {
   expect_error(new_sbom(x$metadata, bad, x$relationships, x$issues), "ref")
 })
 
+test_that("new_sbom() refuses components that share a ref", {
+  x <- minimal_sbom()
+  comps <- rbind(x$components, x$components[2:3, ])
+  expect_error(
+    new_sbom(x$metadata, comps, x$relationships, x$issues),
+    "pkg:cran/b@2.0.*R", class = "rlang_error"
+  )
+})
+
 test_that("new_sbom() checks relationships, issues and metadata", {
   x <- minimal_sbom()
   expect_error(
@@ -24,6 +33,7 @@ test_that("empty frames have the object-model types", {
   expect_equal(nrow(e), 0L)
   expect_named(e, component_columns())
   expect_type(e$is_root, "logical")
+  expect_type(e$deps_known, "logical")
   expect_type(e$hashes, "list")
   expect_type(e$deps, "list")
   expect_type(e$asserted, "list")

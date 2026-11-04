@@ -1,0 +1,86 @@
+{
+  "R": {
+    "Version": "4.6.2",
+    "Repositories": [
+      {
+        "Name": "CRAN",
+        "URL": "https://cloud.r-project.org"
+      },
+      {
+        "Name": "PPM",
+        "URL": "https://packagemanager.posit.co/cran/latest"
+      }
+    ]
+  },
+  "Packages": {
+    "cli": {
+      "Package": "cli",
+      "Version": "3.6.6",
+      "Source": "Repository",
+      "Title": "Helpers for Developing Command Line Interfaces",
+      "Description": "A suite of tools to build attractive command line interfaces.",
+      "License": "MIT + file LICENSE",
+      "URL": "https://cli.r-lib.org, https://github.com/r-lib/cli",
+      "Depends": [
+        "R (>= 3.4)"
+      ],
+      "Imports": [
+        "utils"
+      ],
+      "Maintainer": "Gábor Csárdi <gabor@posit.co>",
+      "Repository": "CRAN"
+    },
+    "glue": {
+      "Package": "glue",
+      "Version": "1.8.1",
+      "Source": "Repository",
+      "Title": "Interpreted String Literals",
+      "License": "MIT + file LICENSE",
+      "Depends": [
+        "R (>= 4.1)"
+      ],
+      "Imports": [
+        "methods"
+      ],
+      "Maintainer": "Jennifer Bryan <jenny@posit.co>",
+      "Repository": "PPM"
+    },
+    "ghpkg": {
+      "Package": "ghpkg",
+      "Version": "0.1.0",
+      "Source": "GitHub",
+      "Title": "A GitHub Package",
+      "License": "GPL-3",
+      "Imports": [
+        "cli"
+      ],
+      "Maintainer": "Example Person <person@example.org>",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteRepo": "ghpkg",
+      "RemoteUsername": "example",
+      "RemoteRef": "HEAD",
+      "RemoteSha": "abc123"
+    },
+    "biocpkg": {
+      "Package": "biocpkg",
+      "Version": "1.2.3",
+      "Source": "Bioconductor",
+      "Title": "A Bioconductor Package",
+      "License": "Artistic-2.0",
+      "Maintainer": "Bio Person <bio@example.org>",
+      "git_url": "https://git.bioconductor.org/packages/biocpkg",
+      "git_branch": "RELEASE_3_22",
+      "git_last_commit": "1a2b3c4",
+      "git_last_commit_date": "2026-04-20"
+    },
+    "localpkg": {
+      "Package": "localpkg",
+      "Version": "0.0.1",
+      "Source": "Local",
+      "Title": "A Local Package",
+      "License": "file LICENSE",
+      "Maintainer": "Local Person <local@example.org>"
+    }
+  }
+}

@@ -83,6 +83,8 @@ spdx3_package <- function(row, id, supplier, person) {
     "platform"
   } else if (isTRUE(row$is_root) && row$type == "application") {
     "application"
+  } else if (row$type == "file") {
+    "file"
   } else {
     "library"
   }

@@ -4,18 +4,20 @@
 #' the DataCite DOI that CRAN assigns to each package.
 #'
 #' Unknown values give `NA_character_` for that element. A package name that
-#' is `NA` or `""`, or a GitHub namespace that is `NA` or `""`, is unknown.
+#' is `NA` or `""`, or a namespace that is `NA` or `""`, is unknown.
 #' Other elements of the vector are unaffected.
 #'
 #' @param name Package names, as a character vector.
 #' @param version Package versions, as a character vector. `NA` omits the
 #'   version.
-#' @param source Where the package comes from: `"cran"` or `"github"`.
+#' @param source Where the package comes from: `"cran"`, `"github"`,
+#'   `"gitlab"` or `"bitbucket"`.
 #' @param namespace Owner of the source repository. Required when `source` is
-#'   `"github"`.
+#'   `"github"`, `"gitlab"` or `"bitbucket"`.
 #' @param repository_url Optional repository URL, written unencoded as a
 #'   `repository_url` qualifier. Use this for packages from repositories other
-#'   than CRAN, such as Bioconductor, or from a GitHub Enterprise server.
+#'   than CRAN, such as Bioconductor, or from a GitHub Enterprise or GitLab
+#'   server of one's own.
 #' @param pkg Package names, as a character vector.
 #'
 #' @return A character vector. `purl()` recycles `name`, `version`,
@@ -27,9 +29,9 @@
 #' cran_doi("dplyr")
 purl <- function(name, version = NA, source = "cran", namespace = NULL,
                  repository_url = NULL) {
-  source <- match.arg(source, c("cran", "github"))
-  if (source == "github" && length(namespace) == 0L) {
-    cli::cli_abort("{.arg namespace} is required when {.arg source} is {.val github}.")
+  source <- match.arg(source, c("cran", "github", "gitlab", "bitbucket"))
+  if (source != "cran" && length(namespace) == 0L) {
+    cli::cli_abort("{.arg namespace} is required when {.arg source} is {.val {source}}.")
   }
   if (length(name) == 0L || length(version) == 0L) {
     return(character(0))
@@ -39,9 +41,9 @@ purl <- function(name, version = NA, source = "cran", namespace = NULL,
   name <- rep_len(name, n)
   version <- rep_len(version, n)
 
-  if (source == "github") {
+  if (source != "cran") {
     namespace <- rep_len(namespace, n)
-    base <- paste0("pkg:github/", namespace, "/", name)
+    base <- paste0("pkg:", source, "/", namespace, "/", name)
     unknown <- is_unknown(name) | is_unknown(namespace)
   } else {
     base <- paste0("pkg:cran/", name)

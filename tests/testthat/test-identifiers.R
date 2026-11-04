@@ -14,6 +14,10 @@ test_that("purl() builds package URLs the way R Observatory does", {
   expect_equal(purl("dplyr", NA), "pkg:cran/dplyr")
   expect_equal(purl(c("a", "b"), c("1", "2")), c("pkg:cran/a@1", "pkg:cran/b@2"))
   expect_error(purl("x", "1", source = "github"), "namespace")
+  expect_equal(purl("p", "abc123", source = "gitlab", namespace = "team"), "pkg:gitlab/team/p@abc123")
+  expect_equal(purl("p", "abc123", source = "bitbucket", namespace = "team"), "pkg:bitbucket/team/p@abc123")
+  expect_error(purl("x", "1", source = "gitlab"), "namespace")
+  expect_error(purl("x", "1", source = "bitbucket"), "namespace")
 })
 
 test_that("cran_doi() builds CRAN's DataCite DOI", {
