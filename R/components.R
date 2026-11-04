@@ -249,7 +249,11 @@ package_component <- function(desc, evidence, source_input, is_root = FALSE,
   unrecorded <- function(what) {
     paste0(
       recorded_in, " does not record the ", what, " of ", label,
-      if (library_checked) ", and no installed copy of that version was found", "."
+      if (library_checked) {
+        paste0(", and no installed copy", if (!is.na(version)) " of that version", " was found.")
+      } else {
+        "."
+      }
     )
   }
   issues <- empty_issues()

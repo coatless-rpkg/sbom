@@ -35,7 +35,7 @@ test_that("R, base packages and omitted fields follow the sample", {
   expect_null(u$versionInfo)
   expect_null(u$supplier)
   expect_equal(u$licenseComments, "Part of R, under R's own licence.")
-  contains <- Filter(function(r) r$relationshipType == "CONTAINS", d$relationships)
+  contains <- Filter(function(r) r$relationshipType == "CONTAINS" && r$spdxElementId == "SPDXRef-R", d$relationships)
   expect_true(all(vapply(contains, function(r) r$comment == "Part of R", logical(1))))
   expect_true(all(vapply(contains, function(r) r$spdxElementId == "SPDXRef-R", logical(1))))
   ids <- vapply(d$packages, function(p) p$SPDXID, "")

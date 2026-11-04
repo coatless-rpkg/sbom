@@ -44,7 +44,10 @@ read_overrides <- function(overrides, call = parent.frame()) {
 }
 
 match_component <- function(comps, value, row, call) {
-  hits <- which(comps$ref %in% value | comps$name %in% value)
+  # An embedded component shares its name with the package it copies, so only
+  # its ref names it.
+  hits <- which(comps$ref %in% value |
+    (comps$name %in% value & !is_embedded_ref(comps$ref)))
   if (length(hits) == 0) {
     cli::cli_abort(
       c(

@@ -6,7 +6,7 @@
 #' components whose version, licence or source changed.
 #'
 #' The two root components are paired with each other. Components of type
-#' `"file"` are matched by `ref`, all other components by name. A `"license"` change compares the SPDX
+#' `"file"` and embedded components are matched by `ref`, all other components by name. A `"license"` change compares the SPDX
 #' expression, then the licence as written. A `"source"` change compares the
 #' ecosystem, then the package URL without its version. R itself is compared
 #' like any other component, so a change of R version shows up. Base packages
@@ -71,7 +71,8 @@ sbom_diff <- function(old, new) {
 # The two roots pair with each other (a package root's ref carries its
 # version); file components match by ref, packages by name.
 component_keys <- function(comps) {
-  key <- ifelse(comps$type %in% "file", paste0("ref:", comps$ref), paste0("name:", comps$name))
+  by_ref <- comps$type %in% "file" | is_embedded_ref(comps$ref)
+  key <- ifelse(by_ref, paste0("ref:", comps$ref), paste0("name:", comps$name))
   key[comps$is_root %in% TRUE] <- "root"
   key
 }
@@ -140,11 +141,13 @@ print.sbom_diff <- function(x, ...) {
 as.data.frame.sbom_diff <- function(x, ...) x$changes
 
 # Appends one issue per difference between `primary` and `other`. R and base
-# packages, and the root components, are never drift. They are set aside
+# packages, embedded components and the root components are never drift. They are set aside
 # before comparing, so that a root sharing a package's name hides nothing.
 drift_issues <- function(issues, primary, other, primary_label, other_label) {
   compared <- function(comps) {
-    comps[!(comps$is_root %in% TRUE | comps$ecosystem %in% c("r", "base-r")), , drop = FALSE]
+    skip <- comps$is_root %in% TRUE | comps$ecosystem %in% c("r", "base-r") |
+      is_embedded_ref(comps$ref)
+    comps[!skip, , drop = FALSE]
   }
   primary$components <- compared(primary$components)
   other$components <- compared(other$components)

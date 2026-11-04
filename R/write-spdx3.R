@@ -23,13 +23,13 @@ spdx3_unique_local <- function(local, taken) {
 }
 
 spdx3_package_comment <- function(row) {
-  is_r <- row$ecosystem == "r"
-  is_base <- !is.na(row$parent_ref)
+  is_r <- identical(row$ecosystem, "r")
+  is_base <- identical(row$parent_ref, "R")
   parts <- character()
   if (spdx_is_set(row$maintainer)) {
     parts <- paste0("Maintainer ", row$maintainer, ".")
   }
-  if ((is_r || is_base) && spdx_is_set(row$description)) {
+  if ((is_r || is_base || is_embedded_ref(row$ref)) && spdx_is_set(row$description)) {
     parts <- c(parts, row$description)
   }
   # license_comment reads "Declared in DESCRIPTION as ..., which has no SPDX
@@ -78,7 +78,7 @@ spdx3_package <- function(row, id, supplier, person) {
     p$releaseTime <- paste0(row$published, "T00:00:00Z")
   }
   # R, and a library root (a platform in CycloneDX too), are platforms.
-  p$software_primaryPurpose <- if (row$ecosystem == "r" ||
+  p$software_primaryPurpose <- if (identical(row$ecosystem, "r") ||
                                      (isTRUE(row$is_root) && row$type == "platform")) {
     "platform"
   } else if (isTRUE(row$is_root) && row$type == "application") {
@@ -184,7 +184,7 @@ spdx3_components <- function(comps, pkg_ids, local_ids, id) {
         )
       }
       lic_to <- lic$id
-    } else if (is.na(row$parent_ref)) {
+    } else if (!identical(row$parent_ref, "R")) {
       lic_to <- "expandedlicensing_NoAssertionLicense"
     }
     if (!is.null(lic_to)) {
@@ -227,8 +227,8 @@ spdx3_dependencies <- function(x, pkg_ids, id) {
 }
 
 # One contains relationship per container: R holds its base packages
-# (rel-part-of-R), and a library root holds its packages
-# (rel-contains-library).
+# (rel-part-of-R), a library root holds its packages (rel-contains-library),
+# and a package holds the packages compiled into it.
 spdx3_contains <- function(x, pkg_ids, local_ids, id) {
   rel <- x$relationships
   rel <- rel[rel$field == "contains", , drop = FALSE]
@@ -239,7 +239,7 @@ spdx3_contains <- function(x, pkg_ids, local_ids, id) {
   rows <- unique(from_row)
   rows <- rows[order(pkg_ids[rows], method = "radix")]
   lapply(rows, function(k) {
-    is_r <- comps$ecosystem[k] == "r"
+    is_r <- identical(comps$ecosystem[k], "r")
     local <- if (is_r) {
       "rel-part-of-R"
     } else {

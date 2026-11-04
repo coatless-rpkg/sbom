@@ -86,6 +86,7 @@ library_lookup <- function(lib = .libPaths()) {
   env <- new.env(parent = emptyenv())
   cand <- library_candidates(lib)
   cache <- new.env(parent = emptyenv())
+  where <- new.env(parent = emptyenv())
   env$get <- function(name) {
     if (!is.character(name) || length(name) != 1L || is.na(name) || !nzchar(name)) {
       return(NULL)
@@ -97,16 +98,23 @@ library_lookup <- function(lib = .libPaths()) {
     for (path in cand$path[cand$package == name]) {
       desc <- read_usable_description(file.path(path, name))
       if (!is.null(desc)) {
+        where[[name]] <- file.path(path, name)
         break
       }
     }
     cache[[name]] <- if (is.null(desc)) NA_character_ else desc
     desc
   }
+  # The folder `$get(name)` read, or NULL.
+  env$dir <- function(name) {
+    env$get(name)
+    where[[name]]
+  }
   env$all <- function() {
     db <- read_library(lib)
     for (i in seq_len(nrow(db))) {
       cache[[db$package[[i]]]] <- db$desc[[i]]
+      where[[db$package[[i]]]] <- file.path(db$libpath[[i]], db$package[[i]])
     }
     db
   }

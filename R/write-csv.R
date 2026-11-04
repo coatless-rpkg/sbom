@@ -6,7 +6,7 @@ csv_columns <- function() {
     "ref", "name", "version", "version_is", "type", "ecosystem", "scope", "purl",
     "supplier", "maintainer", "license", "license_as_written", "published",
     "homepage", "vcs_url", "download_location", "doi", "sha256", "evidence",
-    "asserted", "issues"
+    "asserted", "issues", "parent"
   )
 }
 
@@ -62,7 +62,8 @@ csv_inventory <- function(x, version = NA) {
     homepage = comps$homepage, vcs_url = comps$vcs_url,
     download_location = comps$download_location, doi = comps$doi,
     sha256 = csv_sha256(comps$hashes), evidence = comps$evidence,
-    asserted = csv_asserted(comps$asserted), issues = issues
+    asserted = csv_asserted(comps$asserted), issues = issues,
+    parent = comps$parent_ref
   )
   stopifnot(identical(names(cols), csv_columns()))
   cols <- lapply(cols, csv_neutralise)

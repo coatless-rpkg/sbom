@@ -2,7 +2,8 @@ test_that("sbom_package() builds the fixture tree", {
   x <- fixture_sbom()
   comps <- sbom_components(x)
   expect_setequal(comps$ref, c("local/srcpkg", "pkg:cran/cranpkg@1.2.0", "local/localpkg",
-                               "pkg:cran/suggestpkg@2.0.0", "R", "R/utils", "R/methods"))
+                               "pkg:cran/suggestpkg@2.0.0", "R", "R/utils", "R/methods",
+                               "local/srcpkg#embedded/cranpkg"))
   expect_equal(comps$scope[comps$ref == "pkg:cran/suggestpkg@2.0.0"], "optional")
   expect_equal(comps$version_is[comps$ref == "R"], "minimum")
   rel <- sbom_dependencies(x)

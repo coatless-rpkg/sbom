@@ -1,0 +1,2 @@
+Notes about the widget.
+This is not a library.

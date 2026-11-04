@@ -352,7 +352,7 @@ test_that("recommended packages left in R's own library are not drift from the p
   x <- sbom_renv(lock)
   drift <- sbom_issues(x)[startsWith(sbom_issues(x)$code, "drift-"), ]
   expect_equal(drift$message, "cli is 3.6.6 in renv.lock but 3.6.5 in the project library.")
-  expect_true(.Library %in% x$metadata$inputs$path)
+  expect_true(normalizePath(.Library, winslash = "/", mustWork = FALSE) %in% x$metadata$inputs$path)
   # A library that is given is compared on its own.
   y <- sbom_renv(lock, library = proj_lib)
   expect_true(paste0("Matrix ", matrix[["Version"]], " is in renv.lock but not in the library.") %in%
@@ -398,4 +398,38 @@ test_that("the root's edges leave out renv itself and the files a package does n
   comps <- sbom_components(x)
   rel <- sbom_dependencies(x)
   expect_equal(rel$to[rel$from == comps$ref[comps$is_root]], comps$ref[comps$name == "cli"])
+})
+
+test_that("a record without a Version says what is not recorded, without 'of that version'", {
+  rec <- list(Package = "cli", Source = "Repository", Repository = "CRAN")
+  lock <- local_renv_project(list(cli = rec))
+  x <- sbom_renv(lock, library = local_fake_lib(list()))
+  iss <- sbom_issues(x)
+  expect_equal(
+    iss$message[iss$code == "license-missing"],
+    "renv.lock does not record the licence of cli, and no installed copy was found."
+  )
+  expect_equal(
+    iss$message[iss$code == "maintainer-missing"],
+    "renv.lock does not record the maintainer of cli, and no installed copy was found."
+  )
+})
+
+test_that("R's own library is listed once, as normalised, and a recommended package's drift names it", {
+  matrix <- tryCatch(read_description(file.path(.Library, "Matrix")), error = function(e) NULL)
+  skip_if(is.null(matrix) || !identical(unname(matrix["Priority"]), "recommended"),
+          "Matrix is not a recommended package in R's own library.")
+  withr::local_envvar(RENV_PATHS_LIBRARY = NA, RENV_PATHS_LIBRARY_ROOT = NA)
+  mat <- list(Package = "Matrix", Version = "0.0.1", Source = "Repository",
+              Repository = "CRAN", License = "GPL-2 | GPL-3", Maintainer = "M M <m@example.org>")
+  lock <- local_renv_project(list(Matrix = mat, cli = cli_rec()))
+  proj_lib <- renv::paths$library(project = dirname(lock))
+  dir.create(proj_lib, recursive = TRUE)
+  write_fake_lib(proj_lib, list(cli = c(Version = "3.6.6")))
+  x <- sbom_renv(lock)
+  expect_equal(sum(x$metadata$inputs$path == normalizePath(.Library, winslash = "/", mustWork = FALSE)), 1L)
+  expect_equal(
+    sbom_issues(x)$message[sbom_issues(x)$code == "drift-version"],
+    paste0("Matrix is 0.0.1 in renv.lock but ", matrix[["Version"]], " in R's library.")
+  )
 })

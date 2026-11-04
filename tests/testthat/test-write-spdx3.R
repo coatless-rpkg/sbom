@@ -5,12 +5,12 @@ test_that("SPDX 3 follows R Observatory's element structure", {
   expect_equal(types[1], "CreationInfo")
   expect_equal(utils::tail(types, 2), c("software_Sbom", "SpdxDocument"))
   pk <- Filter(function(e) e$type == "software_Package", g)
-  cran <- Find(function(e) e$name == "cranpkg", pk)
+  cran <- Find(function(e) e$name == "cranpkg" && !is.null(e$suppliedBy), pk)
   expect_equal(cran$software_packageUrl, "pkg:cran/cranpkg@1.2.0")
   expect_equal(cran$comment, "Maintainer Grace Hopper.")
   expect_equal(Find(function(e) e$name == "R", pk)$software_primaryPurpose, "platform")
   expect_match(Find(function(e) e$name == "localpkg", pk)$comment,
-               "Licence declared in DESCRIPTION as file LICENSE, which has no SPDX expression in R's licence database.", fixed = TRUE)
+               "License declared in DESCRIPTION as file LICENSE, which has no SPDX expression in R's license database.", fixed = TRUE)
   ids <- unlist(lapply(g, `[[`, "spdxId"))
   expect_false(anyDuplicated(ids) > 0)
   expect_true(all(startsWith(ids, spdx_namespace(x))))
@@ -19,7 +19,9 @@ test_that("SPDX 3 follows R Observatory's element structure", {
 test_that("Suggests, LinkingTo and Imports keep their meaning", {
   g <- spdx3_document(fixture_sbom())[["@graph"]]
   rel <- Filter(function(e) e$type %in% c("Relationship", "LifecycleScopedRelationship"), g)
-  pid <- function(n) Find(function(e) e$type == "software_Package" && e$name == n, g)$spdxId
+  pid <- function(n) {
+    Find(function(e) e$type == "software_Package" && e$name == n && !grepl("embedded", e$spdxId), g)$spdxId
+  }
   to_cran <- Filter(function(e) identical(unlist(e$to), pid("cranpkg")) && e$from == pid("srcpkg"), rel)
   expect_setequal(vapply(to_cran, `[[`, "", "type"), c("Relationship", "LifecycleScopedRelationship"))
   expect_equal(Find(function(e) e$type == "LifecycleScopedRelationship", to_cran)$scope, "build")
@@ -51,11 +53,11 @@ test_that("SPDX 3 matches R Observatory's dplyr 1.2.1 sample", {
 
 test_that("package elements carry suppliers, hashes, references and the DOI", {
   x <- fixture_sbom()
-  at <- which(x$components$name == "cranpkg")
+  at <- which(x$components$ref == "pkg:cran/cranpkg@1.2.0")
   x$components$hashes[[at]] <- data.frame(alg = "SHA-256", content = strrep("a", 64), of = "source tarball")
   g <- spdx3_document(x)[["@graph"]]
   el <- function(id) Find(function(e) identical(e$spdxId, id), g)
-  cran <- Find(function(e) e$type == "software_Package" && e$name == "cranpkg", g)
+  cran <- Find(function(e) e$type == "software_Package" && e$name == "cranpkg" && !grepl("embedded", e$spdxId), g)
   supplier <- el(cran$suppliedBy)
   expect_equal(supplier$type, "Organization")
   expect_equal(supplier$name, "CRAN")
@@ -72,9 +74,11 @@ test_that("package elements carry suppliers, hashes, references and the DOI", {
   expect_null(cran$software_downloadLocation)
 })
 
-test_that("licences are expressions, NOASSERTION, or nothing for R's own packages", {
+test_that("licenses are expressions, NOASSERTION, or nothing for R's own packages", {
   g <- spdx3_document(fixture_sbom())[["@graph"]]
-  pid <- function(n) Find(function(e) e$type == "software_Package" && e$name == n, g)$spdxId
+  pid <- function(n) {
+    Find(function(e) e$type == "software_Package" && e$name == n && !grepl("embedded", e$spdxId), g)$spdxId
+  }
   lic <- Filter(function(e) e$type == "Relationship" && e$relationshipType == "hasDeclaredLicense", g)
   lic_of <- function(n) Find(function(e) e$from == pid(n), lic)
   exprs <- Filter(function(e) e$type == "simplelicensing_LicenseExpression", g)
@@ -142,7 +146,7 @@ test_that("a library SBOM without an author has a software agent and contains it
   expect_equal(schema_validate(tf, "spdx3-jsonld")$status, "partial")
 })
 
-test_that("an asserted licence is an expression, and the comment says who asserted it", {
+test_that("an asserted license is an expression, and the comment says who asserted it", {
   ov <- data.frame(component = "localpkg", field = "license_spdx", value = "Apache-2.0",
                    asserted_by = "Legal", reason = "Reviewed")
   x <- sbom_package(test_path("fixtures/pkgs/srcpkg"), lib = fixture_lib(), overrides = ov)

@@ -1,0 +1,7 @@
+Package: vendorpkg
+Version: 1.0
+Title: Fixture With Vendored Libraries
+Authors@R: c(person("Ada", "Lovelace", email = "ada@example.org", role = c("aut", "cre")),
+    person("zstd authors", role = "cph"))
+Description: A fixture that bundles C libraries.
+License: MIT + file LICENSE

@@ -53,8 +53,8 @@
 #'   argument of [sbom_renv()], [sbom_rsconnect()] or [sbom_package()] other
 #'   than the file or folder it reads, such as `library`, `lib`,
 #'   `dependencies`, `r_version`, `author` or `overrides`. The code scan
-#'   takes `lib`, `author`, `organization`, `regid`, `timestamp` and
-#'   `overrides`. A name that no reader takes is an error. The reader ignores
+#'   takes `lib`, `author`, `organization`, `regid`, `timestamp`,
+#'   `overrides`, `embedded` and `system`. A name that no reader takes is an error. The reader ignores
 #'   those it does not take, except that the cross-checks of `DESCRIPTION`
 #'   and the code also use `lib`. Overrides, given or from
 #'   `sbom-overrides.csv`, apply to the SBOM after the cross-checks, which
@@ -143,7 +143,8 @@ reader_args <- function() {
     renv = setdiff(names(formals(sbom_renv)), "lockfile"),
     manifest = setdiff(names(formals(sbom_rsconnect)), "manifest"),
     package = setdiff(names(formals(sbom_package)), "path"),
-    code = c("author", "organization", "regid", "timestamp", "overrides", "lib")
+    code = c("author", "organization", "regid", "timestamp", "overrides", "lib",
+      "embedded", "system")
   )
 }
 
@@ -311,8 +312,8 @@ description_deps <- function(file) {
 
 # The reason in an error for an issue sentence: the first line of the
 # innermost cause's message, without colour, wrapping or a final full stop,
-# and with a quoted path in the folder made relative to it, so that no
-# machine path reaches the SBOM.
+# and with the folder's path, quoted or not, as given or normalised, made
+# relative to it, so that no machine path reaches the SBOM.
 condition_reason <- function(e, path) {
   while (inherits(e$parent, "condition")) {
     e <- e$parent
@@ -321,13 +322,15 @@ condition_reason <- function(e, path) {
   on.exit(options(old), add = TRUE)
   msg <- tryCatch(cli::ansi_strip(conditionMessage(e)), error = function(err) "")
   line <- enc2utf8_bytes(strsplit(paste0(msg, "\n"), "\n", fixed = TRUE)[[1L]][1L])
-  dirs <- unique(c(
+  dirs <- unique(sub("(?<=.)/+$", "", c(
     path, normalizePath(path, mustWork = FALSE),
     normalizePath(path, winslash = "/", mustWork = FALSE)
-  ))
+  ), perl = TRUE))
+  # The longest first, so that one form never eats part of another.
+  dirs <- dirs[order(-nchar(dirs))]
   for (dir in dirs) {
-    line <- gsub(paste0("'", dir, "/"), "'", line, fixed = TRUE)
-    line <- gsub(paste0("'", dir, "'"), paste0("'", basename(dir), "'"), line, fixed = TRUE)
+    line <- gsub(paste0(dir, "/"), "", line, fixed = TRUE)
+    line <- gsub(dir, basename(dir), line, fixed = TRUE)
   }
   sub("[.]$", "", trimws(line))
 }
@@ -358,7 +361,8 @@ drift_view <- function(x, records, suggests = TRUE) {
     keep <- comps$is_root %in% TRUE | comps$ref %in% direct
     comps$version[!comps$is_root %in% TRUE] <- NA_character_
   }
-  x$components <- comps[keep, , drop = FALSE]
+  # Embedded components are not packages that a source lists.
+  x$components <- comps[keep & !is_embedded_ref(comps$ref), , drop = FALSE]
   x
 }
 
@@ -369,7 +373,8 @@ code_scan <- function(dir, lookup = library_lookup(lib), lib = .libPaths(),
                       author = getOption("sbom.author"),
                       organization = getOption("sbom.organization"),
                       regid = getOption("sbom.regid"),
-                      timestamp = NULL, overrides = NULL) {
+                      timestamp = NULL, overrides = NULL,
+                      embedded = TRUE, system = TRUE) {
   check_lib(lib)
   regid <- check_regid(regid)
   scan <- project_root_edges(dir, NULL, NULL)
@@ -401,7 +406,8 @@ code_scan <- function(dir, lookup = library_lookup(lib), lib = .libPaths(),
     root = root, lookup = lookup, root_desc = root_desc, fields = follow,
     root_suggests = FALSE, lib = lib, r_version = NULL, author = author,
     organization = organization, regid = regid, timestamp = timestamp,
-    inputs = inputs, resolved = res, package_evidence = "inferred"
+    inputs = inputs, resolved = res, package_evidence = "inferred",
+    embedded = embedded
   )
   x$issues <- scan_issue(x$issues, root, scan)
   x$metadata$notes <- c(
@@ -458,8 +464,8 @@ unshipped_files <- function(dir) {
 }
 
 # The commit checked out in the git repository that holds `dir`, read from
-# the files in the nearest .git in `dir` or a folder above it, or NA. Git
-# itself is never run.
+# the files in the nearest .git in `dir` or a folder above it, stopping
+# before the home folder, or NA. Git itself is never run.
 # - HEAD holds a commit (a detached HEAD) or names a branch ref, whose commit
 #   is in a loose ref file or else in packed-refs. A ref that names another
 #   ref is not followed.
@@ -486,10 +492,17 @@ read_git_commit <- function(dir) {
 }
 
 # The nearest folder, `dir` or one above it, that holds a .git (a folder or,
-# in a worktree, a file), or NA at the filesystem root without one.
+# in a worktree, a file), or NA at the home folder or the filesystem root
+# without one. The home folder's own .git is not looked at.
 git_root <- function(dir) {
   d <- normalizePath(dir, winslash = "/", mustWork = FALSE)
+  home <- normalizePath("~", winslash = "/", mustWork = FALSE)
   repeat {
+    # A repository at the home folder is a dotfiles repository, not the
+    # project's.
+    if (identical(d, home)) {
+      return(NA_character_)
+    }
     if (file.exists(file.path(d, ".git"))) {
       return(d)
     }

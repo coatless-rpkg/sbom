@@ -9,7 +9,7 @@ test_that("summary() counts components, licences, unknowns and drift", {
   local_plain_cli()
   s <- summary(fixture_sbom())
   expect_s3_class(s, "sbom_summary")
-  expect_equal(s$counts$n[s$counts$what == "ecosystem" & s$counts$value == "cran"], 2L)
+  expect_equal(s$counts$n[s$counts$what == "ecosystem" & s$counts$value == "cran"], 3L)
   expect_true("NOASSERTION" %in% s$licenses$license)
   expect_gte(s$unknowns, 1L)
   expect_equal(nrow(s$drift), 0L)

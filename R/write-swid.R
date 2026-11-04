@@ -103,7 +103,7 @@ swid_tag <- function(x, version = "2015") {
   ))
   link(c(rel = "related", href = root$vcs_url))
   # App files are not dependencies, so they get no link.
-  deps <- comps[!comps$is_root & comps$type != "file", , drop = FALSE]
+  deps <- comps[!comps$is_root & comps$type != "file" & !is_embedded_ref(comps$ref), , drop = FALSE]
   deps <- deps[order(deps$ref, method = "radix"), , drop = FALSE]
   for (i in seq_len(nrow(deps))) {
     d <- deps[i, ]

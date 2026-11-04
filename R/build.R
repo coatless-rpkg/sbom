@@ -52,6 +52,20 @@
 #'   that contradicts a found value wins and adds an `override-conflict` issue.
 #'   Asserting `"version"` or `"purl"` changes only that field, not the `ref`.
 #'   An unknown component or field, or a missing column, is an error.
+#' @param embedded Whether to record the code that packages carry inside them.
+#'   A package named in `LinkingTo` is recorded as an embedded component of
+#'   the package that compiles it in, nested under that package, at the
+#'   version installed now, as inferred. A C or C++ library that a package
+#'   copies into its `src/` folder (source packages), or names in its
+#'   `COPYRIGHTS` file or `cph` entries (source and installed packages), is
+#'   recorded as a vendored component of that package, from the rules in
+#'   `inst/extdata/vendored.csv`. The version is read from the library's
+#'   header when there is one, and is otherwise unknown. A JavaScript or CSS
+#'   library declared in htmlwidgets YAML, or found by the header comment of a
+#'   file under `www/`, `htmlwidgets/lib/` or `lib/` (under `inst/` in source
+#'   packages), is recorded as an npm component of that package, from the
+#'   rules in `inst/extdata/javascript.csv`. Its licence is not read.
+#' @param system Whether to detect system libraries.
 #' @return An `<sbom>` object. See [sbom_components()] to read it.
 #' @examples
 #' x <- sbom_package(system.file("DESCRIPTION", package = "sbom"))
@@ -63,7 +77,8 @@ sbom_package <- function(path = ".",
                          author = getOption("sbom.author"),
                          organization = getOption("sbom.organization"),
                          regid = getOption("sbom.regid"),
-                         timestamp = NULL, overrides = NULL) {
+                         timestamp = NULL, overrides = NULL,
+                         embedded = TRUE, system = TRUE) {
   dependencies <- match.arg(dependencies, several.ok = TRUE)
   check_lib(lib)
   regid <- check_regid(regid)
@@ -89,9 +104,20 @@ sbom_package <- function(path = ".",
     fields = intersect(c("Depends", "Imports", "LinkingTo"), dependencies),
     root_suggests = "Suggests" %in% dependencies, lib = lib,
     r_version = r_version, author = author, organization = organization,
-    regid = regid, timestamp = timestamp, inputs = inputs
+    regid = regid, timestamp = timestamp, inputs = inputs,
+    embedded = embedded, source_dir = package_source_dir(path)
   )
   apply_overrides(x, overrides)
+}
+
+# The folder that holds a package's files, from a folder or a DESCRIPTION
+# path, or NULL for an archive, which is not unpacked.
+package_source_dir <- function(path) {
+  if (dir.exists(path)) {
+    path
+  } else if (identical(basename(path), "DESCRIPTION")) {
+    dirname(path)
+  }
 }
 
 #' @rdname sbom_package
@@ -107,7 +133,8 @@ sbom_installed <- function(pkgs = NULL, lib = .libPaths(), name = "R library",
                            r_version = NULL, author = getOption("sbom.author"),
                            organization = getOption("sbom.organization"),
                            regid = getOption("sbom.regid"),
-                           timestamp = NULL, overrides = NULL) {
+                           timestamp = NULL, overrides = NULL,
+                           embedded = TRUE, system = TRUE) {
   check_lib(lib)
   regid <- check_regid(regid)
   lookup <- library_lookup(lib)
@@ -153,7 +180,7 @@ sbom_installed <- function(pkgs = NULL, lib = .libPaths(), name = "R library",
     fields = c("Depends", "Imports", "LinkingTo"), root_suggests = FALSE,
     lib = lib, r_version = r_version, author = author,
     organization = organization, regid = regid, timestamp = timestamp,
-    inputs = inputs, extra_base = listed_base
+    inputs = inputs, extra_base = listed_base, embedded = embedded
   )
   apply_overrides(x, overrides)
 }
@@ -207,7 +234,8 @@ build_sbom <- function(root, lookup, root_desc, fields, root_suggests, lib,
                        package_evidence = "observed", package_source = "library",
                        where = "installed in the library sbom read",
                        missing_code = "dependency-not-installed", r_evidence = NULL,
-                       all_required = FALSE, not_installed = character()) {
+                       all_required = FALSE, not_installed = character(),
+                       embedded = TRUE, source_dir = NULL, detect_lib = lib) {
   root_row <- root$component
   root_is_library <- identical(root_row$ecosystem, "library")
   root_name <- root_desc[["Package"]]
@@ -326,6 +354,22 @@ build_sbom <- function(root, lookup, root_desc, fields, root_suggests, lib,
         spec = NA_character_, evidence = "observed", stringsAsFactors = FALSE
       ))
     }
+  }
+  if (embedded) {
+    inside <- linkingto_components(all_comps, rels, lookup)
+    vendored <- detect_bundled(
+      all_comps, root_row$ref, source_dir, root_desc, lookup, detect_lib
+    )
+    inside <- list(
+      components = rbind(inside$components, vendored$components),
+      relationships = rbind(inside$relationships, vendored$relationships),
+      issues = rbind(inside$issues, vendored$issues)
+    )
+    all_comps <- rbind(all_comps, inside$components)
+    all_comps <- all_comps[order(all_comps$ref, method = "radix"), , drop = FALSE]
+    rownames(all_comps) <- NULL
+    rels <- rbind(rels, inside$relationships)
+    issues <- rbind(issues, inside$issues)
   }
   rels <- rels[!duplicated(rels[c("from", "to", "field")]), , drop = FALSE]
   rels <- rels[order(rels$from, rels$to, rels$field, method = "radix"), , drop = FALSE]

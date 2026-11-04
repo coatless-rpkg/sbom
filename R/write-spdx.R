@@ -5,8 +5,9 @@
 spdx_prefixes <- c(
   cran = "cran", bioconductor = "bioc", github = "github", gitlab = "gitlab",
   bitbucket = "bitbucket", git = "git", repository = "repository",
-  local = "local", unknown = "unknown", file = "file"
+  local = "local", unknown = "unknown", file = "file", npm = "npm"
 )
+
 
 spdx_sanitize <- function(x) {
   gsub("[^A-Za-z0-9.-]", "-", x)
@@ -19,10 +20,12 @@ spdx_ids <- function(components) {
   prefix <- unname(spdx_prefixes[eco])
   prefix[is.na(prefix)] <- "unknown"
   prefix[startsWith(as.character(components$ref), "project/") %in% TRUE] <- "project"
+  prefix[grepl("#embedded/", components$ref, fixed = TRUE)] <- "embedded"
+  prefix[grepl("#vendored/", components$ref, fixed = TRUE)] <- "vendored"
   ids <- paste0("SPDXRef-", prefix, "-", name)
-  ids[eco == "r"] <- "SPDXRef-R"
-  ids[eco == "base-r"] <- paste0("SPDXRef-R-", name[eco == "base-r"])
-  ids[eco == "library"] <- "SPDXRef-library"
+  ids[eco %in% "r"] <- "SPDXRef-R"
+  ids[eco %in% "base-r"] <- paste0("SPDXRef-R-", name[eco %in% "base-r"])
+  ids[eco %in% "library"] <- "SPDXRef-library"
 
   dup <- ids %in% ids[duplicated(ids)]
   if (any(dup)) {
@@ -54,8 +57,8 @@ spdx_asserted_sentences <- function(row) {
 }
 
 spdx_package <- function(row, id, version = "2.3") {
-  is_r <- row$ecosystem == "r"
-  is_base <- !is.na(row$parent_ref)
+  is_r <- identical(row$ecosystem, "r")
+  is_base <- identical(row$parent_ref, "R")
   p <- list(name = row$name, SPDXID = id)
   if (spdx_is_set(row$version)) p$versionInfo <- row$version
   if (spdx_is_set(row$package_file_name)) {
@@ -105,7 +108,7 @@ spdx_package <- function(row, id, version = "2.3") {
   p$copyrightText <- "NOASSERTION"
 
   parts <- character()
-  if (is_r || is_base) {
+  if (is_r || is_base || is_embedded_ref(row$ref)) {
     if (spdx_is_set(row$description)) parts <- row$description
   } else {
     if (spdx_is_set(row$maintainer)) {
@@ -162,6 +165,9 @@ spdx_relationships <- function(x, ids) {
   comment <- ifelse(is.na(rel$spec), NA_character_,
                     paste0(rel$field, ": ", rel$spec))
   comment[rel$field == "contains" & rel$from == "R"] <- "Part of R"
+  comment[rel$field == "contains" & grepl("#embedded/", rel$to, fixed = TRUE)] <- "Compiled in from LinkingTo"
+  comment[rel$field == "contains" & grepl("#vendored/", rel$to, fixed = TRUE)] <- "Bundled as source code"
+  comment[rel$field == "contains" & grepl("#js/", rel$to, fixed = TRUE)] <- "Bundled JavaScript or CSS"
   # Suggests: written from the suggested package to its dependent.
   swap <- type == "OPTIONAL_DEPENDENCY_OF"
   tmp <- from[swap]

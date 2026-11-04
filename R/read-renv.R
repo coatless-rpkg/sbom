@@ -50,7 +50,8 @@ sbom_renv <- function(lockfile = "renv.lock", library = NULL,
                       author = getOption("sbom.author"),
                       organization = getOption("sbom.organization"),
                       regid = getOption("sbom.regid"),
-                      timestamp = NULL, overrides = NULL) {
+                      timestamp = NULL, overrides = NULL,
+                      embedded = TRUE, system = TRUE) {
   regid <- check_regid(regid)
   lock <- read_renv_lock(lockfile)
   project <- dirname(normalizePath(lockfile, mustWork = TRUE))
@@ -100,6 +101,7 @@ sbom_renv <- function(lockfile = "renv.lock", library = NULL,
     root_suggests = FALSE, lib = character(), r_version = r_version,
     author = author, organization = organization, regid = regid,
     timestamp = timestamp, inputs = inputs, resolved = resolved,
+    embedded = embedded, detect_lib = library,
     package_evidence = "declared", package_source = "renv.lock",
     where = "recorded in renv.lock",
     missing_code = "dependency-not-locked", r_evidence = "declared", all_required = TRUE,
@@ -122,15 +124,26 @@ sbom_renv <- function(lockfile = "renv.lock", library = NULL,
     locked$components <- comps[!comps$evidence %in% "unknown", , drop = FALSE]
     installed <- lookup$all()[, c("package", "version")]
     kept <- if (!given) system_recommended(installed$package, names_locked)
+    from_r <- locked$components$name %in% kept$package
+    here <- locked
+    here$components <- locked$components[!from_r, , drop = FALSE]
     x$issues <- drift_issues(
-      x$issues, locked, library_stub(rbind(installed, kept)), "renv.lock",
+      x$issues, here, library_stub(installed), "renv.lock",
       if (given) "the library" else "the project library"
     )
     if (!is.null(kept) && nrow(kept) > 0L) {
-      x$metadata$inputs <- rbind(
-        x$metadata$inputs,
-        data.frame(kind = "library", path = .Library, stringsAsFactors = FALSE)
-      )
+      # Recommended packages restore to R's own library, not the project's.
+      there <- locked
+      there$components <- locked$components[from_r, , drop = FALSE]
+      x$issues <- drift_issues(x$issues, there, library_stub(kept), "renv.lock", "R's library")
+      r_lib <- normalizePath(.Library, winslash = "/", mustWork = FALSE)
+      listed <- normalizePath(as.character(library), winslash = "/", mustWork = FALSE)
+      if (!r_lib %in% listed) {
+        x$metadata$inputs <- rbind(
+          x$metadata$inputs,
+          data.frame(kind = "library", path = r_lib, stringsAsFactors = FALSE)
+        )
+      }
     }
   } else {
     x$issues <- add_issue(

@@ -20,7 +20,8 @@ at the limit are shown but not expanded.}
 Prints the dependencies of the root component as a tree. A component
 reached by several paths is expanded the first time it appears and marked
 \verb{(see above)} afterwards. Components reached only through \code{Suggests} are
-marked \code{(suggested)}. Files that the root contains are leaves labelled
+marked \code{(suggested)}, and the packages compiled into a package, which are
+its \code{LinkingTo} packages, are marked \code{(embedded)}. Files that the root contains are leaves labelled
 with their path.
 }
 \examples{

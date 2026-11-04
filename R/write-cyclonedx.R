@@ -86,7 +86,7 @@ cdx_component <- function(row, version, children = NULL) {
       add_prop(tolower(deps$field[i]), deps$spec[i])
     }
   }
-  if (row$ref == "R" || cdx_is_set(row$parent_ref)) add_prop("part-of", "R")
+  if (row$ref == "R" || identical(row$parent_ref, "R")) add_prop("part-of", "R")
   if (cdx_is_set(row$version_is) && row$version_is == "minimum" &&
         cdx_is_set(row$version)) {
     add_prop("version-is", "minimum")
@@ -144,13 +144,15 @@ cdx_document <- function(x, version = "1.6") {
     cdx_component(comps[i, , drop = FALSE], version, children)
   }
 
-  is_base <- !is.na(comps$parent_ref)
+  # Every component with a parent nests under it, wherever the parent is.
+  # A component whose parent is not in the document goes to the top level.
+  nested <- !is.na(comps$parent_ref) & comps$parent_ref %in% comps$ref
   is_root <- comps$ref == x$metadata$root
-  base_comps <- lapply(which(is_base), build)
-  top <- which(!is_root & !is_base)
-  components <- lapply(top, function(i) {
-    build(i, if (comps$ref[i] == "R") base_comps)
-  })
+  nest <- function(i) {
+    kids <- which(nested & comps$parent_ref == comps$ref[i])
+    build(i, if (length(kids) > 0L) lapply(kids, nest))
+  }
+  components <- lapply(which(!is_root & !nested), nest)
 
   tool <- list(type = "application", name = "sbom")
   tool <- cdx_put(tool, "version", x$metadata$tool_version)
@@ -165,7 +167,7 @@ cdx_document <- function(x, version = "1.6") {
   if (length(authors) > 0L) {
     meta$authors <- unname(lapply(authors, function(a) list(name = a)))
   }
-  meta$component <- build(which(is_root))
+  meta$component <- nest(which(is_root))
   # In 1.4 and 1.5, `manufacture` is the maker of the described component, so
   # the SBOM's organization goes in a property there instead.
   props <- list()

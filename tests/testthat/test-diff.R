@@ -1,7 +1,7 @@
 test_that("sbom_diff() reports additions, removals and changes", {
   a <- fixture_sbom()
   b <- a
-  b$components$version[b$components$name == "cranpkg"] <- "1.3.0"
+  b$components$version[b$components$ref == "pkg:cran/cranpkg@1.2.0"] <- "1.3.0"
   b$components$license_spdx[b$components$name == "localpkg"] <- "MIT"
   b$components <- b$components[b$components$name != "suggestpkg", ]
   d <- sbom_diff(a, b)

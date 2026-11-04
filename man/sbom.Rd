@@ -13,8 +13,8 @@ sbom(path = ".", ...)
 argument of \code{\link[=sbom_renv]{sbom_renv()}}, \code{\link[=sbom_rsconnect]{sbom_rsconnect()}} or \code{\link[=sbom_package]{sbom_package()}} other
 than the file or folder it reads, such as \code{library}, \code{lib},
 \code{dependencies}, \code{r_version}, \code{author} or \code{overrides}. The code scan
-takes \code{lib}, \code{author}, \code{organization}, \code{regid}, \code{timestamp} and
-\code{overrides}. A name that no reader takes is an error. The reader ignores
+takes \code{lib}, \code{author}, \code{organization}, \code{regid}, \code{timestamp},
+\code{overrides}, \code{embedded} and \code{system}. A name that no reader takes is an error. The reader ignores
 those it does not take, except that the cross-checks of \code{DESCRIPTION}
 and the code also use \code{lib}. Overrides, given or from
 \code{sbom-overrides.csv}, apply to the SBOM after the cross-checks, which

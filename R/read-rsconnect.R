@@ -37,7 +37,8 @@ sbom_rsconnect <- function(manifest = "manifest.json",
                            author = getOption("sbom.author"),
                            organization = getOption("sbom.organization"),
                            regid = getOption("sbom.regid"),
-                           timestamp = NULL, overrides = NULL) {
+                           timestamp = NULL, overrides = NULL,
+                           embedded = TRUE, system = TRUE) {
   regid <- check_regid(regid)
   m <- read_manifest(manifest)
   project <- dirname(normalizePath(manifest, mustWork = TRUE))
@@ -78,6 +79,7 @@ sbom_rsconnect <- function(manifest = "manifest.json",
     root_suggests = FALSE, lib = character(), r_version = r_version,
     author = author, organization = organization, regid = regid,
     timestamp = timestamp, inputs = inputs, resolved = resolved,
+    embedded = embedded, detect_lib = .libPaths(),
     package_evidence = "declared", package_source = "manifest.json",
     where = "recorded in manifest.json",
     missing_code = "dependency-not-recorded", r_evidence = "declared",
@@ -116,7 +118,7 @@ read_manifest <- function(manifest, call = parent.frame()) {
       c(
         "The manifest {.file {manifest}} is malformed.",
         x = if (is.na(entry)) {
-          "Its {.field {where}} is not an object."
+          "Its {.field {where}} entry is not an object."
         } else {
           "The entry for {.val {entry}} in {.field {where}} is not an object."
         }

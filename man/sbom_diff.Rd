@@ -34,7 +34,7 @@ components whose version, licence or source changed.
 }
 \details{
 The two root components are paired with each other. Components of type
-\code{"file"} are matched by \code{ref}, all other components by name. A \code{"license"} change compares the SPDX
+\code{"file"} and embedded components are matched by \code{ref}, all other components by name. A \code{"license"} change compares the SPDX
 expression, then the licence as written. A \code{"source"} change compares the
 ecosystem, then the package URL without its version. R itself is compared
 like any other component, so a change of R version shows up. Base packages

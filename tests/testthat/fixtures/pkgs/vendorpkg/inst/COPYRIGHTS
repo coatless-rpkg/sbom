@@ -1,0 +1,4 @@
+Bundled code
+============
+
+src/ also uses libuv, copyright its contributors.

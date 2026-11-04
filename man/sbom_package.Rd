@@ -14,7 +14,9 @@ sbom_package(
   organization = getOption("sbom.organization"),
   regid = getOption("sbom.regid"),
   timestamp = NULL,
-  overrides = NULL
+  overrides = NULL,
+  embedded = TRUE,
+  system = TRUE
 )
 
 sbom_installed(
@@ -26,7 +28,9 @@ sbom_installed(
   organization = getOption("sbom.organization"),
   regid = getOption("sbom.regid"),
   timestamp = NULL,
-  overrides = NULL
+  overrides = NULL,
+  embedded = TRUE,
+  system = TRUE
 )
 }
 \arguments{
@@ -72,6 +76,22 @@ order, and each is recorded with who asserted it and why. An override
 that contradicts a found value wins and adds an \code{override-conflict} issue.
 Asserting \code{"version"} or \code{"purl"} changes only that field, not the \code{ref}.
 An unknown component or field, or a missing column, is an error.}
+
+\item{embedded}{Whether to record the code that packages carry inside them.
+A package named in \code{LinkingTo} is recorded as an embedded component of
+the package that compiles it in, nested under that package, at the
+version installed now, as inferred. A C or C++ library that a package
+copies into its \verb{src/} folder (source packages), or names in its
+\code{COPYRIGHTS} file or \code{cph} entries (source and installed packages), is
+recorded as a vendored component of that package, from the rules in
+\code{inst/extdata/vendored.csv}. The version is read from the library's
+header when there is one, and is otherwise unknown. A JavaScript or CSS
+library declared in htmlwidgets YAML, or found by the header comment of a
+file under \verb{www/}, \verb{htmlwidgets/lib/} or \verb{lib/} (under \verb{inst/} in source
+packages), is recorded as an npm component of that package, from the
+rules in \code{inst/extdata/javascript.csv}. Its licence is not read.}
+
+\item{system}{Whether to detect system libraries.}
 
 \item{pkgs}{Names of the installed packages to list. \code{NULL} lists every
 package in \code{lib}, and an issue is recorded when there are none. The

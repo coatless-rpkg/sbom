@@ -1,0 +1,16 @@
+# Rules for JavaScript and CSS libraries that packages bundle.
+# Columns:
+#   name          Component name.
+#   file_regex    Perl regex on the file name (not the path) of a .js or .css file.
+#   header_regex  Perl regex on the first 2 KB of the file. Its one capture group is the version.
+#   npm           npm package name, used for the purl; empty when it differs between versions.
+# Only libraries whose header comment format is known are listed.
+name,file_regex,header_regex,npm
+jquery,"^jquery([-.][0-9][0-9.]*)?(\.min)?\.js$","jQuery(?: JavaScript Library)? v([0-9]+(?:\.[0-9]+)*)",jquery
+bootstrap,"^bootstrap([-.][0-9][0-9.]*)?(\.bundle)?(\.min)?\.(js|css)$","Bootstrap\s+v([0-9]+(?:\.[0-9]+)*)",bootstrap
+d3,"^d3(\.v[0-9]+)?(\.min)?\.js$","d3js\.org\s+(?:[Vv]ersion\s+|v)([0-9]+(?:\.[0-9]+)*)",d3
+datatables,"^(jquery\.)?dataTables(\.min)?\.js$","DataTables\s+([0-9]+(?:\.[0-9]+)*)",datatables.net
+leaflet,"^leaflet(-src)?(\.min)?\.js$","Leaflet\s+([0-9]+(?:\.[0-9]+)*),",leaflet
+plotly.js,"^plotly[-.a-z0-9]*\.js$","plotly\.js(?: \([^)]*\))? v([0-9]+(?:\.[0-9]+)*)",plotly.js
+highlight.js,"^highlight(\.pack)?(\.min)?\.js$","[Hh]ighlight\.js\s+v?([0-9]+(?:\.[0-9]+)*)",highlight.js
+font-awesome,"^(font-?awesome|all|fontawesome-all)(\.min)?\.(css|js)$","Font Awesome(?: Free| Pro)?\s+([0-9]+(?:\.[0-9]+)*)",

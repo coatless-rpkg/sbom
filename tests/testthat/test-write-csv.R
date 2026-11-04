@@ -5,16 +5,17 @@ test_that("the CSV inventory has one quoted row per component", {
   df <- utils::read.csv(text = txt, colClasses = "character", na.strings = "", encoding = "UTF-8")
   expect_equal(nrow(df), nrow(sbom_components(x)))
   expect_equal(df$ref[1], "local/srcpkg")
-  expect_equal(df$license[df$name == "cranpkg"], "GPL-2.0-only OR GPL-3.0-only")
+  expect_equal(names(df)[ncol(df)], "parent")
+  expect_equal(df$license[df$ref == "pkg:cran/cranpkg@1.2.0"], "GPL-2.0-only OR GPL-3.0-only")
   expect_match(df$issues[df$name == "localpkg"], "local source")
 })
 
 test_that("commas, quotes and non-ASCII survive", {
   local_c_ctype()
   x <- fixture_sbom()
-  x$components$maintainer[x$components$name == "cranpkg"] <- 'Gábor, "the" Csárdi'
+  x$components$maintainer[x$components$ref == "pkg:cran/cranpkg@1.2.0"] <- 'Gábor, "the" Csárdi'
   df <- utils::read.csv(text = csv_inventory(x), colClasses = "character", encoding = "UTF-8")
-  expect_equal(df$maintainer[df$name == "cranpkg"], 'Gábor, "the" Csárdi')
+  expect_equal(df$maintainer[df$ref == "pkg:cran/cranpkg@1.2.0"], 'Gábor, "the" Csárdi')
 })
 
 test_that("format = 'all' leaves the inventory out, and .csv writes it", {
@@ -39,7 +40,7 @@ test_that("every field is quoted, empty ones included, and lines end in LF", {
 
 test_that("the sha256 and asserted columns are filled from the component tables", {
   x <- fixture_sbom()
-  i <- which(x$components$name == "cranpkg")
+  i <- which(x$components$ref == "pkg:cran/cranpkg@1.2.0")
   x$components$hashes[[i]] <- data.frame(
     alg = c("SHA-1", "SHA-256"), content = c("aa", "bb"), of = "package",
     stringsAsFactors = FALSE
@@ -49,9 +50,9 @@ test_that("the sha256 and asserted columns are filled from the component tables"
     asserted_by = "me", reason = "checked", stringsAsFactors = FALSE
   )
   df <- utils::read.csv(text = csv_inventory(x), colClasses = "character", na.strings = "")
-  expect_equal(df$sha256[df$name == "cranpkg"], "bb")
+  expect_equal(df$sha256[df$ref == "pkg:cran/cranpkg@1.2.0"], "bb")
   expect_equal(
-    df$asserted[df$name == "cranpkg"],
+    df$asserted[df$ref == "pkg:cran/cranpkg@1.2.0"],
     "license=MIT (me: checked); homepage=https://e.org (me: checked)"
   )
 })
@@ -60,14 +61,14 @@ test_that("free-text cells that a spreadsheet would evaluate get a leading apost
   payloads <- c("=cmd|' /C calc'!A0", "+1", "-2+3", "@SUM(A1)", "\tx")
   for (p in payloads) {
     x <- fixture_sbom()
-    x$components$maintainer[x$components$name == "cranpkg"] <- p
+    x$components$maintainer[x$components$ref == "pkg:cran/cranpkg@1.2.0"] <- p
     df <- utils::read.csv(text = csv_inventory(x), colClasses = "character", na.strings = NULL)
-    expect_identical(df$maintainer[df$name == "cranpkg"], paste0("'", p))
+    expect_identical(df$maintainer[df$ref == "pkg:cran/cranpkg@1.2.0"], paste0("'", p))
   }
   x <- fixture_sbom()
-  x$components$maintainer[x$components$name == "cranpkg"] <- "Grace Hopper"
+  x$components$maintainer[x$components$ref == "pkg:cran/cranpkg@1.2.0"] <- "Grace Hopper"
   df <- utils::read.csv(text = csv_inventory(x), colClasses = "character", na.strings = NULL)
-  expect_identical(df$maintainer[df$name == "cranpkg"], "Grace Hopper")
+  expect_identical(df$maintainer[df$ref == "pkg:cran/cranpkg@1.2.0"], "Grace Hopper")
 })
 
 test_that("a value a spreadsheet would evaluate gets a leading apostrophe in any column", {
@@ -82,27 +83,27 @@ test_that("a value a spreadsheet would evaluate gets a leading apostrophe in any
   for (col in names(fields)) {
     for (p in c("=1+1", "-1")) {
       x <- fixture_sbom()
-      x$components[[fields[[col]]]][x$components$name == "cranpkg"] <- p
+      x$components[[fields[[col]]]][x$components$ref == "pkg:cran/cranpkg@1.2.0"] <- p
       df <- utils::read.csv(text = csv_inventory(x), colClasses = "character", na.strings = NULL)
       expect_true(paste0("'", p) %in% df[[col]], label = paste(col, p))
       expect_false(p %in% df[[col]], label = paste(col, p))
     }
   }
   x <- fixture_sbom()
-  i <- which(x$components$name == "cranpkg")
+  i <- which(x$components$ref == "pkg:cran/cranpkg@1.2.0")
   x$components$hashes[[i]] <- data.frame(alg = "SHA-256", content = "=1+1", of = "package")
   df <- utils::read.csv(text = csv_inventory(x), colClasses = "character", na.strings = NULL)
-  expect_identical(df$sha256[df$name == "cranpkg"], "'=1+1")
+  expect_identical(df$sha256[df$ref == "pkg:cran/cranpkg@1.2.0"], "'=1+1")
 })
 
 test_that("a real version is left as it is", {
   x <- fixture_sbom()
-  x$components$version[x$components$name == "cranpkg"] <- "1.0-2"
+  x$components$version[x$components$ref == "pkg:cran/cranpkg@1.2.0"] <- "1.0-2"
   df <- utils::read.csv(text = csv_inventory(x), colClasses = "character", na.strings = NULL)
-  expect_identical(df$version[df$name == "cranpkg"], "1.0-2")
+  expect_identical(df$version[df$ref == "pkg:cran/cranpkg@1.2.0"], "1.0-2")
 })
 
-test_that("a package name and publication date from DESCRIPTION are neutralised", {
+test_that("a package name and publication date from DESCRIPTION are neutralized", {
   src <- withr::local_tempdir()
   write_text(paste0(
     "Package: =2+5\nVersion: 1.0\nLicense: MIT\nMaintainer: A <a@b.c>\n",
@@ -114,16 +115,16 @@ test_that("a package name and publication date from DESCRIPTION are neutralised"
   expect_identical(df$published[1], "'=1+1")
 })
 
-test_that("a leading carriage return is neutralised in the written text", {
+test_that("a leading carriage return is neutralized in the written text", {
   x <- fixture_sbom()
-  x$components$maintainer[x$components$name == "cranpkg"] <- "\rx"
+  x$components$maintainer[x$components$ref == "pkg:cran/cranpkg@1.2.0"] <- "\rx"
   expect_match(csv_inventory(x), "\"'\rx\"", fixed = TRUE)
 })
 
 test_that("a written CSV starts with a UTF-8 byte-order mark; the inventory text has none", {
   local_c_ctype()
   x <- fixture_sbom()
-  x$components$maintainer[x$components$name == "cranpkg"] <- "G\u00e1bor Cs\u00e1rdi"
+  x$components$maintainer[x$components$ref == "pkg:cran/cranpkg@1.2.0"] <- "G\u00e1bor Cs\u00e1rdi"
   txt <- csv_inventory(x)
   expect_false(startsWith(txt, "\ufeff"))
   tf <- withr::local_tempfile(fileext = ".csv")

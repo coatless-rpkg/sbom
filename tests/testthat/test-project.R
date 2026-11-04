@@ -488,3 +488,29 @@ test_that("sbom() applies sbom-overrides.csv from the folder unless overrides ar
   expect_equal(comps$version[comps$name == "glue"], "9.9.9")
   expect_false("overrides" %in% y$metadata$inputs$kind)
 })
+
+test_that("a read failure's reason names no path, whatever cli's colours", {
+  withr::local_options(cli.num_colors = 256)
+  dir <- withr::local_tempdir()
+  file.copy(test_path("fixtures/renv/modern/renv.lock"), dir)
+  write_text("{ not json", file.path(dir, "manifest.json"))
+  x <- sbom(dir, library = local_fake_lib(list()))
+  msg <- paste(sbom_issues(x)$message, collapse = " ")
+  expect_false(grepl(dir, msg, fixed = TRUE))
+  expect_false(grepl(normalizePath(dir), msg, fixed = TRUE))
+  expect_false(grepl("\033[", msg, fixed = TRUE))
+})
+
+test_that("git_commit() does not take a commit from a repository at the home folder", {
+  home <- withr::local_tempdir()
+  proj <- file.path(home, "work", "proj")
+  dir.create(proj, recursive = TRUE)
+  dir.create(file.path(home, ".git", "refs", "heads"), recursive = TRUE)
+  write_text(paste0(strrep("c3", 20), "\n"), file.path(home, ".git", "HEAD"))
+  withr::local_envvar(HOME = home)
+  expect_true(is.na(git_commit(proj)))
+  # A repository below the home folder is still found.
+  dir.create(file.path(proj, ".git"))
+  write_text(paste0(strrep("d4", 20), "\n"), file.path(proj, ".git", "HEAD"))
+  expect_equal(git_commit(proj), strrep("d4", 20))
+})

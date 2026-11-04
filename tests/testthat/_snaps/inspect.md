@@ -7,14 +7,14 @@
       
       -- Components --
       
-      ecosystem: base-r (2), cran (2), local (2), r (1)
-      type: library (6), platform (1)
-      evidence: observed (3), declared (2), inferred (2)
-      Unknown version or licence: 3
+      ecosystem: cran (3), base-r (2), local (2), r (1)
+      type: library (7), platform (1)
+      evidence: inferred (3), observed (3), declared (2)
+      Unknown version or licence: 4
       
       -- Licences --
       
-      NOASSERTION (3), GPL-2.0-only OR GPL-3.0-only (2), MIT (2)
+      NOASSERTION (4), GPL-2.0-only OR GPL-3.0-only (2), MIT (2)
       
       -- Drift --
       
@@ -52,6 +52,7 @@
       | \-utils
       +-cranpkg 1.2.0
       | \-methods (see above)
+      +-cranpkg 1.2.0 (embedded)
       +-localpkg 0.0.1
       +-suggestpkg 2.0.0 (suggested)
       \-utils (see above)
@@ -64,6 +65,7 @@
       srcpkg 0.1.0
       +-R 4.1.0
       +-cranpkg 1.2.0
+      +-cranpkg 1.2.0 (embedded)
       +-localpkg 0.0.1
       +-suggestpkg 2.0.0 (suggested)
       \-utils

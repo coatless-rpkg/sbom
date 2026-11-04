@@ -46,10 +46,10 @@ test_that("a component matches by ref, and an ambiguous name is an error", {
   x <- build_with(ov_row(component = "pkg:cran/cranpkg@1.2.0", field = "supplier_name",
                          value = "Acme"))
   comps <- sbom_components(x)
-  expect_equal(comps$supplier_name[comps$name == "cranpkg"], "Acme")
+  expect_equal(comps$supplier_name[comps$ref == "pkg:cran/cranpkg@1.2.0"], "Acme")
 
   base <- build_with(NULL)
-  dup <- base$components[base$components$name == "cranpkg", ]
+  dup <- base$components[base$components$ref == "pkg:cran/cranpkg@1.2.0", ]
   dup$ref <- "unknown/cranpkg"
   base$components <- rbind(base$components, dup)
   expect_error(apply_overrides(base, ov_row()), "unknown/cranpkg")
@@ -61,7 +61,7 @@ test_that("rows append in order and a later row wins", {
   ov <- rbind(ov_row(value = "First"), ov_row(value = "Second", asserted_by = "You"))
   x <- build_with(ov)
   comps <- sbom_components(x)
-  row <- comps$name == "cranpkg"
+  row <- comps$ref == "pkg:cran/cranpkg@1.2.0"
   expect_equal(comps$maintainer[row], "Second")
   expect_equal(comps$asserted[row][[1]]$value, c("First", "Second"))
   expect_equal(names(comps$asserted[row][[1]]), c("field", "value", "asserted_by", "reason"))

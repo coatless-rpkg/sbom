@@ -194,3 +194,10 @@ test_that("a manifest of the wrong shape is a clear error, and not a Posit Conne
   expect_equal(x$metadata$inputs$kind, c("code", "library"))
   expect_true("manifest.json is not a Posit Connect manifest, so it was not read." %in% sbom_issues(x)$message)
 })
+
+test_that("a manifest whose files are not an object says so in a full sentence", {
+  f <- file.path(withr::local_tempdir(), "manifest.json")
+  write_text('{"version": 1, "packages": {}, "files": [{"checksum": "abc"}]}', f)
+  err <- expect_error(sbom_rsconnect(f), class = "rlang_error")
+  expect_true("Its files entry is not an object." %in% cli::ansi_strip(err$body))
+})

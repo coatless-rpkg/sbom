@@ -1,0 +1,6 @@
+Package: widgetpkg
+Version: 1.0
+Title: Fixture With Bundled JavaScript
+Authors@R: person("Ada", "Lovelace", email = "ada@example.org", role = c("aut", "cre"))
+Description: A fixture that bundles JavaScript libraries.
+License: MIT + file LICENSE
