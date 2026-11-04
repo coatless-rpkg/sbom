@@ -1,6 +1,6 @@
 #' Write an SBOM to disk
 #'
-#' Serialises an `<sbom>` object as UTF-8 text with `"\n"` line endings and a
+#' Serializes an `<sbom>` object as UTF-8 text with `"\n"` line endings and a
 #' trailing newline. Existing files are overwritten.
 #'
 #' @param x An `<sbom>` object from [sbom_package()] or [sbom_installed()].
@@ -59,7 +59,7 @@
 #' @return `path`, invisibly.
 #' @export
 #' @examples
-#' x <- sbom_package(system.file("DESCRIPTION", package = "sbom"))
+#' x <- sbom_package(system.file("DESCRIPTION", package = "sbom"), system = FALSE)
 #' write_sbom(x, file.path(tempdir(), "sbom.cdx.json"))
 write_sbom <- function(x, path, format = NULL, version = NULL) {
   if (!inherits(x, "sbom")) {

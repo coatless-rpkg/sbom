@@ -6,7 +6,9 @@
 #' components whose version, licence or source changed.
 #'
 #' The two root components are paired with each other. Components of type
-#' `"file"` and embedded components are matched by `ref`, all other components by name. A `"license"` change compares the SPDX
+#' `"file"`, embedded components and system components (ecosystems
+#' `"system"`, `"deb"` and `"rpm"`) are matched by `ref`, all other
+#' components by name. A `"license"` change compares the SPDX
 #' expression, then the licence as written. A `"source"` change compares the
 #' ecosystem, then the package URL without its version. R itself is compared
 #' like any other component, so a change of R version shows up. Base packages
@@ -22,8 +24,8 @@
 #'   argument invisibly.
 #' @examples
 #' desc <- system.file("DESCRIPTION", package = "sbom")
-#' old <- sbom_package(desc)
-#' new <- sbom_package(desc)
+#' old <- sbom_package(desc, system = FALSE)
+#' new <- sbom_package(desc, system = FALSE)
 #' sbom_diff(old, new)
 #' @export
 sbom_diff <- function(old, new) {
@@ -69,9 +71,11 @@ sbom_diff <- function(old, new) {
 }
 
 # The two roots pair with each other (a package root's ref carries its
-# version); file components match by ref, packages by name.
+# version); file, embedded and system components match by ref, packages by
+# name.
 component_keys <- function(comps) {
-  by_ref <- comps$type %in% "file" | is_embedded_ref(comps$ref)
+  by_ref <- comps$type %in% "file" | is_embedded_ref(comps$ref) |
+    comps$ecosystem %in% system_ecosystems
   key <- ifelse(by_ref, paste0("ref:", comps$ref), paste0("name:", comps$name))
   key[comps$is_root %in% TRUE] <- "root"
   key
@@ -141,11 +145,12 @@ print.sbom_diff <- function(x, ...) {
 as.data.frame.sbom_diff <- function(x, ...) x$changes
 
 # Appends one issue per difference between `primary` and `other`. R and base
-# packages, embedded components and the root components are never drift. They are set aside
-# before comparing, so that a root sharing a package's name hides nothing.
+# packages, embedded and system components and the root components are never
+# drift. They are set aside before comparing, so that a root sharing a
+# package's name hides nothing.
 drift_issues <- function(issues, primary, other, primary_label, other_label) {
   compared <- function(comps) {
-    skip <- comps$is_root %in% TRUE | comps$ecosystem %in% c("r", "base-r") |
+    skip <- comps$is_root %in% TRUE | comps$ecosystem %in% c("r", "base-r", system_ecosystems) |
       is_embedded_ref(comps$ref)
     comps[!skip, , drop = FALSE]
   }

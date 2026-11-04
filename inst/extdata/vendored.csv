@@ -10,16 +10,16 @@
 #                      100201 reads as 10.2.1. Empty: a file name match alone counts, and
 #                      the version stays unknown.
 #   purl               Package URL template with {version}, used only when the version is known.
-#   license            The SPDX id the library usually has, empty when it has none.
+#   license            The SPDX expression the library usually has, empty when it has none.
 #   homepage           Upstream home page.
 # A line that starts with # is a comment. Every regex was checked against the macro text
 # in tests/testthat/test-embedded.R.
 name,aliases,dir_regex,version_file_regex,version_regex,purl,license,homepage
 sqlite,sqlite;sqlite3,^sqlite3?$,^sqlite3\.h$,"#define\s+SQLITE_VERSION\s+""([0-9][0-9.]*)""",pkg:generic/sqlite@{version},,https://www.sqlite.org
 libuv,libuv,^(lib)?uv$,^version\.h$,"(?s)UV_VERSION_MAJOR\s+(\d+).*?UV_VERSION_MINOR\s+(\d+).*?UV_VERSION_PATCH\s+(\d+)",pkg:generic/libuv@{version},MIT,https://libuv.org
-zstd,zstd;zstandard,^zstd$,^zstd\.h$,"(?s)ZSTD_VERSION_MAJOR\s+(\d+).*?ZSTD_VERSION_MINOR\s+(\d+).*?ZSTD_VERSION_RELEASE\s+(\d+)",pkg:generic/zstd@{version},BSD-3-Clause,https://facebook.github.io/zstd/
+zstd,zstd;zstandard,^zstd$,^zstd\.h$,"(?s)ZSTD_VERSION_MAJOR\s+(\d+).*?ZSTD_VERSION_MINOR\s+(\d+).*?ZSTD_VERSION_RELEASE\s+(\d+)",pkg:generic/zstd@{version},BSD-3-Clause OR GPL-2.0-only,https://facebook.github.io/zstd/
 lz4,lz4,^lz4$,^lz4\.h$,"(?s)LZ4_VERSION_MAJOR\s+(\d+).*?LZ4_VERSION_MINOR\s+(\d+).*?LZ4_VERSION_RELEASE\s+(\d+)",pkg:generic/lz4@{version},BSD-2-Clause,https://lz4.org
-mbedtls,mbedtls;mbed tls,^mbedtls$,^(version|build_info)\.h$,"#define\s+MBEDTLS_VERSION_STRING\s+""([0-9][0-9.]*)""",pkg:generic/mbedtls@{version},Apache-2.0,https://github.com/Mbed-TLS/mbedtls
+mbedtls,mbedtls;mbed tls,^mbedtls$,^(version|build_info)\.h$,"#define\s+MBEDTLS_VERSION_STRING\s+""([0-9][0-9.]*)""",pkg:generic/mbedtls@{version},Apache-2.0 OR GPL-2.0-or-later,https://github.com/Mbed-TLS/mbedtls
 libgit2,libgit2,^(lib)?git2$,^version\.h$,"#define\s+LIBGIT2_VERSION\s+""([0-9][0-9.]*)""",pkg:generic/libgit2@{version},,https://libgit2.org
 miniz,miniz,^miniz$,^miniz\.h$,"#define\s+MZ_VERSION\s+""([0-9][0-9.]*)""",pkg:generic/miniz@{version},MIT,https://github.com/richgel999/miniz
 pcre2,pcre2,^pcre2$,^pcre2\.h$,"(?s)#define\s+PCRE2_MAJOR\s+(\d+).*?#define\s+PCRE2_MINOR\s+(\d+)",pkg:generic/pcre2@{version},BSD-3-Clause,https://github.com/PCRE2Project/pcre2

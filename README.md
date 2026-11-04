@@ -57,6 +57,55 @@ sbom_tree(x, max_depth = 2)
 sbom_diff(old, new)
 ```
 
+## Inside packages
+
+A package can carry code that is not an R package. With `embedded = TRUE` (the
+default), sbom records it as components contained in the package:
+
+- A package named in `LinkingTo` is compiled into the package, so its headers
+  are an embedded component, separate from the same package as a dependency.
+- C and C++ libraries copied into a package's `src/` folder, or named in its
+  `COPYRIGHTS` file or `cph` entries, are vendored components. The version is
+  read from a header when there is one, and is otherwise unknown.
+- Bundled JavaScript and CSS libraries are read from `htmlwidgets` YAML and
+  from the header comments of files under `www/`, `htmlwidgets/lib/` and
+  `lib/`. Their licences are not read.
+
+With `system = TRUE` (the default), sbom also records what a package needs from
+the operating system:
+
+- `SystemRequirements` is mapped to system libraries and programs through pak's
+  rules, as pak has them on disk: sbom turns off pak's update of its rules, so
+  it makes no network request. The text itself is written as it stands too: a
+  property in CycloneDX, the package comment in SPDX, a column in the CSV and,
+  for the root, the SWID tag. So text that pak cannot map, such as "C++17", is
+  kept, and no component is invented for it.
+- For installed packages with compiled code, the shared libraries the binary
+  links (read with `otool` or `ldd`) become components, with the version of the
+  Debian or RPM package that owns the file when the operating system says so.
+  A library's own "current version" is never written as a version. R's own
+  libraries, the C, C++, Fortran and OpenMP runtimes, and the copies that
+  packages ship in a library folder are not system libraries. What Windows
+  DLLs link is not read.
+- When a package declares a library it does not link dynamically, sbom adds an
+  informational issue: it may include its own copy, whose version is unknown.
+
+Each component states how sbom knows it. `declared` means a package says so,
+as in `SystemRequirements` (even when pak's rules give the library its name)
+or a `htmlwidgets` file. `observed` means sbom read it from a binary or the
+operating system. `inferred` means a rule matched: a `LinkingTo` entry, a
+header comment or a name in `COPYRIGHTS`. Machines without `otool`, `ldd`,
+`dpkg`, `rpm` or pak still get an SBOM, with an issue naming what was not
+checked or is unknown. Set `embedded = FALSE` or `system = FALSE` to skip
+either step.
+
+In SPDX and CycloneDX a system requirement is a dependency (in SPDX 3, scoped
+to the build for build tools such as make and cmake, and to run time
+otherwise), and a dynamic link is a link relationship (`DYNAMIC_LINK` in SPDX
+2, `hasDynamicLink` in SPDX 3, a dependency in CycloneDX). A SWID tag lists
+system components among the root's `requires` links, like any other
+component, without saying which relationship it is.
+
 ## Installation
 
 sbom is not yet on CRAN. Install the development version from a local checkout

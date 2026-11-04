@@ -7,8 +7,6 @@
 # htmlwidgets/lib/ and lib/, or declared in htmlwidgets YAML, become npm
 # components, found by inst/extdata/javascript.csv.
 
-the <- new.env(parent = emptyenv())
-
 embedded_ref <- function(parent_ref, name) {
   paste0(parent_ref, "#embedded/", name)
 }
@@ -22,15 +20,18 @@ is_embedded_ref <- function(ref) {
 
 # For each package P with a LinkingTo edge to L, one component "<P
 # ref>#embedded/<L>" and a `contains` relationship from P. The LinkingTo edge
-# stays. Ecosystem and purl are those of the installed L, if any; the version
-# is the one `lookup` finds now, since nothing records the version used at
-# build time. Returns list(components, relationships, issues), where the two
-# tables hold only the new rows.
-linkingto_components <- function(components, relationships, lookup) {
+# stays. Ecosystem, purl and licence are those of L as `lookup` finds it, and
+# so is the version, since nothing records the version used at build time.
+# `where` says where `lookup` looks, as in "installed in the library sbom
+# read". Returns list(components, relationships, issues), where the tables
+# hold only the new rows.
+linkingto_components <- function(components, relationships, lookup,
+                                 where = "installed in the library sbom read") {
   edges <- relationships[relationships$field == "LinkingTo", , drop = FALSE]
   edges <- edges[!duplicated(edges[c("from", "to")]), , drop = FALSE]
   edges <- edges[edges$from != "R" & !edges$to %in% c("R", components$ref[!is.na(components$parent_ref)]), , drop = FALSE]
   rows <- list()
+  absent <- list()
   for (i in seq_len(nrow(edges))) {
     parent <- components[match(edges$from[[i]], components$ref), , drop = FALSE]
     target <- components[match(edges$to[[i]], components$ref), , drop = FALSE]
@@ -40,18 +41,40 @@ linkingto_components <- function(components, relationships, lookup) {
     desc <- lookup$get(target$name)
     installed <- !is.null(desc)
     version <- if (installed) trimws(desc[["Version"]]) else NA_character_
+    if (!installed) {
+      absent[[length(absent) + 1L]] <- c(target$name, pkg_label(parent$name, parent$version))
+    }
     rows[[length(rows) + 1L]] <- component_row(
       ref = embedded_ref(parent$ref, target$name), name = target$name,
       version = version, version_is = if (installed) "exact" else NA_character_,
       type = "library", ecosystem = if (installed) target$ecosystem,
       scope = parent$scope, parent_ref = parent$ref,
       purl = if (installed) target$purl,
+      license_as_written = if (installed) target$license_as_written,
+      license_spdx = if (installed) target$license_spdx,
+      license_comment = if (installed) target$license_comment,
       description = paste0(
         "Compiled into ", parent$name, " from the headers of ", target$name,
-        if (installed) paste0(" ", version),
-        ", the version installed now; nothing records the version used at build time."
+        if (installed) paste0(" ", version, ", the version ", where) else paste0(", which is not ", where),
+        "; nothing records the version used at build time."
       ),
       evidence = "inferred", source_input = parent$source_input
+    )
+  }
+  issues <- empty_issues()
+  if (length(absent) > 0L) {
+    names <- sort(unique(vapply(absent, `[[`, "", 1L)), method = "radix")
+    parents <- sort(unique(vapply(absent, `[[`, "", 2L)), method = "radix")
+    one <- length(names) == 1L
+    root <- components$ref[components$is_root %in% TRUE][1L]
+    issues <- add_issue(
+      issues, root, "version", "embedded-not-installed",
+      paste0(
+        and_list(names), if (one) " is" else " are", " compiled into ", and_list(parents),
+        " through LinkingTo, but ", if (one) "is" else "are", " not ", where, ", so ",
+        if (one) "its version is" else "their versions are", " unknown."
+      ),
+      severity = "info"
     )
   }
   if (length(rows) == 0L) {
@@ -68,7 +91,7 @@ linkingto_components <- function(components, relationships, lookup) {
       from = new$parent_ref, to = new$ref, field = "contains",
       spec = NA_character_, evidence = "inferred", stringsAsFactors = FALSE
     ),
-    issues = empty_issues()
+    issues = issues
   )
 }
 
@@ -347,23 +370,33 @@ javascript_components <- function(pkg_dir, parent, installed = FALSE, max_files 
         found[[key]]$header_file <<- file
         return(invisible())
       }
-      if (!is.na(declared$version) && declared$version != version) {
-        issues <<- add_issue(
-          issues, parent$ref, "version", "javascript-version-differs",
-          paste0(
-            label, " declares ", name, " ", declared$version, " in ", declared$file,
-            " but ", file, " has ", version, "; sbom recorded ", declared$version, "."
-          ),
-          severity = "warning"
-        )
+      if (declared$version == version) {
+        return(invisible())
       }
-      return(invisible())
+      # A header with another version is a second copy, which the package
+      # ships as well: it is recorded below as one more inferred entry.
     }
     same <- vapply(
       found, function(h) tolower(h$name) == key && identical(h$version, version), NA
     )
     if (any(same)) {
       return(invisible())
+    }
+    if (!is.null(declared) && declared$evidence == "declared") {
+      # The declared entry's version may itself come from a header.
+      first <- if (is.na(declared$header_file)) {
+        paste0("declared in ", declared$file)
+      } else {
+        paste0("found in ", declared$header_file)
+      }
+      issues <<- add_issue(
+        issues, parent$ref, "version", "javascript-version-differs",
+        paste0(
+          label, " ships two versions of ", name, ": ", declared$version, ", ", first,
+          ", and ", version, ", found in ", file, "; both are recorded."
+        ),
+        severity = "warning"
+      )
     }
     suffix <- if (is.null(found[[key]])) "" else paste0("@", version)
     key <- paste0(key, suffix)
@@ -599,9 +632,23 @@ detect_bundled <- function(comps, root_ref, source_dir, root_desc, lookup, lib) 
       issues, root_ref, "embedded", "compiled-code-limited",
       paste0(
         n, if (n == 1L) " package contains" else " packages contain",
-        " compiled code but ", if (n == 1L) "names" else "name",
-        " no bundled library in a COPYRIGHTS file or Authors@R, so sbom could not look inside ",
+        " compiled code, but sbom recognised no bundled library in ",
+        if (n == 1L) "its" else "their", " COPYRIGHTS file or cph entries, so it could not look inside ",
         if (n == 1L) "it" else "them", ": ", paste(limited, collapse = ", "), "."
+      ),
+      severity = "info"
+    )
+  }
+  found <- do.call(rbind, c(list(empty_components()), lapply(out, `[[`, "components")))
+  unversioned <- found[found$ecosystem %in% "vendored" & is.na(found$version), , drop = FALSE]
+  if (nrow(unversioned) > 0L) {
+    at <- match(unversioned$parent_ref, comps$ref)
+    pairs <- paste(unversioned$name, "in", pkg_label(comps$name[at], comps$version[at]))
+    issues <- add_issue(
+      issues, root_ref, "version", "vendored-version-unknown",
+      paste0(
+        "sbom found no version for the bundled ",
+        and_list(sort(unique(pairs), method = "radix")), "."
       ),
       severity = "info"
     )

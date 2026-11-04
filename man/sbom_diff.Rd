@@ -34,7 +34,9 @@ components whose version, licence or source changed.
 }
 \details{
 The two root components are paired with each other. Components of type
-\code{"file"} and embedded components are matched by \code{ref}, all other components by name. A \code{"license"} change compares the SPDX
+\code{"file"}, embedded components and system components (ecosystems
+\code{"system"}, \code{"deb"} and \code{"rpm"}) are matched by \code{ref}, all other
+components by name. A \code{"license"} change compares the SPDX
 expression, then the licence as written. A \code{"source"} change compares the
 ecosystem, then the package URL without its version. R itself is compared
 like any other component, so a change of R version shows up. Base packages
@@ -42,7 +44,7 @@ have no versions and appear only as added or removed.
 }
 \examples{
 desc <- system.file("DESCRIPTION", package = "sbom")
-old <- sbom_package(desc)
-new <- sbom_package(desc)
+old <- sbom_package(desc, system = FALSE)
+new <- sbom_package(desc, system = FALSE)
 sbom_diff(old, new)
 }

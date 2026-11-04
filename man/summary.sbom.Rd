@@ -36,6 +36,6 @@ licence is \code{NA} (reported as \code{"NOASSERTION"}). Base packages have no
 version, so they are always unknown.
 }
 \examples{
-x <- sbom_package(system.file("DESCRIPTION", package = "sbom"))
+x <- sbom_package(system.file("DESCRIPTION", package = "sbom"), system = FALSE)
 summary(x)
 }

@@ -69,7 +69,8 @@ issue is recorded. The default is the \code{sbom.regid} option, as
 \item{overrides}{Values to assert where \code{sbom} found none, or found
 something different. \code{NULL}, a data frame or the path to a CSV file, with
 the character columns \code{component} (the \code{name} or \code{ref} of one
-component), \code{field}, \code{value}, \code{asserted_by} and \code{reason}. \code{field} is one
+component; embedded and system components only by \code{ref}), \code{field},
+\code{value}, \code{asserted_by} and \code{reason}. \code{field} is one
 of \code{"version"}, \code{"license_spdx"}, \code{"supplier_name"}, \code{"supplier_url"},
 \code{"maintainer"}, \code{"purl"} and \code{"download_location"}. Rows are applied in
 order, and each is recorded with who asserted it and why. An override
@@ -79,8 +80,9 @@ An unknown component or field, or a missing column, is an error.}
 
 \item{embedded}{Whether to record the code that packages carry inside them.
 A package named in \code{LinkingTo} is recorded as an embedded component of
-the package that compiles it in, nested under that package, at the
-version installed now, as inferred. A C or C++ library that a package
+the package that compiles it in, nested under that package, as
+inferred, at the version and with the licence that the library,
+lockfile or manifest records for it now. A C or C++ library that a package
 copies into its \verb{src/} folder (source packages), or names in its
 \code{COPYRIGHTS} file or \code{cph} entries (source and installed packages), is
 recorded as a vendored component of that package, from the rules in
@@ -91,7 +93,12 @@ file under \verb{www/}, \verb{htmlwidgets/lib/} or \verb{lib/} (under \verb{inst
 packages), is recorded as an npm component of that package, from the
 rules in \code{inst/extdata/javascript.csv}. Its licence is not read.}
 
-\item{system}{Whether to detect system libraries.}
+\item{system}{Whether to detect system libraries. A package's
+\code{SystemRequirements} text is mapped to system libraries and programs
+with the rules of the pak package, when it is installed. sbom turns off
+pak's update of those rules, so pak uses the rules it has cached or
+ships and makes no network request. The shared libraries that installed
+compiled code links are read with \code{otool} (macOS) or \code{ldd} (Linux).}
 
 \item{pkgs}{Names of the installed packages to list. \code{NULL} lists every
 package in \code{lib}, and an issue is recorded when there are none. The
@@ -123,7 +130,7 @@ library, the lowest version that the dependency tree states, the highest
 \verb{R (>= x)} found, is used as a minimum.
 }
 \examples{
-x <- sbom_package(system.file("DESCRIPTION", package = "sbom"))
+x <- sbom_package(system.file("DESCRIPTION", package = "sbom"), system = FALSE)
 x
-sbom_installed("sbom")
+sbom_installed("sbom", system = FALSE)
 }

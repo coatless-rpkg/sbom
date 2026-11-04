@@ -91,7 +91,8 @@ swid_tag <- function(x, version = "2015") {
   swid_node(doc, "Meta", c(
     generator = paste("sbom", meta$tool_version), product = root$name,
     description = if (length(notes) > 0L) paste(notes, collapse = " "),
-    `sbom:purl` = root$purl, `sbom:license` = root$license_as_written
+    `sbom:purl` = root$purl, `sbom:license` = root$license_as_written,
+    `sbom:systemRequirements` = root$system_requirements
   ))
 
   # A link needs its href; without one the link is left out.

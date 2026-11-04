@@ -44,10 +44,11 @@ read_overrides <- function(overrides, call = parent.frame()) {
 }
 
 match_component <- function(comps, value, row, call) {
-  # An embedded component shares its name with the package it copies, so only
-  # its ref names it.
-  hits <- which(comps$ref %in% value |
-    (comps$name %in% value & !is_embedded_ref(comps$ref)))
+  # An embedded component shares its name with the package it copies, and a
+  # system component may share its name with an R package (openssl), so only
+  # their refs name them.
+  by_ref_only <- is_embedded_ref(comps$ref) | comps$ecosystem %in% system_ecosystems
+  hits <- which(comps$ref %in% value | (comps$name %in% value & !by_ref_only))
   if (length(hits) == 0) {
     cli::cli_abort(
       c(

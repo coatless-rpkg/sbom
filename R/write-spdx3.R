@@ -29,7 +29,8 @@ spdx3_package_comment <- function(row) {
   if (spdx_is_set(row$maintainer)) {
     parts <- paste0("Maintainer ", row$maintainer, ".")
   }
-  if ((is_r || is_base || is_embedded_ref(row$ref)) && spdx_is_set(row$description)) {
+  if ((is_r || is_base || is_embedded_ref(row$ref) || row$ecosystem %in% system_ecosystems) &&
+        spdx_is_set(row$description)) {
     parts <- c(parts, row$description)
   }
   # license_comment reads "Declared in DESCRIPTION as ..., which has no SPDX
@@ -38,7 +39,7 @@ spdx3_package_comment <- function(row) {
         spdx_is_set(row$license_comment)) {
     parts <- c(parts, paste0("Licence d", substring(row$license_comment, 2L)))
   }
-  parts <- c(parts, spdx_asserted_sentences(row))
+  parts <- c(parts, spdx_asserted_sentences(row), spdx_system_requirements(row))
   if (length(parts) > 0L) paste(parts, collapse = " ")
 }
 
@@ -81,7 +82,7 @@ spdx3_package <- function(row, id, supplier, person) {
   p$software_primaryPurpose <- if (identical(row$ecosystem, "r") ||
                                      (isTRUE(row$is_root) && row$type == "platform")) {
     "platform"
-  } else if (isTRUE(row$is_root) && row$type == "application") {
+  } else if (row$type == "application") {
     "application"
   } else if (row$type == "file") {
     "file"
@@ -199,17 +200,28 @@ spdx3_components <- function(comps, pkg_ids, local_ids, id) {
   elements
 }
 
-# Depends and Imports are dependsOn; LinkingTo is a build-scoped dependsOn;
-# Suggests is hasOptionalDependency. Numbered in sorted order.
+# Depends and Imports are dependsOn; LinkingTo, and a system requirement on a
+# build tool, are build-scoped dependsOn, and any other system requirement is
+# a runtime-scoped one; Suggests is hasOptionalDependency; a dynamic link is
+# hasDynamicLink, which the bundled 3.0.1 schema lists. Numbered in sorted
+# order.
 spdx3_dependencies <- function(x, pkg_ids, id) {
   rel <- x$relationships
   rel <- rel[rel$field != "contains", , drop = FALSE]
   if (nrow(rel) == 0L) return(list())
   from <- unname(pkg_ids[match(rel$from, x$components$ref)])
   to <- unname(pkg_ids[match(rel$to, x$components$ref)])
-  rtype <- ifelse(rel$field == "Suggests", "hasOptionalDependency", "dependsOn")
-  etype <- ifelse(rel$field == "LinkingTo", "LifecycleScopedRelationship", "Relationship")
-  comment <- ifelse(is.na(rel$spec), NA_character_, paste0(rel$field, ": ", rel$spec))
+  rtype <- ifelse(
+    rel$field == "Suggests", "hasOptionalDependency",
+    ifelse(rel$field == "dynamic_link", "hasDynamicLink", "dependsOn")
+  )
+  etype <- ifelse(
+    rel$field %in% c("LinkingTo", "system_requirement"),
+    "LifecycleScopedRelationship", "Relationship"
+  )
+  comment <- relationship_comment(rel)
+  build <- rel$field == "LinkingTo" | (rel$field == "system_requirement" &
+    is_build_tool(x$components$name[match(rel$to, x$components$ref)]))
   ord <- order(from, rtype, to, etype, rel$field, method = "radix")
   lapply(seq_along(ord), function(n) {
     i <- ord[n]
@@ -221,7 +233,9 @@ spdx3_dependencies <- function(x, pkg_ids, id) {
     r$from <- from[i]
     r$relationshipType <- rtype[i]
     r$to <- list(to[i])
-    if (etype[i] == "LifecycleScopedRelationship") r$scope <- "build"
+    if (etype[i] == "LifecycleScopedRelationship") {
+      r$scope <- if (build[i]) "build" else "runtime"
+    }
     r
   })
 }

@@ -74,3 +74,24 @@ test_that("sbom_diff() pairs the two roots whatever their refs", {
   expect_equal(ch$name, "srcpkg")
   expect_equal(ch$new, "2.0.0")
 })
+
+test_that("sbom_diff() pairs R packages by name and system components by ref", {
+  # deb/openssl sorts before local/openssl, the R package of the same name.
+  local_mocked_bindings(
+    sys_linked_libraries = function(so) "/usr/lib/x86_64-linux-gnu/libssl.so.3",
+    sys_os_package = function(path) list(manager = "deb", name = "openssl", version = "3.0.11-1", arch = "amd64")
+  )
+  build <- function(version) {
+    lib <- local_fake_lib(list(openssl = c(Version = version, License = "MIT")), env = parent.frame())
+    dir.create(file.path(lib, "openssl", "libs"))
+    write_text("", file.path(lib, "openssl", "libs", "openssl.so"))
+    sbom_installed("openssl", lib = lib)
+  }
+  old <- build("2.0")
+  new <- build("2.1")
+  ch <- as.data.frame(sbom_diff(old, new))
+  expect_equal(ch$change, "version")
+  expect_equal(ch$ecosystem, "local")
+  expect_equal(ch$old, "2.0")
+  expect_equal(ch$new, "2.1")
+})

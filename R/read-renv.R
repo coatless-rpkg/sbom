@@ -44,7 +44,7 @@
 #'   project's renv library when there is one.
 #' @return An `<sbom>` object. See [sbom_components()] to read it.
 #' @examples
-#' sbom_renv(system.file("extdata", "renv.lock", package = "sbom"))
+#' sbom_renv(system.file("extdata", "renv.lock", package = "sbom"), system = FALSE)
 #' @export
 sbom_renv <- function(lockfile = "renv.lock", library = NULL,
                       author = getOption("sbom.author"),
@@ -101,7 +101,7 @@ sbom_renv <- function(lockfile = "renv.lock", library = NULL,
     root_suggests = FALSE, lib = character(), r_version = r_version,
     author = author, organization = organization, regid = regid,
     timestamp = timestamp, inputs = inputs, resolved = resolved,
-    embedded = embedded, detect_lib = library,
+    embedded = embedded, system = system, detect_lib = library,
     package_evidence = "declared", package_source = "renv.lock",
     where = "recorded in renv.lock",
     missing_code = "dependency-not-locked", r_evidence = "declared", all_required = TRUE,

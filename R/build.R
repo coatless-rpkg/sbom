@@ -45,7 +45,8 @@
 #' @param overrides Values to assert where `sbom` found none, or found
 #'   something different. `NULL`, a data frame or the path to a CSV file, with
 #'   the character columns `component` (the `name` or `ref` of one
-#'   component), `field`, `value`, `asserted_by` and `reason`. `field` is one
+#'   component; embedded and system components only by `ref`), `field`,
+#'   `value`, `asserted_by` and `reason`. `field` is one
 #'   of `"version"`, `"license_spdx"`, `"supplier_name"`, `"supplier_url"`,
 #'   `"maintainer"`, `"purl"` and `"download_location"`. Rows are applied in
 #'   order, and each is recorded with who asserted it and why. An override
@@ -54,8 +55,9 @@
 #'   An unknown component or field, or a missing column, is an error.
 #' @param embedded Whether to record the code that packages carry inside them.
 #'   A package named in `LinkingTo` is recorded as an embedded component of
-#'   the package that compiles it in, nested under that package, at the
-#'   version installed now, as inferred. A C or C++ library that a package
+#'   the package that compiles it in, nested under that package, as
+#'   inferred, at the version and with the licence that the library,
+#'   lockfile or manifest records for it now. A C or C++ library that a package
 #'   copies into its `src/` folder (source packages), or names in its
 #'   `COPYRIGHTS` file or `cph` entries (source and installed packages), is
 #'   recorded as a vendored component of that package, from the rules in
@@ -65,10 +67,15 @@
 #'   file under `www/`, `htmlwidgets/lib/` or `lib/` (under `inst/` in source
 #'   packages), is recorded as an npm component of that package, from the
 #'   rules in `inst/extdata/javascript.csv`. Its licence is not read.
-#' @param system Whether to detect system libraries.
+#' @param system Whether to detect system libraries. A package's
+#'   `SystemRequirements` text is mapped to system libraries and programs
+#'   with the rules of the pak package, when it is installed. sbom turns off
+#'   pak's update of those rules, so pak uses the rules it has cached or
+#'   ships and makes no network request. The shared libraries that installed
+#'   compiled code links are read with `otool` (macOS) or `ldd` (Linux).
 #' @return An `<sbom>` object. See [sbom_components()] to read it.
 #' @examples
-#' x <- sbom_package(system.file("DESCRIPTION", package = "sbom"))
+#' x <- sbom_package(system.file("DESCRIPTION", package = "sbom"), system = FALSE)
 #' x
 #' @export
 sbom_package <- function(path = ".",
@@ -105,7 +112,7 @@ sbom_package <- function(path = ".",
     root_suggests = "Suggests" %in% dependencies, lib = lib,
     r_version = r_version, author = author, organization = organization,
     regid = regid, timestamp = timestamp, inputs = inputs,
-    embedded = embedded, source_dir = package_source_dir(path)
+    embedded = embedded, system = system, source_dir = package_source_dir(path)
   )
   apply_overrides(x, overrides)
 }
@@ -127,7 +134,7 @@ package_source_dir <- function(path) {
 #'   installed in `lib`, other than a base package, is an error.
 #' @param name The name of the library, used for its root component.
 #' @examples
-#' sbom_installed("sbom")
+#' sbom_installed("sbom", system = FALSE)
 #' @export
 sbom_installed <- function(pkgs = NULL, lib = .libPaths(), name = "R library",
                            r_version = NULL, author = getOption("sbom.author"),
@@ -180,7 +187,8 @@ sbom_installed <- function(pkgs = NULL, lib = .libPaths(), name = "R library",
     fields = c("Depends", "Imports", "LinkingTo"), root_suggests = FALSE,
     lib = lib, r_version = r_version, author = author,
     organization = organization, regid = regid, timestamp = timestamp,
-    inputs = inputs, extra_base = listed_base, embedded = embedded
+    inputs = inputs, extra_base = listed_base, embedded = embedded,
+    system = system
   )
   apply_overrides(x, overrides)
 }
@@ -235,7 +243,7 @@ build_sbom <- function(root, lookup, root_desc, fields, root_suggests, lib,
                        where = "installed in the library sbom read",
                        missing_code = "dependency-not-installed", r_evidence = NULL,
                        all_required = FALSE, not_installed = character(),
-                       embedded = TRUE, source_dir = NULL, detect_lib = lib) {
+                       embedded = TRUE, system = TRUE, source_dir = NULL, detect_lib = lib) {
   root_row <- root$component
   root_is_library <- identical(root_row$ecosystem, "library")
   root_name <- root_desc[["Package"]]
@@ -356,7 +364,7 @@ build_sbom <- function(root, lookup, root_desc, fields, root_suggests, lib,
     }
   }
   if (embedded) {
-    inside <- linkingto_components(all_comps, rels, lookup)
+    inside <- linkingto_components(all_comps, rels, lookup, where)
     vendored <- detect_bundled(
       all_comps, root_row$ref, source_dir, root_desc, lookup, detect_lib
     )
@@ -370,6 +378,18 @@ build_sbom <- function(root, lookup, root_desc, fields, root_suggests, lib,
     rownames(all_comps) <- NULL
     rels <- rbind(rels, inside$relationships)
     issues <- rbind(issues, inside$issues)
+  }
+  if (system) {
+    sys <- declared_system_requirements(all_comps)
+    all_comps <- sys$components
+    rels <- rbind(rels, sys$relationships)
+    issues <- rbind(issues, sys$issues)
+    linked <- linked_system_libraries(all_comps, detect_lib, rels)
+    all_comps <- linked$components
+    rels <- rbind(rels, linked$relationships)
+    issues <- rbind(issues, linked$issues)
+  } else {
+    all_comps$system_requirements <- NA_character_
   }
   rels <- rels[!duplicated(rels[c("from", "to", "field")]), , drop = FALSE]
   rels <- rels[order(rels$from, rels$to, rels$field, method = "radix"), , drop = FALSE]

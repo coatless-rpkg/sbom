@@ -29,7 +29,7 @@ there it is written as the metadata property \code{sbom:organization}.}
 \code{path}, invisibly.
 }
 \description{
-Serialises an \verb{<sbom>} object as UTF-8 text with \code{"\\n"} line endings and a
+Serializes an \verb{<sbom>} object as UTF-8 text with \code{"\\n"} line endings and a
 trailing newline. Existing files are overwritten.
 }
 \details{
@@ -73,6 +73,6 @@ byte-order mark so that spreadsheets read it as UTF-8; in R, read it with
 \code{read.csv(path, fileEncoding = "UTF-8-BOM")}.
 }
 \examples{
-x <- sbom_package(system.file("DESCRIPTION", package = "sbom"))
+x <- sbom_package(system.file("DESCRIPTION", package = "sbom"), system = FALSE)
 write_sbom(x, file.path(tempdir(), "sbom.cdx.json"))
 }

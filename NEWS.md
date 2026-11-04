@@ -14,3 +14,9 @@
   they list at different versions. `sbom_renv()` and
   `sbom_rsconnect()` read a lockfile or manifest directly, and `summary()`,
   `sbom_tree()` and `sbom_diff()` inspect an SBOM.
+
+* SBOMs now record what is inside packages: code compiled in through
+  `LinkingTo`, vendored C and C++ sources, bundled JavaScript, declared
+  `SystemRequirements` and the shared libraries a package links, each with its
+  evidence level, in every output format. `embedded = FALSE` and
+  `system = FALSE` skip the detection.

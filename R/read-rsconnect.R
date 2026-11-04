@@ -31,7 +31,7 @@
 #' @param manifest The path to a `manifest.json` file.
 #' @return An `<sbom>` object. See [sbom_components()] to read it.
 #' @examples
-#' sbom_rsconnect(system.file("extdata", "manifest.json", package = "sbom"))
+#' sbom_rsconnect(system.file("extdata", "manifest.json", package = "sbom"), system = FALSE)
 #' @export
 sbom_rsconnect <- function(manifest = "manifest.json",
                            author = getOption("sbom.author"),
@@ -79,7 +79,7 @@ sbom_rsconnect <- function(manifest = "manifest.json",
     root_suggests = FALSE, lib = character(), r_version = r_version,
     author = author, organization = organization, regid = regid,
     timestamp = timestamp, inputs = inputs, resolved = resolved,
-    embedded = embedded, detect_lib = .libPaths(),
+    embedded = embedded, system = system, detect_lib = .libPaths(),
     package_evidence = "declared", package_source = "manifest.json",
     where = "recorded in manifest.json",
     missing_code = "dependency-not-recorded", r_evidence = "declared",

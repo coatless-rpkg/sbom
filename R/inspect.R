@@ -21,7 +21,7 @@
 #'   `drift` (the issues whose code starts with `"drift-"`). `print()`
 #'   returns `x` invisibly.
 #' @examples
-#' x <- sbom_package(system.file("DESCRIPTION", package = "sbom"))
+#' x <- sbom_package(system.file("DESCRIPTION", package = "sbom"), system = FALSE)
 #' summary(x)
 #' @export
 summary.sbom <- function(object, ...) {
@@ -102,8 +102,9 @@ node_label <- function(comp) {
 #' Prints the dependencies of the root component as a tree. A component
 #' reached by several paths is expanded the first time it appears and marked
 #' `(see above)` afterwards. Components reached only through `Suggests` are
-#' marked `(suggested)`, and the packages compiled into a package, which are
-#' its `LinkingTo` packages, are marked `(embedded)`. Files that the root contains are leaves labelled
+#' marked `(suggested)`, and the code a package carries inside it (its
+#' `LinkingTo` packages, vendored C and C++ libraries and bundled JavaScript)
+#' is marked `(embedded)`. Files that the root contains are leaves labelled
 #' with their path.
 #'
 #' @param x An `<sbom>` object, as returned by [sbom_package()] or
@@ -112,7 +113,7 @@ node_label <- function(comp) {
 #'   at the limit are shown but not expanded.
 #' @return `x`, invisibly.
 #' @examples
-#' x <- sbom_package(system.file("DESCRIPTION", package = "sbom"))
+#' x <- sbom_package(system.file("DESCRIPTION", package = "sbom"), system = FALSE)
 #' sbom_tree(x)
 #' sbom_tree(x, max_depth = 1)
 #' @export
@@ -125,7 +126,7 @@ sbom_tree <- function(x, max_depth = Inf) {
   rel <- x$relationships
   root <- comps$ref[comps$is_root %in% TRUE][1]
   labels <- vapply(seq_len(nrow(comps)), function(i) node_label(comps[i, ]), character(1))
-  # A package compiled into another has the name of one that is listed itself.
+  # Code inside a package may have the name of a package that is listed itself.
   labels[is_embedded_ref(comps$ref)] <- paste(labels[is_embedded_ref(comps$ref)], "(embedded)")
   names(labels) <- comps$ref
 

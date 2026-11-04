@@ -34,7 +34,7 @@ Accessors for the three tables of an \verb{<sbom>} object. Each returns its
 data frame unchanged.
 }
 \examples{
-x <- sbom_package(system.file("DESCRIPTION", package = "sbom"))
+x <- sbom_package(system.file("DESCRIPTION", package = "sbom"), system = FALSE)
 sbom_components(x)
 sbom_dependencies(x)
 sbom_issues(x)

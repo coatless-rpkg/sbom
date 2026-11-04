@@ -93,3 +93,17 @@ test_that("NULL overrides change nothing", {
   x <- build_with(NULL)
   expect_identical(apply_overrides(x, NULL), x)
 })
+
+test_that("an override names an R package, not a system library of the same name", {
+  lib <- local_fake_lib(list(openssl = c(Version = "2.0", License = "MIT", SystemRequirements = "OpenSSL")))
+  local_mocked_bindings(sysreqs_match = function(spec, platform) {
+    list(data.frame(sysreq = "openssl", packages = I(list(character()))))
+  })
+  ov <- data.frame(component = "openssl", field = "supplier_name", value = "Acme",
+                   asserted_by = "QA", reason = "Checked")
+  x <- sbom_installed("openssl", lib = lib, overrides = ov)
+  comps <- sbom_components(x)
+  expect_true("system/openssl" %in% comps$ref)
+  expect_equal(comps$supplier_name[comps$ecosystem == "local" & comps$name == "openssl"], "Acme")
+  expect_true(is.na(comps$supplier_name[comps$ref == "system/openssl"]))
+})

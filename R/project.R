@@ -61,7 +61,7 @@
 #'   compare what the sources say.
 #' @return An `<sbom>` object. See [sbom_components()] to read it.
 #' @examples
-#' x <- sbom(system.file("extdata", package = "sbom"))
+#' x <- sbom(system.file("extdata", package = "sbom"), system = FALSE)
 #' x
 #' sbom_issues(x)
 #' @export
@@ -93,8 +93,14 @@ sbom <- function(path = ".", ...) {
       x$issues <- cross_check_issue(x$issues, "cross-check-failed", src$skipped)
       next
     }
+    # A cross-check compares packages only, so it looks neither inside them
+    # nor at the operating system.
+    quick <- list(embedded = FALSE, system = FALSE)
     other <- tryCatch(
-      src$build(args[intersect(names(args), intersect(src$args, "lib"))]),
+      src$build(c(
+        args[intersect(names(args), intersect(src$args, "lib"))],
+        quick[intersect(names(quick), src$args)]
+      )),
       error = function(e) e
     )
     if (inherits(other, "error")) {
@@ -361,8 +367,11 @@ drift_view <- function(x, records, suggests = TRUE) {
     keep <- comps$is_root %in% TRUE | comps$ref %in% direct
     comps$version[!comps$is_root %in% TRUE] <- NA_character_
   }
-  # Embedded components are not packages that a source lists.
-  x$components <- comps[keep & !is_embedded_ref(comps$ref), , drop = FALSE]
+  # Embedded and system components are not packages that a source lists.
+  x$components <- comps[
+    keep & !is_embedded_ref(comps$ref) & !comps$ecosystem %in% system_ecosystems, ,
+    drop = FALSE
+  ]
   x
 }
 
@@ -407,7 +416,7 @@ code_scan <- function(dir, lookup = library_lookup(lib), lib = .libPaths(),
     root_suggests = FALSE, lib = lib, r_version = NULL, author = author,
     organization = organization, regid = regid, timestamp = timestamp,
     inputs = inputs, resolved = res, package_evidence = "inferred",
-    embedded = embedded
+    embedded = embedded, system = system
   )
   x$issues <- scan_issue(x$issues, root, scan)
   x$metadata$notes <- c(

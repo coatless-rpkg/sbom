@@ -20,12 +20,13 @@ at the limit are shown but not expanded.}
 Prints the dependencies of the root component as a tree. A component
 reached by several paths is expanded the first time it appears and marked
 \verb{(see above)} afterwards. Components reached only through \code{Suggests} are
-marked \code{(suggested)}, and the packages compiled into a package, which are
-its \code{LinkingTo} packages, are marked \code{(embedded)}. Files that the root contains are leaves labelled
+marked \code{(suggested)}, and the code a package carries inside it (its
+\code{LinkingTo} packages, vendored C and C++ libraries and bundled JavaScript)
+is marked \code{(embedded)}. Files that the root contains are leaves labelled
 with their path.
 }
 \examples{
-x <- sbom_package(system.file("DESCRIPTION", package = "sbom"))
+x <- sbom_package(system.file("DESCRIPTION", package = "sbom"), system = FALSE)
 sbom_tree(x)
 sbom_tree(x, max_depth = 1)
 }

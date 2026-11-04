@@ -10,11 +10,11 @@
       ecosystem: cran (3), base-r (2), local (2), r (1)
       type: library (7), platform (1)
       evidence: inferred (3), observed (3), declared (2)
-      Unknown version or licence: 4
+      Unknown version or licence: 3
       
       -- Licences --
       
-      NOASSERTION (4), GPL-2.0-only OR GPL-3.0-only (2), MIT (2)
+      GPL-2.0-only OR GPL-3.0-only (3), NOASSERTION (3), MIT (2)
       
       -- Drift --
       

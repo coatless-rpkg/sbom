@@ -351,7 +351,7 @@ test_that("sbom() finds no drift between this package's DESCRIPTION and its code
   desc <- file.path(root, "DESCRIPTION")
   skip_if_not(file.exists(desc) && identical(read_description(desc)[["Package"]], "sbom"),
               "The package source folder is not available.")
-  expect_false("drift-extra" %in% sbom_issues(sbom(root))$code)
+  expect_false("drift-extra" %in% sbom_issues(sbom(root, system = FALSE))$code)
 })
 
 test_that("every reader's SBOM validates in every format and is byte-identical across runs", {
@@ -513,4 +513,45 @@ test_that("git_commit() does not take a commit from a repository at the home fol
   dir.create(file.path(proj, ".git"))
   write_text(paste0(strrep("d4", 20), "\n"), file.path(proj, ".git", "HEAD"))
   expect_equal(git_commit(proj), strrep("d4", 20))
+})
+
+test_that("cross-checks build no system components, and system components are not drift", {
+  dir <- withr::local_tempdir()
+  fields <- c(Package = "xmlish", Version = "1.0", Repository = "CRAN", License = "MIT",
+              Maintainer = "A B <a@example.org>", SystemRequirements = "libxml2")
+  lib <- write_fake_lib(withr::local_tempdir(), list(xmlish = fields[-1L]))
+  dir.create(file.path(lib, "xmlish", "libs"))
+  write_text("", file.path(lib, "xmlish", "libs", "xmlish.so"))
+  lock <- list(R = list(Version = "4.6.2"), Packages = list(xmlish = as.list(c(fields, Source = "Repository"))))
+  write_text(jsonlite::toJSON(lock, auto_unbox = TRUE, pretty = TRUE), file.path(dir, "renv.lock"))
+  manifest <- list(
+    version = 1L, platform = "4.6.2", metadata = list(appmode = "shiny"),
+    packages = list(xmlish = list(Source = "CRAN", Repository = "https://cloud.r-project.org",
+                                  description = as.list(fields))),
+    files = list(app.R = list(checksum = "0123456789abcdef0123456789abcdef"))
+  )
+  write_text(jsonlite::toJSON(manifest, auto_unbox = TRUE, pretty = TRUE), file.path(dir, "manifest.json"))
+  write_text("library(xmlish)\n", file.path(dir, "app.R"))
+  calls <- new.env()
+  calls$match <- 0L
+  calls$linked <- 0L
+  local_mocked_bindings(
+    sysreqs_match = function(spec, platform) {
+      calls$match <- calls$match + 1L
+      lapply(spec, function(s) data.frame(sysreq = "libxml2", packages = I(list("libxml2-dev"))))
+    },
+    sys_linked_libraries = function(so) {
+      calls$linked <- calls$linked + 1L
+      "/usr/lib/x86_64-linux-gnu/libxml2.so.2"
+    },
+    sys_os_package = function(path) list(manager = "deb", name = "libxml2", version = "2.9.14", arch = "amd64"),
+    sys_os_release = function() list(id = "debian", version_id = "12")
+  )
+  x <- sbom(dir, library = lib, lib = lib, system = TRUE)
+  expect_true(all(c("system/libxml2", "deb/libxml2") %in% sbom_components(x)$ref))
+  iss <- sbom_issues(x)
+  drift <- iss$message[startsWith(iss$code, "drift-")]
+  expect_false(any(grepl("libxml2", drift, fixed = TRUE)), info = paste(drift, collapse = "\n"))
+  expect_equal(calls$match, 1L)
+  expect_equal(calls$linked, 1L)
 })

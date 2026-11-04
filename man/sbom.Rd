@@ -71,7 +71,7 @@ that file is applied as the overrides.
 The \code{inputs} element of the SBOM's metadata lists every source read.
 }
 \examples{
-x <- sbom(system.file("extdata", package = "sbom"))
+x <- sbom(system.file("extdata", package = "sbom"), system = FALSE)
 x
 sbom_issues(x)
 }

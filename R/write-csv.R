@@ -6,7 +6,7 @@ csv_columns <- function() {
     "ref", "name", "version", "version_is", "type", "ecosystem", "scope", "purl",
     "supplier", "maintainer", "license", "license_as_written", "published",
     "homepage", "vcs_url", "download_location", "doi", "sha256", "evidence",
-    "asserted", "issues", "parent"
+    "asserted", "issues", "system_requirements", "parent"
   )
 }
 
@@ -21,7 +21,7 @@ csv_quote <- function(x) {
 # not, so such a value gets a leading apostrophe (OWASP), in every column:
 # names, versions and dates come from third-party DESCRIPTION text too. Real
 # values never start that way, so they are unchanged.
-csv_neutralise <- function(x) {
+csv_neutralize <- function(x) {
   x <- as.character(x)
   risky <- !is.na(x) & grepl("^[=+@\t\r-]", x, useBytes = TRUE)
   x[risky] <- paste0("'", x[risky])
@@ -63,10 +63,10 @@ csv_inventory <- function(x, version = NA) {
     download_location = comps$download_location, doi = comps$doi,
     sha256 = csv_sha256(comps$hashes), evidence = comps$evidence,
     asserted = csv_asserted(comps$asserted), issues = issues,
-    parent = comps$parent_ref
+    system_requirements = comps$system_requirements, parent = comps$parent_ref
   )
   stopifnot(identical(names(cols), csv_columns()))
-  cols <- lapply(cols, csv_neutralise)
+  cols <- lapply(cols, csv_neutralize)
   lines <- do.call(paste, c(lapply(cols, csv_quote), sep = ","))
   enc2utf8(paste0(paste(c(paste(csv_quote(csv_columns()), collapse = ","), lines), collapse = "\n"), "\n"))
 }

@@ -8,7 +8,7 @@ component_columns <- function() {
     "maintainer", "license_as_written", "license_spdx", "license_comment",
     "published", "homepage", "vcs_url", "download_location",
     "package_file_name", "doi", "description", "bioc_release", "evidence",
-    "source_input", "deps_known", "hashes", "deps", "asserted"
+    "source_input", "system_requirements", "deps_known", "hashes", "deps", "asserted"
   )
 }
 
@@ -145,7 +145,7 @@ resolve_timestamp <- function(timestamp = NULL) {
 #'   `spec`, `evidence`), and `sbom_issues()` one row per recorded issue
 #'   (`ref`, `field`, `severity`, `code`, `message`).
 #' @examples
-#' x <- sbom_package(system.file("DESCRIPTION", package = "sbom"))
+#' x <- sbom_package(system.file("DESCRIPTION", package = "sbom"), system = FALSE)
 #' sbom_components(x)
 #' sbom_dependencies(x)
 #' sbom_issues(x)

@@ -86,6 +86,9 @@ cdx_component <- function(row, version, children = NULL) {
       add_prop(tolower(deps$field[i]), deps$spec[i])
     }
   }
+  if (cdx_is_set(row$system_requirements)) {
+    add_prop("system-requirements", row$system_requirements)
+  }
   if (row$ref == "R" || identical(row$parent_ref, "R")) add_prop("part-of", "R")
   if (cdx_is_set(row$version_is) && row$version_is == "minimum" &&
         cdx_is_set(row$version)) {

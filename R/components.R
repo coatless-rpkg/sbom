@@ -54,6 +54,15 @@ pkg_label <- function(name, version) {
   ifelse(is.na(version), name, paste(name, version))
 }
 
+# Items for a sentence: "a", "a and b", "a, b and c".
+and_list <- function(x) {
+  n <- length(x)
+  if (n <= 1L) {
+    return(paste(x, collapse = ""))
+  }
+  paste(paste(x[-n], collapse = ", "), "and", x[[n]])
+}
+
 desc_field <- function(desc, field) {
   if (field %in% names(desc) && !is.na(desc[[field]]) && nzchar(trimws(desc[[field]]))) {
     trimws(desc[[field]])
@@ -241,7 +250,8 @@ package_component <- function(desc, evidence, source_input, is_root = FALSE,
     package_file_name = if (has_file_name) paste0(name, "_", version, ".tar.gz") else NA_character_,
     doi = if (eco$ecosystem == "cran") cran_doi(name) else NA_character_,
     bioc_release = eco$bioc_release, evidence = evidence,
-    source_input = source_input, deps = deps
+    source_input = source_input, deps = deps,
+    system_requirements = desc_field(desc, "SystemRequirements")
   )
 
   label <- pkg_label(name, version)

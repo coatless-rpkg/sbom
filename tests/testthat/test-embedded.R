@@ -10,7 +10,12 @@ test_that("a LinkingTo package becomes an embedded component of its parent", {
   expect_equal(e$evidence, "inferred")
   expect_equal(e$type, "library")
   expect_equal(e$purl, "pkg:cran/cranpkg@1.2.0")
-  expect_match(e$description, "Compiled into srcpkg from the headers of cranpkg 1.2.0", fixed = TRUE)
+  expect_equal(e$description, paste0(
+    "Compiled into srcpkg from the headers of cranpkg 1.2.0, the version installed in the library ",
+    "sbom read; nothing records the version used at build time."
+  ))
+  expect_equal(e$license_spdx, "GPL-2.0-only OR GPL-3.0-only")
+  expect_equal(e$license_as_written, comps$license_as_written[comps$ref == "pkg:cran/cranpkg@1.2.0"])
   expect_true("pkg:cran/cranpkg@1.2.0" %in% comps$ref)
   rel <- sbom_dependencies(x)
   expect_true(any(rel$from == "local/srcpkg" & rel$to == e$ref & rel$field == "contains"))
@@ -27,8 +32,44 @@ test_that("a LinkingTo package that is not installed has no version or purl", {
   expect_true(is.na(e$version))
   expect_true(is.na(e$purl))
   expect_true(is.na(e$ecosystem))
-  expect_match(e$description, "Compiled into p from the headers of ghostpkg, the version installed now", fixed = TRUE)
+  expect_equal(e$description, paste0(
+    "Compiled into p from the headers of ghostpkg, which is not installed in the library sbom read; ",
+    "nothing records the version used at build time."
+  ))
+  iss <- sbom_issues(x)
+  expect_equal(iss$message[iss$code == "embedded-not-installed"], paste0(
+    "ghostpkg is compiled into p 1 through LinkingTo, but is not installed in the library sbom read, ",
+    "so its version is unknown."
+  ))
+  expect_equal(iss$severity[iss$code == "embedded-not-installed"], "info")
   expect_valid_in_every_format(x)
+})
+
+test_that("LinkingTo packages that are not installed are named in one issue", {
+  desc <- withr::local_tempdir()
+  write_text("Package: p\nVersion: 1\nLinkingTo: ghostpkg, phantompkg\n", file.path(desc, "DESCRIPTION"))
+  iss <- sbom_issues(sbom_package(desc, lib = fixture_lib()))
+  expect_equal(iss$message[iss$code == "embedded-not-installed"], paste0(
+    "ghostpkg and phantompkg are compiled into p 1 through LinkingTo, but are not installed in the ",
+    "library sbom read, so their versions are unknown."
+  ))
+})
+
+test_that("a LinkingTo copy in an renv SBOM names the lockfile as its version's source", {
+  dir <- withr::local_tempdir()
+  lock <- list(R = list(Version = "4.6.2"), Packages = list(
+    a = list(Package = "a", Version = "1.0", Source = "Repository", Repository = "CRAN", LinkingTo = list("b")),
+    b = list(Package = "b", Version = "2.0", Source = "Repository", Repository = "CRAN", License = "MIT")
+  ))
+  write_text(jsonlite::toJSON(lock, auto_unbox = TRUE, pretty = TRUE), file.path(dir, "renv.lock"))
+  x <- sbom_renv(file.path(dir, "renv.lock"), library = local_fake_lib(list()), system = FALSE)
+  comps <- sbom_components(x)
+  e <- comps[grepl("#embedded/b", comps$ref, fixed = TRUE), ]
+  expect_equal(e$description, paste0(
+    "Compiled into a from the headers of b 2.0, the version recorded in renv.lock; ",
+    "nothing records the version used at build time."
+  ))
+  expect_equal(e$license_spdx, "MIT")
 })
 
 test_that("embedded components nest in CycloneDX and validate everywhere", {
@@ -159,6 +200,37 @@ test_that("an installed package is searched through its COPYRIGHTS file and cph 
   expect_equal(v$description[v$name == "lz4"], "Named as a copyright holder in cpkg's Authors@R.")
   expect_equal(v$ref[v$name == "sqlite"], "pkg:cran/cpkg@1.0#vendored/sqlite")
   expect_false("compiled-code-limited" %in% sbom_issues(x)$code)
+  iss <- sbom_issues(x)
+  expect_equal(iss$message[iss$code == "vendored-version-unknown"],
+    "sbom found no version for the bundled lz4 in cpkg 1.0 and sqlite in cpkg 1.0.")
+  expect_equal(iss$severity[iss$code == "vendored-version-unknown"], "info")
+})
+
+test_that("one bundled library without a version is named alone, and a known version gives no issue", {
+  lib <- local_fake_lib(list(cpkg = c(Version = "1.0")))
+  write_text("Bundles libuv.\n", file.path(lib, "cpkg", "COPYRIGHTS"))
+  iss <- sbom_issues(sbom_installed("cpkg", lib = lib))
+  expect_equal(iss$message[iss$code == "vendored-version-unknown"],
+    "sbom found no version for the bundled libuv in cpkg 1.0.")
+  x <- sbom_package(test_path("fixtures/pkgs/vendorpkg"), lib = local_fake_lib(list()))
+  msg <- sbom_issues(x)$message[sbom_issues(x)$code == "vendored-version-unknown"]
+  expect_false(grepl("sqlite", msg, fixed = TRUE))
+})
+
+test_that("zstd and mbedtls keep both sides of their dual licences", {
+  r <- vendored_rules()
+  expect_equal(r$license[r$name == "zstd"], "BSD-3-Clause OR GPL-2.0-only")
+  expect_equal(r$license[r$name == "mbedtls"], "Apache-2.0 OR GPL-2.0-or-later")
+  lib <- local_fake_lib(list(cpkg = c(Version = "1.0", License = "MIT")))
+  write_text("Bundles zstd and Mbed TLS.\n", file.path(lib, "cpkg", "COPYRIGHTS"))
+  x <- sbom_installed("cpkg", lib = lib)
+  comps <- sbom_components(x)
+  expect_equal(comps$license_spdx[comps$name == "zstd"], "BSD-3-Clause OR GPL-2.0-only")
+  expect_equal(comps$license_spdx[comps$name == "mbedtls"], "Apache-2.0 OR GPL-2.0-or-later")
+  pkgs <- spdx_document(x)$packages
+  declared <- vapply(pkgs, function(p) paste(p$name, p$licenseDeclared), "")
+  expect_true("zstd BSD-3-Clause OR GPL-2.0-only" %in% declared)
+  expect_valid_in_every_format(x)
 })
 
 test_that("an installed package with compiled code and no clues raises one issue", {
@@ -173,8 +245,8 @@ test_that("an installed package with compiled code and no clues raises one issue
   expect_equal(iss$ref, sbom_components(x)$ref[sbom_components(x)$is_root])
   expect_equal(
     iss$message,
-    paste0("1 package contains compiled code but names no bundled library in a COPYRIGHTS ",
-           "file or Authors@R, so sbom could not look inside it: cpkg 1.0.")
+    paste0("1 package contains compiled code, but sbom recognised no bundled library in its COPYRIGHTS ",
+           "file or cph entries, so it could not look inside it: cpkg 1.0.")
   )
   expect_false(any(sbom_components(x)$ecosystem == "vendored"))
 })
@@ -255,8 +327,8 @@ test_that("several packages with compiled code share one issue, labels in radix 
   expect_equal(nrow(iss), 1L)
   expect_equal(
     iss$message,
-    paste0("3 packages contain compiled code but name no bundled library in a COPYRIGHTS ",
-           "file or Authors@R, so sbom could not look inside them: Alpha 1.0, mid 1.0, zeta 1.0.")
+    paste0("3 packages contain compiled code, but sbom recognised no bundled library in their COPYRIGHTS ",
+           "file or cph entries, so it could not look inside them: Alpha 1.0, mid 1.0, zeta 1.0.")
   )
 })
 
@@ -399,10 +471,28 @@ test_that("a declared and a header version that disagree are reported", {
   write_text("/*! jQuery v3.7.1 | (c) OpenJS Foundation */\n", file.path(dir, "inst", "www", "jquery.min.js"))
   x <- sbom_package(dir, lib = local_fake_lib(list()))
   comps <- sbom_components(x)
-  expect_equal(comps$version[comps$name == "jquery"], "3.6.0")
-  expect_equal(comps$evidence[comps$name == "jquery"], "declared")
-  expect_equal(sum(comps$name == "jquery"), 1L)
-  expect_true("javascript-version-differs" %in% sbom_issues(x)$code)
+  js <- comps[comps$name == "jquery", ]
+  expect_equal(nrow(js), 2L)
+  expect_equal(js$evidence[js$version == "3.6.0"], "declared")
+  expect_equal(js$ref[js$version == "3.6.0"], "local/dpkg2#js/jquery@3.6.0")
+  expect_equal(js$evidence[js$version == "3.7.1"], "inferred")
+  expect_equal(js$ref[js$version == "3.7.1"], "local/dpkg2#js/jquery@3.7.1")
+  expect_equal(js$description[js$version == "3.6.0"], "Declared in inst/htmlwidgets/a.yaml.")
+  iss <- sbom_issues(x)
+  expect_equal(iss$message[iss$code == "javascript-version-differs"], paste0(
+    "dpkg2 1.0 ships two versions of jquery: 3.6.0, declared in inst/htmlwidgets/a.yaml, ",
+    "and 3.7.1, found in inst/www/jquery.min.js; both are recorded."
+  ))
+  expect_valid_in_every_format(x)
+  # A declared library without a version takes the first header's, which is
+  # then not said to be declared.
+  write_text("dependencies:\n  - name: jquery\n", file.path(dir, "inst", "htmlwidgets", "a.yaml"))
+  write_text("/*! jQuery v3.5.1 | x */\n", file.path(dir, "inst", "www", "jquery-3.5.1.min.js"))
+  iss <- sbom_issues(sbom_package(dir, lib = local_fake_lib(list())))
+  expect_equal(iss$message[iss$code == "javascript-version-differs"], paste0(
+    "dpkg2 1.0 ships two versions of jquery: 3.5.1, found in inst/www/jquery-3.5.1.min.js, ",
+    "and 3.7.1, found in inst/www/jquery.min.js; both are recorded."
+  ))
 })
 
 test_that("several versions of one library in a package are separate components", {

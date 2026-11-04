@@ -5,7 +5,8 @@
 spdx_prefixes <- c(
   cran = "cran", bioconductor = "bioc", github = "github", gitlab = "gitlab",
   bitbucket = "bitbucket", git = "git", repository = "repository",
-  local = "local", unknown = "unknown", file = "file", npm = "npm"
+  local = "local", unknown = "unknown", file = "file", npm = "npm",
+  system = "system", deb = "deb", rpm = "rpm"
 )
 
 
@@ -54,6 +55,14 @@ spdx_asserted_sentences <- function(row) {
     "Asserted by %s: %s is %s (%s).",
     asserted$asserted_by, asserted$field, asserted$value, asserted$reason
   )
+}
+
+# The package's SystemRequirements text, as written, for the end of its
+# comment in SPDX 2 and SPDX 3, which have no field for it.
+spdx_system_requirements <- function(row) {
+  if (spdx_is_set(row$system_requirements)) {
+    paste0("SystemRequirements: ", row$system_requirements)
+  }
 }
 
 spdx_package <- function(row, id, version = "2.3") {
@@ -108,7 +117,7 @@ spdx_package <- function(row, id, version = "2.3") {
   p$copyrightText <- "NOASSERTION"
 
   parts <- character()
-  if (is_r || is_base || is_embedded_ref(row$ref)) {
+  if (is_r || is_base || is_embedded_ref(row$ref) || row$ecosystem %in% system_ecosystems) {
     if (spdx_is_set(row$description)) parts <- row$description
   } else {
     if (spdx_is_set(row$maintainer)) {
@@ -118,7 +127,7 @@ spdx_package <- function(row, id, version = "2.3") {
       parts <- c(parts, paste0("Published ", row$published, "."))
     }
   }
-  parts <- c(parts, spdx_asserted_sentences(row))
+  parts <- c(parts, spdx_asserted_sentences(row), spdx_system_requirements(row))
   if (length(parts) > 0L) p$comment <- paste(parts, collapse = " ")
 
   refs <- list()
@@ -160,10 +169,12 @@ spdx_relationships <- function(x, ids) {
   to <- id_of(rel$to)
   type <- ifelse(
     rel$field == "contains", "CONTAINS",
-    ifelse(rel$field == "Suggests", "OPTIONAL_DEPENDENCY_OF", "DEPENDS_ON")
+    ifelse(
+      rel$field == "Suggests", "OPTIONAL_DEPENDENCY_OF",
+      ifelse(rel$field == "dynamic_link", "DYNAMIC_LINK", "DEPENDS_ON")
+    )
   )
-  comment <- ifelse(is.na(rel$spec), NA_character_,
-                    paste0(rel$field, ": ", rel$spec))
+  comment <- relationship_comment(rel)
   comment[rel$field == "contains" & rel$from == "R"] <- "Part of R"
   comment[rel$field == "contains" & grepl("#embedded/", rel$to, fixed = TRUE)] <- "Compiled in from LinkingTo"
   comment[rel$field == "contains" & grepl("#vendored/", rel$to, fixed = TRUE)] <- "Bundled as source code"
@@ -241,4 +252,11 @@ spdx_json <- function(x, version = "2.3") {
     spdx_document(x, version), auto_unbox = TRUE, pretty = TRUE, null = "null"
   )
   enc2utf8(paste0(json, "\n"))
+}
+
+# The comment of a relationship: the field and the text that stated it. A
+# system requirement is stated in SystemRequirements.
+relationship_comment <- function(rel) {
+  field <- ifelse(rel$field == "system_requirement", "SystemRequirements", rel$field)
+  ifelse(is.na(rel$spec), NA_character_, paste0(field, ": ", rel$spec))
 }
