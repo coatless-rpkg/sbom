@@ -14,11 +14,12 @@ argument of \code{\link[=sbom_renv]{sbom_renv()}}, \code{\link[=sbom_rsconnect]{
 than the file or folder it reads, such as \code{library}, \code{lib},
 \code{dependencies}, \code{r_version}, \code{author} or \code{overrides}. The code scan
 takes \code{lib}, \code{author}, \code{organization}, \code{regid}, \code{timestamp},
-\code{overrides}, \code{embedded} and \code{system}. A name that no reader takes is an error. The reader ignores
-those it does not take, except that the cross-checks of \code{DESCRIPTION}
-and the code also use \code{lib}. Overrides, given or from
-\code{sbom-overrides.csv}, apply to the SBOM after the cross-checks, which
-compare what the sources say.}
+\code{overrides}, \code{embedded} and \code{system}. A Shiny app also takes
+\code{evaluate_ui} (see \code{\link[=sbom_shiny]{sbom_shiny()}}), which other folders ignore. A name
+that no reader takes is an error. The reader ignores those it does not
+take, except that the cross-checks of \code{DESCRIPTION} and the code also
+use \code{lib}. Overrides, given or from \code{sbom-overrides.csv}, apply to the
+SBOM after the cross-checks, which compare what the sources say.}
 }
 \value{
 An \verb{<sbom>} object. See \code{\link[=sbom_components]{sbom_components()}} to read it.
@@ -47,6 +48,11 @@ In a package folder, so are test fixtures and snapshots,
 folder, an application named after it, with its git commit as the
 version. This is the weakest evidence, and a note says so.
 }
+
+A folder that is a Shiny app (see \code{\link[=sbom_shiny]{sbom_shiny()}}) is described by
+\code{\link[=sbom_shiny]{sbom_shiny()}}, which \code{sbom()} calls for it. That includes a folder with
+\code{app.R}, or \code{ui.R} and \code{server.R}, even when it also has a \code{DESCRIPTION}
+without golem structure.
 
 The strongest source present makes the SBOM. Every other source present,
 and the code scan when the SBOM does not already come from it, are read

@@ -3,10 +3,14 @@
 sbom writes Software Bills of Materials (SBOMs) for R packages and R library
 installations, in CycloneDX, SPDX, SWID and a CSV inventory (see below).
 `sbom_package()` describes one package and the dependencies installed for it,
-and `sbom_installed()` describes the packages in a library. Both read only the
-`DESCRIPTION` files on disk. They run no package code and make no network
-requests, and given the same inputs and `timestamp` they produce the same
-document.
+and `sbom_installed()` describes the packages in a library. They read the
+`DESCRIPTION` files on disk, and also what a package carries inside it: the
+copies of `LinkingTo` packages that it compiles in, vendored C and C++ code,
+bundled JavaScript and CSS, the system requirements it declares and, for
+installed packages with compiled code, the shared libraries it links. They run
+no package code and make no network requests; the system steps run `otool` or
+`ldd`, `dpkg` or `rpm`, and read pak's rules on disk. Given the same inputs and
+`timestamp` they produce the same document.
 
 Each component records its package URL (purl), its distributor as supplier, its
 maintainer, its licence and the dependencies it declares. Licences are mapped to
@@ -121,7 +125,8 @@ remotes::install_local()
 ``` r
 library(sbom)
 
-x <- sbom_package(system.file("DESCRIPTION", package = "sbom"))
+# system = TRUE (the default) also runs otool or ldd and reads pak's rules.
+x <- sbom_package(system.file("DESCRIPTION", package = "sbom"), system = FALSE)
 x
 sbom_issues(x)
 

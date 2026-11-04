@@ -356,6 +356,14 @@ ignored_libraries <- c(
   "libquadmath", "libgomp", "libomp"
 )
 
+# Whether a library's base name is one of the runtimes that every compiled
+# package links: libc, the dynamic loaders (glibc's and musl's) and the like.
+ignored_base_name <- function(base) {
+  base %in% ignored_libraries | startsWith(base, "ld-linux") |
+    startsWith(base, "ld-musl") | startsWith(base, "libc.musl") |
+    startsWith(base, "libSystem") | startsWith(base, "libR")
+}
+
 # The name of a library without its directory, "lib" kept, and without a
 # version or extension: "/usr/lib/libssl.48.dylib" and "libssl.so.3" are both
 # "libssl".
@@ -370,10 +378,8 @@ library_base_name <- function(path) {
 # own: libR, libRblas, libRlapack and the like by name, and anything in R's
 # own folder, such as the libgfortran that R for macOS ships.
 ignored_library <- function(path) {
-  base <- library_base_name(path)
-  startsWith(path, "/System/Library/Frameworks") | base %in% ignored_libraries |
-    startsWith(base, "ld-linux") | startsWith(base, "libSystem") |
-    startsWith(base, "libR") | inside_any(path, R.home())
+  startsWith(path, "/System/Library/Frameworks") |
+    ignored_base_name(library_base_name(path)) | inside_any(path, R.home())
 }
 
 # Whether a path is absolute: it starts with "/", a drive letter and a
@@ -494,6 +500,43 @@ compiled_files <- function(dir) {
   sort(files[!grepl(".dSYM/", files, fixed = TRUE)], method = "radix")
 }
 
+# The purl namespaces of the purl spec's deb and rpm types: "the vendor such as
+# debian or ubuntu" (deb) and "such as Fedora or OpenSUSE" (rpm), lowercased. An
+# os-release ID that is not here, such as rocky, is its own vendor name.
+purl_vendors <- c(rhel = "redhat")
+
+# The vendor in a purl for an os-release `id`: Red Hat's is redhat, any
+# opensuse-* is opensuse, and any other ID stands for itself.
+purl_vendor <- function(id) {
+  if (startsWith(id, "opensuse")) {
+    return("opensuse")
+  }
+  if (id %in% names(purl_vendors)) purl_vendors[[id]] else id
+}
+
+# The purl of an operating system package `os`, as list(manager, name, version,
+# arch), on the system `os_release` describes, or NULL when its ID is unknown.
+# The distro qualifier is "<id>-<version_id>", as the rpm example in the spec
+# (fedora-25), but the spec's deb examples name the release (jessie, stretch),
+# so a deb package uses VERSION_CODENAME when os-release has one.
+os_package_purl <- function(os, os_release) {
+  id <- os_release$id
+  if (is.null(id) || is.na(id) || !nzchar(id)) {
+    return(NULL)
+  }
+  field <- function(x) if (is.null(x) || is.na(x) || !nzchar(x)) NULL else x
+  distro <- if (identical(os$manager, "deb") && !is.null(field(os_release$version_codename))) {
+    os_release$version_codename
+  } else if (!is.null(field(os_release$version_id))) {
+    paste0(id, "-", os_release$version_id)
+  }
+  paste0(
+    "pkg:", os$manager, "/", purl_vendor(id), "/", os$name, "@",
+    utils::URLencode(os$version, reserved = TRUE), "?arch=", os$arch,
+    if (!is.null(distro)) paste0("&distro=", utils::URLencode(distro, reserved = TRUE))
+  )
+}
+
 # One component per shared library linked by the installed packages in
 # `components` (found by name and version in `lib_dirs`), a "dynamic_link"
 # relationship from each package, and the issues. A library with an operating
@@ -567,6 +610,7 @@ linked_system_libraries <- function(components, lib_dirs, relationships = empty_
     }
     paths <- character()
     versions <- character()
+    unfound <- character()
     failed <- FALSE
     for (so in files) {
       got <- sys_linked_libraries(so)
@@ -579,6 +623,7 @@ linked_system_libraries <- function(components, lib_dirs, relationships = empty_
         failures <- failures + 1L
         failed <- TRUE
       }
+      unfound <- c(unfound, as.character(attr(got, "not_found")))
       v <- attr(got, "versions")
       v <- if (length(v) == length(got)) as.character(v) else rep(NA_character_, length(got))
       rpaths <- local({
@@ -609,10 +654,22 @@ linked_system_libraries <- function(components, lib_dirs, relationships = empty_
     paths <- paths[ord]
     versions <- versions[ord]
     pkg_ref <- pkgs$ref[[i]]
-    if (failed) {
+    # A library that ldd did not find is not a component, since it is not
+    # there; the runtimes every package links are left out as elsewhere.
+    unfound <- sort(unique(unfound[!ignored_base_name(library_base_name(unfound))]), method = "radix")
+    if (failed || length(unfound) > 0L) {
       issues <- add_issue(
         issues, pkg_ref, "system", "links-not-read",
-        paste0("sbom could not read the shared libraries linked by ", label, "."),
+        paste(c(
+          if (failed) paste0("sbom could not read the shared libraries linked by ", label, "."),
+          if (length(unfound) > 0L) {
+            paste0(
+              "ldd did not find ", and_list(unfound), ", which ", label,
+              " links, so ", if (length(unfound) == 1L) "it is" else "they are",
+              " not listed as ", if (length(unfound) == 1L) "a component." else "components."
+            )
+          }
+        ), collapse = " "),
         severity = "info"
       )
     }
@@ -634,9 +691,10 @@ linked_system_libraries <- function(components, lib_dirs, relationships = empty_
         evidence = "observed", stringsAsFactors = FALSE
       )
     }
-    # What a package links is unknown when a read failed or a DLL was not
-    # read, so it is not said to carry its own copy of anything.
-    if (failed || any(dll)) {
+    # What a package links is unknown when a read failed, a library was not
+    # found or a DLL was not read, so it is not said to carry its own copy of
+    # anything.
+    if (failed || length(unfound) > 0L || any(dll)) {
       next
     }
     declared <- unique(sub("^system/", "", relationships$to[
@@ -659,7 +717,14 @@ linked_system_libraries <- function(components, lib_dirs, relationships = empty_
   if (tool_missing) {
     out$issues <- not_checked(
       issues[!issues$code %in% "links-not-read", , drop = FALSE],
-      "compiled packages were not checked, because neither otool nor ldd is available"
+      if (identical(os_name, "Darwin") && isFALSE(tools)) {
+        paste0(
+          "compiled packages were not checked, because otool cannot run without ",
+          "the Xcode Command Line Tools"
+        )
+      } else {
+        "compiled packages were not checked, because neither otool nor ldd is available"
+      }
     )
     return(out)
   }
@@ -685,8 +750,18 @@ linked_system_libraries <- function(components, lib_dirs, relationships = empty_
     sentence <- linked_as(basename(f$path), f$version)
     i <- match(ref, all$ref)
     if (!is.na(i)) {
-      all$evidence[[i]] <- "observed"
+      # A declared minimum stays a minimum: the link was observed, the
+      # version was not.
+      declared_version <- all$version_is[[i]] %in% "minimum"
+      if (declared_version) {
+        sentence <- paste(sentence, "The link was observed; the version is the declared minimum, not an observed one.")
+      } else {
+        all$evidence[[i]] <- "observed"
+      }
       all$description[[i]] <- if (is.na(all$description[[i]])) sentence else paste(all$description[[i]], sentence)
+      if (identical(f$scope, "required")) {
+        all$scope[[i]] <- "required"
+      }
       next
     }
     os <- f$os
@@ -695,12 +770,7 @@ linked_system_libraries <- function(components, lib_dirs, relationships = empty_
       version_is = if (!is.null(os)) "exact", type = "library",
       ecosystem = if (is.null(os)) "system" else os$manager,
       scope = f$scope, description = sentence, evidence = "observed",
-      purl = if (!is.null(os) && !is.null(os_release$id)) {
-        paste0(
-          "pkg:", os$manager, "/", os_release$id, "/", f$name, "@",
-          utils::URLencode(os$version, reserved = TRUE), "?arch=", os$arch
-        )
-      },
+      purl = if (!is.null(os)) os_package_purl(os, os_release),
       source_input = f$source_input, deps_known = FALSE
     ))
   }

@@ -59,6 +59,12 @@ test_that("accessors return the tables", {
   expect_error(sbom_components(list()), "sbom")
 })
 
+test_that("an explicit timestamp wins over SOURCE_DATE_EPOCH", {
+  withr::local_envvar(SOURCE_DATE_EPOCH = "1700000000")
+  expect_equal(format(resolve_timestamp("2026-01-02 03:04:05"), "%Y-%m-%d"), "2026-01-02")
+  expect_equal(as.numeric(resolve_timestamp()), 1700000000)
+})
+
 test_that("resolve_timestamp() honours SOURCE_DATE_EPOCH", {
   withr::local_envvar(SOURCE_DATE_EPOCH = "1700000000")
   expect_equal(format(resolve_timestamp(), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"), "2023-11-14T22:13:20Z")

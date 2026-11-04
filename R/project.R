@@ -26,6 +26,11 @@
 #'    folder, an application named after it, with its git commit as the
 #'    version. This is the weakest evidence, and a note says so.
 #'
+#' A folder that is a Shiny app (see [sbom_shiny()]) is described by
+#' [sbom_shiny()], which `sbom()` calls for it. That includes a folder with
+#' `app.R`, or `ui.R` and `server.R`, even when it also has a `DESCRIPTION`
+#' without golem structure.
+#'
 #' The strongest source present makes the SBOM. Every other source present,
 #' and the code scan when the SBOM does not already come from it, are read
 #' to cross-check it, and their disagreements become issues: a package that
@@ -54,11 +59,12 @@
 #'   than the file or folder it reads, such as `library`, `lib`,
 #'   `dependencies`, `r_version`, `author` or `overrides`. The code scan
 #'   takes `lib`, `author`, `organization`, `regid`, `timestamp`,
-#'   `overrides`, `embedded` and `system`. A name that no reader takes is an error. The reader ignores
-#'   those it does not take, except that the cross-checks of `DESCRIPTION`
-#'   and the code also use `lib`. Overrides, given or from
-#'   `sbom-overrides.csv`, apply to the SBOM after the cross-checks, which
-#'   compare what the sources say.
+#'   `overrides`, `embedded` and `system`. A Shiny app also takes
+#'   `evaluate_ui` (see [sbom_shiny()]), which other folders ignore. A name
+#'   that no reader takes is an error. The reader ignores those it does not
+#'   take, except that the cross-checks of `DESCRIPTION` and the code also
+#'   use `lib`. Overrides, given or from `sbom-overrides.csv`, apply to the
+#'   SBOM after the cross-checks, which compare what the sources say.
 #' @return An `<sbom>` object. See [sbom_components()] to read it.
 #' @examples
 #' x <- sbom(system.file("extdata", package = "sbom"), system = FALSE)
@@ -66,19 +72,36 @@
 #' sbom_issues(x)
 #' @export
 sbom <- function(path = ".", ...) {
-  args <- check_sbom_dots(list(...))
+  args <- check_project_args(path, list(...))
+  layout <- shiny_layout(path)
+  if (!is.na(layout)) {
+    return(do.call(sbom_shiny, c(list(path = path), args)))
+  }
+  sbom_project(path, args)
+}
+
+# The checks that every front door makes: `...` is named and known, the path
+# is a folder, and `lib` is usable. Returns the arguments.
+check_project_args <- function(path, dots, call = parent.frame()) {
+  args <- check_sbom_dots(dots, call = call)
   if (!is.character(path) || length(path) != 1L || is.na(path)) {
-    cli::cli_abort("{.arg path} must be a single string, not {.obj_type_friendly {path}}.")
+    cli::cli_abort("{.arg path} must be a single string, not {.obj_type_friendly {path}}.", call = call)
   }
   if (!dir.exists(path)) {
     if (file.exists(path)) {
-      cli::cli_abort("{.file {path}} is not a folder.")
+      cli::cli_abort("{.file {path}} is not a folder.", call = call)
     }
-    cli::cli_abort("The folder {.file {path}} does not exist.")
+    cli::cli_abort("The folder {.file {path}} does not exist.", call = call)
   }
   if (!is.null(args$lib)) {
     check_lib(args$lib)
   }
+  args
+}
+
+# The pipeline behind sbom() and sbom_shiny(): `args` are checked already.
+# For a Shiny app, `layout` is its layout, and the app becomes the root.
+sbom_project <- function(path, args, layout = NA, evaluate_ui = FALSE) {
   sources <- project_sources(path)
   primary <- sources[[1L]]
   x <- primary$build(args[intersect(names(args), setdiff(primary$args, "overrides"))])
@@ -128,6 +151,12 @@ sbom <- function(path = ".", ...) {
       severity = "info"
     )
   }
+  if (!is.na(layout)) {
+    x <- apply_app_layout(
+      x, path, layout, evaluate_ui = evaluate_ui,
+      lib = if (is.null(args$lib)) .libPaths() else args$lib
+    )
+  }
   overrides <- args$overrides
   if (is.null(overrides) && file.exists(file.path(path, "sbom-overrides.csv"))) {
     overrides <- file.path(path, "sbom-overrides.csv")
@@ -150,7 +179,8 @@ reader_args <- function() {
     manifest = setdiff(names(formals(sbom_rsconnect)), "manifest"),
     package = setdiff(names(formals(sbom_package)), "path"),
     code = c("author", "organization", "regid", "timestamp", "overrides", "lib",
-      "embedded", "system")
+      "embedded", "system"),
+    shiny = "evaluate_ui"
   )
 }
 

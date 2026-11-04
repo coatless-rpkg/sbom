@@ -121,7 +121,6 @@ local_lock_and_manifest <- function(env = parent.frame()) {
   dir <- withr::local_tempdir(.local_envir = env)
   file.copy(test_path("fixtures/renv/modern/renv.lock"), dir)
   file.copy(test_path("fixtures/rsconnect/manifest.json"), dir)
-  file.copy(test_path("fixtures/rsconnect/app.R"), dir)
   dir
 }
 
@@ -231,7 +230,6 @@ test_that("a source's read failure names no path, even for a relative folder", {
 test_that("a manifest outranks DESCRIPTION, and DESCRIPTION outranks the code", {
   dir <- withr::local_tempdir()
   file.copy(test_path("fixtures/rsconnect/manifest.json"), dir)
-  file.copy(test_path("fixtures/rsconnect/app.R"), dir)
   write_text("Package: mypkg\nVersion: 1.0\nImports: cli\n", file.path(dir, "DESCRIPTION"))
   lib <- local_fake_lib(list())
   x <- sbom(dir, lib = lib)

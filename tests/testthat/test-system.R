@@ -15,7 +15,7 @@ test_that("linked libraries become observed components, with OS package versions
   x <- sbom_installed("curlish", lib = lib)
   comps <- sbom_components(x)
   d <- comps[comps$ref == "deb/libcurl4", ]
-  expect_equal(d$purl, "pkg:deb/debian/libcurl4@7.88.1-10?arch=amd64")
+  expect_equal(d$purl, "pkg:deb/debian/libcurl4@7.88.1-10?arch=amd64&distro=debian-12")
   expect_equal(d$evidence, "observed")
   expect_equal(d$ecosystem, "deb")
   expect_false(any(grepl("libc$|libc\\.so", comps$name)))
@@ -72,7 +72,7 @@ test_that("a declared and observed library is one component, observed", {
   expect_equal(nrow(s), 1L)
   expect_equal(s$evidence, "observed")
   expect_match(s$description, "Needed by sslish")
-  expect_match(s$description, "Linked as libssl.48.dylib", fixed = TRUE)
+  expect_match(s$description, "Linked as libssl.48.dylib (library version 49.2.0).", fixed = TRUE)
   expect_setequal(sbom_dependencies(x)$field[grepl("libssl", sbom_dependencies(x)$to)], c("system_requirement", "dynamic_link"))
   expect_false("may-statically-link" %in% sbom_issues(x)$code)
 })
@@ -255,7 +255,7 @@ test_that("a Debian version is percent-encoded in the purl", {
     sys_os_package = function(path) list(manager = "deb", name = "libcurl4", version = "1:2.3-1+deb12u1", arch = "amd64"),
     sys_os_release = function() list(id = "debian", version_id = "12"))
   comps <- sbom_components(sbom_installed("a", lib = lib))
-  expect_equal(comps$purl[comps$ref == "deb/libcurl4"], "pkg:deb/debian/libcurl4@1%3A2.3-1%2Bdeb12u1?arch=amd64")
+  expect_equal(comps$purl[comps$ref == "deb/libcurl4"], "pkg:deb/debian/libcurl4@1%3A2.3-1%2Bdeb12u1?arch=amd64&distro=debian-12")
 })
 
 test_that("ldd lines with no path and a name inside another are not links", {
@@ -591,4 +591,134 @@ test_that("SPDX 2 and SPDX 3 keep how a deb or rpm package is linked", {
   s3 <- Filter(function(e) identical(e$type, "software_Package") && identical(e$name, "libcurl4"),
                spdx3_document(x)[["@graph"]])[[1]]
   expect_equal(s3$comment, "Linked as libcurl.so.4.")
+})
+
+test_that("deb and rpm purls follow the purl spec's vendor and distro conventions", {
+  deb <- list(manager = "deb", name = "libcurl4", version = "7.88.1-10", arch = "amd64")
+  rpm <- list(manager = "rpm", name = "libcurl", version = "7.76.1-23.el9", arch = "x86_64")
+  expect_equal(
+    os_package_purl(rpm, list(id = "rhel", version_id = "9.2")),
+    "pkg:rpm/redhat/libcurl@7.76.1-23.el9?arch=x86_64&distro=rhel-9.2"
+  )
+  expect_equal(
+    os_package_purl(rpm, list(id = "fedora", version_id = "25")),
+    "pkg:rpm/fedora/libcurl@7.76.1-23.el9?arch=x86_64&distro=fedora-25"
+  )
+  expect_equal(
+    os_package_purl(rpm, list(id = "opensuse-leap", version_id = "15.5")),
+    "pkg:rpm/opensuse/libcurl@7.76.1-23.el9?arch=x86_64&distro=opensuse-leap-15.5"
+  )
+  for (id in c("centos", "rocky", "almalinux")) {
+    expect_match(os_package_purl(rpm, list(id = id, version_id = "9")), paste0("^pkg:rpm/", id, "/"))
+  }
+  expect_equal(
+    os_package_purl(deb, list(id = "ubuntu", version_id = "22.04")),
+    "pkg:deb/ubuntu/libcurl4@7.88.1-10?arch=amd64&distro=ubuntu-22.04"
+  )
+  # The spec's deb examples name the release.
+  expect_equal(
+    os_package_purl(deb, list(id = "debian", version_id = "12", version_codename = "bookworm")),
+    "pkg:deb/debian/libcurl4@7.88.1-10?arch=amd64&distro=bookworm"
+  )
+  # An ID that is not mapped keeps its own name; no version_id, no distro.
+  expect_equal(
+    os_package_purl(deb, list(id = "pop")),
+    "pkg:deb/pop/libcurl4@7.88.1-10?arch=amd64"
+  )
+  expect_null(os_package_purl(deb, NULL))
+})
+
+test_that("a linked library on RHEL gets the redhat namespace and a distro qualifier", {
+  lib <- local_fake_lib(list(curlish = c(Version = "1.0")))
+  local_compiled_pkg(lib, "curlish")
+  local_mocked_bindings(
+    sys_linked_libraries = function(so) "/usr/lib64/libcurl.so.4",
+    sys_os_package = function(path) list(manager = "rpm", name = "libcurl", version = "7.76.1-23.el9", arch = "x86_64"),
+    sys_os_release = function() list(id = "rhel", version_id = "9.2"),
+    sysreqs_match = function(spec, platform) NULL)
+  comps <- sbom_components(sbom_installed("curlish", lib = lib))
+  expect_equal(comps$purl[comps$ref == "rpm/libcurl"], "pkg:rpm/redhat/libcurl@7.76.1-23.el9?arch=x86_64&distro=rhel-9.2")
+})
+
+test_that("musl's loader and libc are ignored like glibc's", {
+  expect_equal(
+    ignored_library(c("/lib/ld-musl-x86_64.so.1", "/lib/libc.musl-x86_64.so.1", "/usr/lib/libcurl.so.4")),
+    c(TRUE, TRUE, FALSE)
+  )
+  lib <- local_fake_lib(list(a = c(Version = "1.0")))
+  local_compiled_pkg(lib, "a")
+  local_mocked_bindings(
+    sys_linked_libraries = function(so) c("/lib/ld-musl-x86_64.so.1", "/lib/libc.musl-x86_64.so.1"),
+    sysreqs_match = function(spec, platform) NULL)
+  comps <- sbom_components(sbom_installed("a", lib = lib))
+  expect_false(any(grepl("musl", comps$name)))
+})
+
+test_that("ldd's not found lines are named in links-not-read, with no component", {
+  expect_equal(
+    parse_ldd(c("\tlibfoo.so.1 => not found", "\tlibz.so.1 => /lib/libz.so.1 (0x1)", "\tlibR.so => not found"))$not_found,
+    c("libR.so", "libfoo.so.1")
+  )
+  lib <- local_fake_lib(list(a = c(Version = "1.0", SystemRequirements = "libfoo")))
+  local_compiled_pkg(lib, "a")
+  local_mocked_bindings(
+    sys_linked_libraries = function(so) {
+      structure("/usr/lib/libz.so.1", versions = NA_character_, not_found = c("libR.so", "libfoo.so.1"))
+    },
+    sysreqs_match = function(spec, platform) list(data.frame(sysreq = "libfoo", packages = I(list(character())))))
+  x <- sbom_installed("a", lib = lib)
+  iss <- sbom_issues(x)
+  expect_equal(sum(iss$code == "links-not-read"), 1L)
+  expect_equal(
+    iss$message[iss$code == "links-not-read"],
+    "ldd did not find libfoo.so.1, which a 1.0 links, so it is not listed as a component."
+  )
+  expect_false("may-statically-link" %in% iss$code)
+  comps <- sbom_components(x)
+  expect_false(any(grepl("libfoo.so", comps$name) & comps$evidence == "observed"))
+  expect_true("system/libz" %in% comps$ref)
+  # A failed read and a missing library share one issue.
+  local_mocked_bindings(
+    sys_linked_libraries = function(so) {
+      structure(character(), versions = character(), not_found = "libfoo.so.1", failed = TRUE)
+    })
+  iss <- sbom_issues(sbom_installed("a", lib = lib))
+  expect_equal(sum(iss$code == "links-not-read" | iss$code == "links-not-checked"), 1L)
+})
+
+test_that("a declared minimum stays a minimum when the library is observed, and a required package raises the scope", {
+  lib <- local_fake_lib(list(
+    sslish = c(Version = "1.0", SystemRequirements = "libssl (>= 1.1)", Suggests = "x"),
+    caller = c(Version = "1.0", Imports = "sslish")))
+  local_compiled_pkg(lib, "sslish")
+  local_mocked_bindings(
+    sys_linked_libraries = function(so) structure("/usr/lib/libssl.48.dylib", versions = "49.2.0"),
+    sysreqs_match = function(spec, platform) list(data.frame(sysreq = "libssl", packages = I(list(character())))))
+  x <- sbom_installed("caller", lib = lib)
+  s <- sbom_components(x)
+  s <- s[s$ref == "system/libssl", ]
+  expect_equal(s$version_is, "minimum")
+  expect_false(identical(s$evidence, "observed"))
+  expect_match(s$description, "the version is the declared minimum, not an observed one", fixed = TRUE)
+  expect_match(s$description, "library version 49.2.0", fixed = TRUE)
+  expect_equal(s$scope, "required")
+})
+
+test_that("a macOS machine without the Command Line Tools says so", {
+  lib <- local_fake_lib(list(a = c(Version = "1")))
+  local_compiled_pkg(lib, "a")
+  local_mocked_bindings(
+    sys_os_name = function() "Darwin",
+    sys_xcode_tools = function() FALSE,
+    sys_linked_libraries = function(so) stop("not called"))
+  iss <- sbom_issues(sbom_installed("a", lib = lib))
+  expect_equal(iss$message[iss$code == "links-not-checked"], paste0(
+    "The shared libraries linked by compiled packages were not checked, because ",
+    "otool cannot run without the Xcode Command Line Tools."
+  ))
+  local_mocked_bindings(
+    sys_os_name = function() "Linux",
+    sys_linked_libraries = function(so) structure(character(), tool_missing = TRUE))
+  iss <- sbom_issues(sbom_installed("a", lib = lib))
+  expect_match(iss$message[iss$code == "links-not-checked"], "neither otool nor ldd is available", fixed = TRUE)
 })

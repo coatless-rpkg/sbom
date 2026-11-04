@@ -39,9 +39,11 @@
 #'   issue is recorded. The default is the `sbom.regid` option, as
 #'   `author` and `organization` read `sbom.author` and `sbom.organization`.
 #' @param timestamp The creation time, as a date-time or as seconds since
-#'   1970-01-01 UTC. `NULL` means now. When the
-#'   `SOURCE_DATE_EPOCH` environment variable is set, it wins over
-#'   `timestamp`, so that builds are reproducible, and a note says so.
+#'   1970-01-01 UTC. An explicit `timestamp` wins. Without one, the
+#'   `SOURCE_DATE_EPOCH` environment variable is used when it is set, so that
+#'   builds are reproducible, and a note says so; otherwise it is now. Nix sets
+#'   `SOURCE_DATE_EPOCH` to 1980-01-01 in every `nix-shell`, and when the
+#'   timestamp is that value a note says it is a placeholder.
 #' @param overrides Values to assert where `sbom` found none, or found
 #'   something different. `NULL`, a data frame or the path to a CSV file, with
 #'   the character columns `component` (the `name` or `ref` of one
@@ -94,7 +96,9 @@ sbom_package <- function(path = ".",
     cli::cli_abort("The {.file DESCRIPTION} at {.file {path}} has no {.field Package} field.")
   }
   root <- package_component(root_desc, "declared", "package", is_root = TRUE)
-  if (file.exists(path) && !dir.exists(path) && grepl("\\.(tar\\.gz|tgz|tar)$", path)) {
+  is_tarball <- file.exists(path) && !dir.exists(path) &&
+    grepl("\\.(tar\\.gz|tgz|tar)$", path)
+  if (is_tarball) {
     root$component$hashes <- list(data.frame(
       alg = "SHA-256", content = cli::hash_file_sha256(path), of = "source tarball",
       stringsAsFactors = FALSE
@@ -114,6 +118,16 @@ sbom_package <- function(path = ".",
     regid = regid, timestamp = timestamp, inputs = inputs,
     embedded = embedded, system = system, source_dir = package_source_dir(path)
   )
+  if (is_tarball && embedded) {
+    x$issues <- add_issue(
+      x$issues, x$metadata$root, "embedded", "tarball-not-unpacked",
+      paste0(
+        "The source tarball ", basename(path), " was not unpacked, so the code ",
+        "bundled in it is not listed."
+      ),
+      severity = "info"
+    )
+  }
   apply_overrides(x, overrides)
 }
 
@@ -422,7 +436,6 @@ build_sbom <- function(root, lookup, root_desc, fields, root_suggests, lib,
   rownames(issues) <- NULL
 
   suggests_only <- vapply(c(res$packages, res$missing), scope_of, "") == "optional"
-  timestamp <- resolve_timestamp(timestamp)
   notes <- c(
     if (identical(r$version_is, "minimum") && !is.na(r$version)) {
       paste0("R is listed at the lowest version stated, ", r$stated_spec, ".")
@@ -434,10 +447,9 @@ build_sbom <- function(root, lookup, root_desc, fields, root_suggests, lib,
     },
     checksum_note(),
     "Download locations are not recorded, since sbom did not look up any package repository.",
-    if (nzchar(source_date_epoch())) {
-      "The timestamp comes from the SOURCE_DATE_EPOCH environment variable."
-    }
+    timestamp_notes(timestamp)
   )
+  timestamp <- resolve_timestamp(timestamp)
   new_sbom(
     list(
       root = root_row$ref,

@@ -60,13 +60,7 @@ sbom_rsconnect <- function(manifest = "manifest.json",
 
   root <- project_root_component(project)
   appmode <- if (is.list(m$metadata)) m$metadata$appmode
-  root$component$description <- enc2utf8_bytes(
-    if (is.character(appmode) && length(appmode) == 1L && !is.na(appmode) && nzchar(appmode)) {
-      paste0("Deployed to Posit Connect as a ", appmode, " application.")
-    } else {
-      "Deployed to Posit Connect."
-    }
-  )
+  root$component$description <- enc2utf8_bytes(connect_sentence(m))
   inputs <- data.frame(
     kind = "manifest.json", path = as.character(manifest), stringsAsFactors = FALSE
   )
@@ -95,6 +89,17 @@ sbom_rsconnect <- function(manifest = "manifest.json",
   )
   rownames(x$issues) <- NULL
   apply_overrides(x, overrides)
+}
+
+# "Deployed to Posit Connect as a {appmode} application.", or without the
+# appmode when the manifest names none, for the parsed manifest `m`.
+connect_sentence <- function(m) {
+  appmode <- if (is.list(m$metadata)) m$metadata$appmode
+  if (is.character(appmode) && length(appmode) == 1L && !is.na(appmode) && nzchar(appmode)) {
+    paste0("Deployed to Posit Connect as a ", appmode, " application.")
+  } else {
+    "Deployed to Posit Connect."
+  }
 }
 
 # The manifest as a list, or an error that names the file.

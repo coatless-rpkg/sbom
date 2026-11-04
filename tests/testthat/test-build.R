@@ -185,17 +185,56 @@ test_that("a library with no packages is recorded as an issue", {
   expect_false("library-empty" %in% sbom_issues(sbom_installed(lib = fixture_lib()))$code)
 })
 
-test_that("SOURCE_DATE_EPOCH wins over the timestamp argument, and a note says so", {
+test_that("SOURCE_DATE_EPOCH is used without a timestamp argument, and a note says so", {
   note <- "The timestamp comes from the SOURCE_DATE_EPOCH environment variable."
   withr::local_envvar(SOURCE_DATE_EPOCH = "1700000000")
-  x <- fixture_sbom()
+  x <- sbom_package(test_path("fixtures/pkgs/srcpkg"), lib = fixture_lib(), system = FALSE)
   expect_equal(format_timestamp(x$metadata$timestamp), "2023-11-14T22:13:20Z")
   expect_true(note %in% x$metadata$notes)
-  expect_true(note %in% sbom_installed(lib = fixture_lib())$metadata$notes)
+  expect_true(note %in% sbom_installed(lib = fixture_lib(), system = FALSE)$metadata$notes)
   withr::local_envvar(SOURCE_DATE_EPOCH = NA)
   y <- fixture_sbom()
   expect_equal(format_timestamp(y$metadata$timestamp), "2026-11-04T00:00:00Z")
   expect_false(note %in% y$metadata$notes)
+})
+
+test_that("an explicit timestamp wins over SOURCE_DATE_EPOCH, with no note about the variable", {
+  withr::local_envvar(SOURCE_DATE_EPOCH = "1700000000")
+  x <- fixture_sbom()
+  expect_equal(format_timestamp(x$metadata$timestamp), "2026-11-04T00:00:00Z")
+  expect_false(any(grepl("SOURCE_DATE_EPOCH|placeholder", x$metadata$notes)))
+})
+
+test_that("Nix's 1980 placeholder is used, with a note saying what it is", {
+  note <- paste0(
+    "The timestamp is 1980-01-01T00:00:00Z, the placeholder that Nix sets in ",
+    "SOURCE_DATE_EPOCH, not the time this SBOM was made."
+  )
+  withr::local_envvar(SOURCE_DATE_EPOCH = "315532800")
+  x <- sbom_package(test_path("fixtures/pkgs/srcpkg"), lib = fixture_lib(), system = FALSE)
+  expect_equal(x$metadata$timestamp, as.POSIXct(315532800, origin = "1970-01-01", tz = "UTC"))
+  expect_true(note %in% x$metadata$notes)
+  expect_false(note %in% fixture_sbom()$metadata$notes)
+  withr::local_envvar(SOURCE_DATE_EPOCH = "1700000000")
+  expect_false(note %in% sbom_package(test_path("fixtures/pkgs/srcpkg"), lib = fixture_lib(), system = FALSE)$metadata$notes)
+})
+
+test_that("a source tarball root records that its bundled code was not listed", {
+  tmp <- withr::local_tempdir()
+  tarball <- file.path(tmp, "srcpkg_0.1.0.tar.gz")
+  withr::with_dir(test_path("fixtures/pkgs"), utils::tar(tarball, "srcpkg", compression = "gzip"))
+  x <- sbom_package(tarball, lib = fixture_lib(), system = FALSE)
+  iss <- sbom_issues(x)
+  row <- iss[iss$code == "tarball-not-unpacked", ]
+  expect_equal(nrow(row), 1L)
+  expect_equal(row$severity, "info")
+  expect_equal(row$ref, x$metadata$root)
+  expect_equal(row$message, paste0(
+    "The source tarball srcpkg_0.1.0.tar.gz was not unpacked, so the code bundled in it is not listed."
+  ))
+  expect_false("tarball-not-unpacked" %in% sbom_issues(sbom_package(tarball, lib = fixture_lib(), system = FALSE, embedded = FALSE))$code)
+  folder <- sbom_package(test_path("fixtures/pkgs/srcpkg"), lib = fixture_lib(), system = FALSE)
+  expect_false("tarball-not-unpacked" %in% sbom_issues(folder)$code)
 })
 
 test_that("a root without Version gets no invented version or file name", {

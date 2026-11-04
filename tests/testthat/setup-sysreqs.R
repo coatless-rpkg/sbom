@@ -4,6 +4,7 @@ sys_os_release_real <- sys_os_release
 # The real pak functions, kept for the tests that call them.
 sysreqs_match_real <- sysreqs_match
 pak_function_real <- pak_function
+sys_ui_dependencies_real <- sys_ui_dependencies
 
 # No test reaches pak: to every test, pak is not installed. A test that wants
 # a mapping mocks sysreqs_match() or another wrapper itself.
@@ -23,5 +24,6 @@ local_mocked_bindings(
   sys_os_release = function() NULL,
   sys_os_name = function() "Linux",
   sys_xcode_tools = function() TRUE,
+  sys_ui_dependencies = function(dir, layout, ...) structure(list(), reason = "not run in tests"),
   .package = "sbom", .env = testthat::teardown_env()
 )

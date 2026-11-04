@@ -341,8 +341,10 @@ read_widget_yaml <- function(path) {
 # one found by the header comment of a .js or .css file is inferred; the
 # declared one wins when both are found. Returns list(components,
 # relationships, issues, libraries), where `libraries` are labels of the
-# components, for the one note about their licences.
-javascript_components <- function(pkg_dir, parent, installed = FALSE, max_files = 5000L) {
+# components, for the one note about their licences. `dirs`, when given, names
+# the only folders to scan, relative to `pkg_dir`, and no YAML is read.
+javascript_components <- function(pkg_dir, parent, installed = FALSE, max_files = 5000L,
+                                  dirs = NULL) {
   base <- if (installed) pkg_dir else file.path(pkg_dir, "inst")
   rules <- javascript_rules()
   label <- pkg_label(parent$name, parent$version)
@@ -416,8 +418,9 @@ javascript_components <- function(pkg_dir, parent, installed = FALSE, max_files 
   }
 
   # htmlwidgets YAML.
+  # `dirs`, when given, replaces the default folders and skips the YAML.
   yaml_dir <- file.path(base, "htmlwidgets")
-  yamls <- if (dir.exists(yaml_dir)) {
+  yamls <- if (is.null(dirs) && dir.exists(yaml_dir)) {
     list.files(yaml_dir, pattern = "\\.ya?ml$", ignore.case = TRUE)
   } else {
     character()
@@ -453,7 +456,11 @@ javascript_components <- function(pkg_dir, parent, installed = FALSE, max_files 
   # Header comments. Candidates are the .js and .css files whose name a rule
   # matches, found within 6 levels of each folder, without following
   # symlinked folders; at most `max_files` are read.
-  roots <- file.path(base, c("www", file.path("htmlwidgets", "lib"), "lib"))
+  roots <- if (is.null(dirs)) {
+    file.path(base, c("www", file.path("htmlwidgets", "lib"), "lib"))
+  } else {
+    file.path(pkg_dir, dirs)
+  }
   name_regex <- paste0("(", paste(rules$file_regex, collapse = ")|("), ")")
   files <- character()
   truncated <- FALSE

@@ -1,0 +1,1 @@
+box::use(shiny[fluidPage])

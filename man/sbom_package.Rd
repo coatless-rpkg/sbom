@@ -62,9 +62,11 @@ issue is recorded. The default is the \code{sbom.regid} option, as
 \code{author} and \code{organization} read \code{sbom.author} and \code{sbom.organization}.}
 
 \item{timestamp}{The creation time, as a date-time or as seconds since
-1970-01-01 UTC. \code{NULL} means now. When the
-\code{SOURCE_DATE_EPOCH} environment variable is set, it wins over
-\code{timestamp}, so that builds are reproducible, and a note says so.}
+1970-01-01 UTC. An explicit \code{timestamp} wins. Without one, the
+\code{SOURCE_DATE_EPOCH} environment variable is used when it is set, so that
+builds are reproducible, and a note says so; otherwise it is now. Nix sets
+\code{SOURCE_DATE_EPOCH} to 1980-01-01 in every \code{nix-shell}, and when the
+timestamp is that value a note says it is a placeholder.}
 
 \item{overrides}{Values to assert where \code{sbom} found none, or found
 something different. \code{NULL}, a data frame or the path to a CSV file, with

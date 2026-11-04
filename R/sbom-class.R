@@ -109,10 +109,11 @@ document_notes <- function(x) {
 
 source_date_epoch <- function() Sys.getenv("SOURCE_DATE_EPOCH", unset = "")
 
-# SOURCE_DATE_EPOCH, when set, wins over `timestamp` (spec section 11).
+# An explicit `timestamp` wins, then SOURCE_DATE_EPOCH, then the clock (spec
+# section 11).
 resolve_timestamp <- function(timestamp = NULL) {
-  epoch <- source_date_epoch()
-  if (nzchar(epoch)) {
+  if (is.null(timestamp) && nzchar(source_date_epoch())) {
+    epoch <- source_date_epoch()
     if (!grepl("^[0-9]+$", epoch)) {
       cli::cli_abort(
         "{.envvar SOURCE_DATE_EPOCH} must be integer seconds, not {.val {epoch}}."
@@ -131,6 +132,25 @@ resolve_timestamp <- function(timestamp = NULL) {
   }
   attr(out, "tzone") <- "UTC"
   out
+}
+
+# The notes that say where the timestamp came from: only when it comes from
+# SOURCE_DATE_EPOCH, and then also when that is the 1980 placeholder that
+# nix-shell and Nix builds set.
+timestamp_notes <- function(timestamp = NULL) {
+  epoch <- source_date_epoch()
+  if (!is.null(timestamp) || !nzchar(epoch)) {
+    return(character())
+  }
+  c(
+    "The timestamp comes from the SOURCE_DATE_EPOCH environment variable.",
+    if (grepl("^[0-9]+$", epoch) && as.numeric(epoch) == 315532800) {
+      paste0(
+        "The timestamp is 1980-01-01T00:00:00Z, the placeholder that Nix sets ",
+        "in SOURCE_DATE_EPOCH, not the time this SBOM was made."
+      )
+    }
+  )
 }
 
 #' Read the tables of an sbom object

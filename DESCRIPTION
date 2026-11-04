@@ -21,6 +21,7 @@ Imports:
     xml2
 Suggests:
     curl,
+    htmltools,
     jsonvalidate,
     pak,
     testthat (>= 3.2.0),

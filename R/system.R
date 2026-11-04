@@ -36,6 +36,7 @@ sys_xcode_tools <- function() {
 # The shared libraries a compiled file links, as a character vector of paths.
 # Two attributes say more: `versions`, one entry per path, holds the "current
 # version" otool prints for a dylib (NA when there is none, as on Linux), and
+# `not_found` holds the names of the libraries ldd reports as "not found", and
 # `tool_missing` is TRUE when otool (macOS) or ldd (elsewhere) is not on the
 # path, and `failed` is TRUE when the tool ran but failed or timed out, or
 # when the file was not given to it. In either case the answer is unknown
@@ -56,7 +57,10 @@ sys_linked_libraries <- function(so_file) {
     ))
   }
   parsed <- if (mac) parse_otool(lines, so_file) else parse_ldd(lines)
-  structure(parsed$paths, versions = parsed$versions, tool_missing = FALSE, failed = FALSE)
+  structure(
+    parsed$paths, versions = parsed$versions, not_found = parsed$not_found,
+    tool_missing = FALSE, failed = FALSE
+  )
 }
 
 # Whether the ELF file at `path` names a program interpreter (it has a
@@ -129,17 +133,21 @@ parse_otool <- function(lines, so_file) {
 }
 
 # The paths in the output of `ldd file`: "name => /path (0x...)" and a bare
-# "/path (0x...)" such as the dynamic loader. A library that is not found has
-# no path, and the kernel's vdso has none either.
+# "/path (0x...)" such as the dynamic loader, and the names of the libraries
+# that are "not found", which have no path. The kernel's vdso has none either.
 parse_ldd <- function(lines) {
   lines <- trimws(lines)
   has_arrow <- grepl("=>", lines, fixed = TRUE)
+  absent <- has_arrow & grepl("=>\\s*not found\\s*$", lines)
   path <- ifelse(
     has_arrow, sub("^.*=>\\s*(\\S+).*$", "\\1", lines),
     ifelse(startsWith(lines, "/"), sub("^(\\S+).*$", "\\1", lines), NA_character_)
   )
   path <- path[!is.na(path) & startsWith(path, "/")]
-  list(paths = path, versions = rep(NA_character_, length(path)))
+  list(
+    paths = path, versions = rep(NA_character_, length(path)),
+    not_found = sort(unique(trimws(sub("=>.*$", "", lines[absent]))), method = "radix")
+  )
 }
 
 # The operating system package that owns `path`, as
@@ -244,4 +252,135 @@ parse_otool_rpaths <- function(lines) {
 # that R loads.
 sys_r_bin <- function() {
   R.home("bin")
+}
+
+# The script that the child R process runs to evaluate an app's UI. It uses
+# base R only, because the library it sees need not hold any of sbom's own
+# packages. It reads the app folder, the layout and the output path from its
+# command line, and writes a DCF file: one record per html dependency (name,
+# version, package, src), or a single `reason` field when it cannot say.
+ui_child_script <- function() {
+  c(
+    'args <- commandArgs(trailingOnly = TRUE)',
+    'dir <- args[[1L]]; layout <- args[[2L]]; out <- args[[3L]]',
+    'fail <- function(reason) {',
+    '  write.dcf(data.frame(reason = reason, stringsAsFactors = FALSE), out, width = 10000L)',
+    '  quit(save = "no", status = 0L)',
+    '}',
+    'if (!requireNamespace("htmltools", quietly = TRUE)) fail("htmltools is not installed")',
+    'deps <- tryCatch({',
+    '  setwd(dir)',
+    '  env <- new.env(parent = globalenv())',
+    '  file <- if (identical(layout, "ui-server")) "ui.R" else "app.R"',
+    '  value <- source(file, local = env)$value',
+    '  if (exists("ui", envir = env, inherits = FALSE)) {',
+    '    ui <- get("ui", envir = env, inherits = FALSE)',
+    '  } else if (identical(layout, "ui-server")) {',
+    '    ui <- value',
+    '  } else {',
+    '    stop(structure(class = c("sbomNoUi", "error", "condition"), list(message = "", call = NULL)))',
+    '  }',
+    '  if (is.function(ui)) ui <- ui(list())',
+    '  htmltools::findDependencies(ui)',
+    '}, error = function(e) {',
+    '  # Only fixed reasons leave the child: the message of an error raised by',
+    '  # the app can name any path.',
+    '  pkg <- tryCatch(e$package, error = function(e2) NULL)',
+    '  if (inherits(e, "sbomNoUi")) {',
+    '    fail("the app defines no ui object")',
+    '  } else if (inherits(e, "packageNotFoundError") && is.character(pkg) && length(pkg) == 1L &&',
+    '    !is.na(pkg) && grepl("^[A-Za-z][A-Za-z0-9.]*$", pkg)) {',
+    '    fail(paste0("the UI needs the package ", pkg, ", which is not installed"))',
+    '  }',
+    '  fail("the UI code failed")',
+    '})',
+    'field <- function(d, name) {',
+    '  v <- d[[name]]',
+    '  if (is.null(v) || length(v) == 0L) NA_character_ else as.character(v)[[1L]]',
+    '}',
+    'rows <- lapply(deps, function(d) data.frame(',
+    '  name = field(d, "name"), version = field(d, "version"), package = field(d, "package"),',
+    '  src = if (is.null(d$src$file)) "href" else "file", stringsAsFactors = FALSE',
+    '))',
+    'res <- if (length(rows) > 0L) do.call(rbind, rows) else data.frame()',
+    'write.dcf(res, out)'
+  )
+}
+
+# The html dependencies of the UI of the Shiny app in `dir` (layout "app.R" or
+# "ui-server"), found by running its UI code in a separate R process that
+# sees the libraries `lib`. A data frame of name, version, package (NA when
+# not known) and src ("file" or "href"). When it cannot say, it returns an
+# empty list with a `reason` attribute, a short phrase that says why not (R
+# cannot put an attribute on NULL). The process gets a fresh R session
+# (--vanilla) and no environment but R_LIBS, and is stopped after `timeout`
+# seconds.
+sys_ui_dependencies <- function(dir, layout, lib = .libPaths(), timeout = 60) {
+  fail <- function(reason) structure(list(), reason = reason)
+  rscript <- file.path(R.home("bin"), "Rscript")
+  if (!file.exists(rscript) && !nzchar(Sys.which(rscript))) {
+    return(fail("Rscript was not found"))
+  }
+  script <- tempfile("sbom-ui-", fileext = ".R")
+  out <- tempfile("sbom-ui-", fileext = ".dcf")
+  on.exit(unlink(c(script, out)), add = TRUE)
+  write_text(paste0(paste(ui_child_script(), collapse = "\n"), "\n"), script)
+  libs <- paste(normalizePath(lib, mustWork = FALSE), collapse = .Platform$path.sep)
+  # R_LIBS is set in this process around the call, and put back after, so the
+  # child changes nothing else and the same works in every shell.
+  old <- Sys.getenv("R_LIBS", unset = NA)
+  on.exit(
+    if (is.na(old)) Sys.unsetenv("R_LIBS") else Sys.setenv(R_LIBS = old),
+    add = TRUE
+  )
+  Sys.setenv(R_LIBS = libs)
+  status <- tryCatch(
+    {
+      res <- suppressWarnings(system2(
+        rscript, shQuote(c("--vanilla", script, normalizePath(dir), layout, out)),
+        stdout = TRUE, stderr = FALSE, timeout = timeout
+      ))
+      st <- attr(res, "status")
+      if (is.null(st)) 0L else st
+    },
+    error = function(e) NA_integer_
+  )
+  if (identical(as.integer(status), 124L)) {
+    return(fail(paste0("the UI did not finish within ", timeout, " seconds")))
+  }
+  if (!file.exists(out) || is.na(status) || status != 0L) {
+    return(fail("the UI evaluation gave no readable result"))
+  }
+  read_ui_dcf(out)
+}
+
+# The result file of the child process as a data frame, or NULL with a reason.
+read_ui_dcf <- function(path) {
+  fail <- function(reason) structure(list(), reason = reason)
+  cols <- c("name", "version", "package", "src")
+  if (file.size(path) == 0L) {
+    return(stats::setNames(
+      data.frame(character(), character(), character(), character(), stringsAsFactors = FALSE), cols
+    ))
+  }
+  dcf <- tryCatch(read.dcf(path), error = function(e) NULL)
+  if (is.null(dcf)) {
+    return(fail("the UI evaluation gave no readable result"))
+  }
+  if ("reason" %in% colnames(dcf)) {
+    reason <- unname(dcf[1L, "reason"])
+    fixed <- c("htmltools is not installed", "the app defines no ui object", "the UI code failed")
+    pkg <- grepl("^the UI needs the package [A-Za-z][A-Za-z0-9.]*, which is not installed$", reason)
+    if (!reason %in% fixed && !pkg) {
+      reason <- "the UI evaluation gave no readable result"
+    }
+    return(fail(reason))
+  }
+  if (!all(c("name", "src") %in% colnames(dcf))) {
+    return(fail("the UI evaluation gave no readable result"))
+  }
+  out <- lapply(cols, function(col) {
+    if (col %in% colnames(dcf)) enc2utf8_bytes(unname(dcf[, col])) else rep(NA_character_, nrow(dcf))
+  })
+  data.frame(stats::setNames(out, cols), stringsAsFactors = FALSE)
 }
