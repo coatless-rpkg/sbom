@@ -346,6 +346,45 @@ test_that("an external entity in SPDX XML is never expanded", {
   expect_false(any(grepl("root:", unlist(doc), fixed = TRUE)))
 })
 
+test_that("SPDX XML elements in another namespace are not read", {
+  tf <- withr::local_tempfile(fileext = ".spdx.xml")
+  write_text(paste0(
+    '<Document xmlns:x="urn:foo"><spdxVersion>SPDX-2.3</spdxVersion>',
+    "<packages><SPDXID>SPDXRef-a</SPDXID><name>Re<x:i>Spoof</x:i>al</name>",
+    "<x:name>Spoof</x:name><versionInfo>1.0</versionInfo>",
+    "<x:wrapper><checksums><algorithm>SHA1</algorithm></checksums></x:wrapper></packages>",
+    "<x:packages><SPDXID>SPDXRef-spoof</SPDXID><name>Spoof</name></x:packages>",
+    "</Document>\n"
+  ), tf)
+  doc <- spdx_xml_read(tf)
+  expect_length(doc$packages, 1L)
+  expect_identical(doc$packages[[1]], list(SPDXID = "SPDXRef-a", name = "Real", versionInfo = "1.0"))
+  expect_false(any(grepl("Spoof", unlist(doc), fixed = TRUE)))
+  expect_identical(read_document(tf)$doc, doc)
+})
+
+test_that("SPDX XML in a namespace reads that namespace only", {
+  tf <- withr::local_tempfile(fileext = ".spdx.xml")
+  write_text(paste0(
+    '<s:Document xmlns:s="urn:example:spdx" xmlns:x="urn:foo">',
+    "<s:spdxVersion>SPDX-2.3</s:spdxVersion><s:name>doc</s:name>",
+    "<name>Spoof</name><x:name>Spoof</x:name></s:Document>\n"
+  ), tf)
+  expect_identical(spdx_xml_read(tf), list(spdxVersion = "SPDX-2.3", name = "doc"))
+})
+
+test_that("an spdxVersion in another namespace does not set the version", {
+  tf <- withr::local_tempfile(fileext = ".spdx.xml")
+  write_text(paste0(
+    '<Document xmlns:x="urn:foo"><x:spdxVersion>SPDX-2.2</x:spdxVersion>',
+    "<spdxVersion>SPDX-2.3</spdxVersion></Document>\n"
+  ), tf)
+  d <- read_document(tf)
+  expect_identical(c(d$format, d$version, d$doc$spdxVersion), c("spdx-xml", "2.3", "SPDX-2.3"))
+  write_text('<Document xmlns:x="urn:foo"><x:spdxVersion>SPDX-2.3</x:spdxVersion></Document>\n', tf)
+  expect_error(read_document(tf), "is not an SBOM in a format sbom reads", class = "sbom_read_error")
+})
+
 # Property names of each JSON type in an SPDX 2 schema.
 spdx_schema_keys <- function(x, type) {
   if (!is.list(x)) {

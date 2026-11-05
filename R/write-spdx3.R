@@ -43,6 +43,13 @@ spdx3_package_comment <- function(row) {
   if (length(parts) > 0L) paste(parts, collapse = " ")
 }
 
+# A checksum algorithm in SPDX 3's vocabulary: SHA-256 is sha256, SHA3-256
+# sha3_256.
+spdx3_hash_algorithm <- function(alg) {
+  alg <- tolower(alg)
+  ifelse(startsWith(alg, "sha3-"), sub("-", "_", alg, fixed = TRUE), gsub("-", "", alg, fixed = TRUE))
+}
+
 spdx3_package <- function(row, id, supplier, person) {
   p <- list(
     type = "software_Package", spdxId = id,
@@ -57,7 +64,7 @@ spdx3_package <- function(row, id, supplier, person) {
     p$verifiedUsing <- unname(lapply(seq_len(nrow(hashes)), function(i) {
       list(
         type = "Hash",
-        algorithm = tolower(gsub("-", "", hashes$alg[i], fixed = TRUE)),
+        algorithm = spdx3_hash_algorithm(hashes$alg[i]),
         hashValue = hashes$content[i]
       )
     }))
@@ -213,8 +220,10 @@ spdx3_dependencies <- function(x, pkg_ids, id) {
   if (nrow(rel) == 0L) return(list())
   from <- unname(pkg_ids[match(rel$from, x$components$ref)])
   to <- unname(pkg_ids[match(rel$to, x$components$ref)])
+  # An optional dependency of a read SBOM is written as Suggests is, with no
+  # comment.
   rtype <- ifelse(
-    rel$field == "Suggests", "hasOptionalDependency",
+    rel$field %in% c("Suggests", "optional"), "hasOptionalDependency",
     ifelse(rel$field == "dynamic_link", "hasDynamicLink", "dependsOn")
   )
   etype <- ifelse(
@@ -222,6 +231,7 @@ spdx3_dependencies <- function(x, pkg_ids, id) {
     "LifecycleScopedRelationship", "Relationship"
   )
   comment <- relationship_comment(rel)
+  comment[rel$field == "optional"] <- NA_character_
   build <- rel$field == "LinkingTo" | (rel$field == "system_requirement" &
     is_build_tool(x$components$name[match(rel$to, x$components$ref)]))
   ord <- order(from, rtype, to, etype, rel$field, method = "radix")

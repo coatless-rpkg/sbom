@@ -111,6 +111,10 @@ spdx_package <- function(row, id, version = "2.3") {
   p$filesAnalyzed <- FALSE
 
   hashes <- row$hashes[[1]]
+  # SPDX 2.2 lists no SHA3, which a read SBOM may hold.
+  if (!is.null(hashes) && nrow(hashes) > 0L && version == "2.2") {
+    hashes <- hashes[!startsWith(hashes$alg, "SHA3-"), , drop = FALSE]
+  }
   if (!is.null(hashes) && nrow(hashes) > 0L) {
     p$checksums <- unname(lapply(seq_len(nrow(hashes)), function(i) {
       list(
@@ -184,14 +188,17 @@ spdx_relationships <- function(x, ids) {
 
   from <- id_of(rel$from)
   to <- id_of(rel$to)
+  # An optional dependency of a read SBOM is written as Suggests is, with no
+  # comment.
   type <- ifelse(
     rel$field == "contains", "CONTAINS",
     ifelse(
-      rel$field == "Suggests", "OPTIONAL_DEPENDENCY_OF",
+      rel$field %in% c("Suggests", "optional"), "OPTIONAL_DEPENDENCY_OF",
       ifelse(rel$field == "dynamic_link", "DYNAMIC_LINK", "DEPENDS_ON")
     )
   )
   comment <- relationship_comment(rel)
+  comment[rel$field == "optional"] <- NA_character_
   comment[rel$field == "contains" & rel$from == "R"] <- "Part of R"
   comment[rel$field == "contains" & grepl("#embedded/", rel$to, fixed = TRUE)] <- "Compiled in from LinkingTo"
   comment[rel$field == "contains" & grepl("#vendored/", rel$to, fixed = TRUE)] <- "Bundled as source code"

@@ -18,7 +18,11 @@ spdx_json_booleans <- c("filesAnalyzed", "isLive", "isValid", "isWayBackLink")
 # byte-order mark. A NUL byte or invalid UTF-8 is an error that quotes
 # nothing from the file; `subject` begins its message.
 read_utf8_text <- function(path, subject = "the file") {
-  bytes <- readBin(path, "raw", n = file.size(path))
+  utf8_text(readBin(path, "raw", n = file.size(path)), subject)
+}
+
+# The same, for bytes already read.
+utf8_text <- function(bytes, subject = "the file") {
   if (any(bytes == as.raw(0L))) {
     cli::cli_abort("{subject} contains a NUL byte", call = NULL)
   }
@@ -125,30 +129,48 @@ yaml_alias_names <- function(txt) {
 # simplifyVector = FALSE)` gives. Needs the yaml package. The bytes are read
 # as UTF-8, whatever the native locale. A `!expr` tag is read as text and
 # never evaluated, whatever the yaml.eval.expr option says. A document that
-# uses aliases is refused unparsed: SPDX never needs them, and a few hundred
-# bytes of aliases can expand to gigabytes.
+# uses aliases is refused unparsed, with an error of class `sbom_yaml_alias`:
+# SPDX never needs them, and a few hundred bytes of aliases can expand to
+# gigabytes.
 spdx_yaml_read <- function(path) {
-  txt <- read_utf8_text(path)
+  spdx_yaml_parse(read_utf8_text(path), basename(path))
+}
+
+# The same, for the text of the file named `file`.
+spdx_yaml_parse <- function(txt, file) {
   aliases <- yaml_alias_names(txt)
   if (length(aliases) > 0L) {
-    file <- basename(path)
     name <- substr(aliases[1], 1L, 40L)
-    cli::cli_abort("{file} uses YAML aliases (*{name}), which sbom does not expand.", call = NULL)
+    cli::cli_abort(
+      "{file} uses YAML aliases (*{name}), which sbom does not expand.",
+      class = "sbom_yaml_alias", call = NULL
+    )
   }
   doc <- yaml::yaml.load(txt, eval.expr = FALSE, handlers = spdx_yaml_handlers())
   spdx_yaml_unmark(doc, "")
 }
 
-spdx_xml_node <- function(node) {
-  kids <- xml2::xml_children(node)
+# The namespace of an SPDX XML document's root, which may be none, as the
+# map and prefixes xml_kids_in() takes.
+spdx_xml_ctx <- function(root) {
+  ns <- xml_ns_map(root)
+  uri <- xml2::xml_find_chr(root, "string(namespace-uri(.))")
+  list(ns = ns, prefixes = if (nzchar(uri)) names(ns)[ns == uri] else character())
+}
+
+# Converts an element of an SPDX XML document. Only elements in the root's
+# namespace are read; any other element is left out, with everything inside
+# it, and its text is not part of its parent's.
+spdx_xml_node <- function(node, ctx = spdx_xml_ctx(node)) {
+  kids <- xml_kids_in(node, ctx$ns, ctx$prefixes)
   if (length(kids) == 0L) {
-    return(xml2::xml_text(node))
+    return(xml_own_text(node))
   }
-  tags <- xml2::xml_name(kids)
+  tags <- names(kids)
   out <- list()
   for (key in unique(tags)) {
-    values <- lapply(kids[tags == key], function(kid) {
-      spdx_typed_value(spdx_xml_node(kid), key)
+    values <- lapply(unname(kids[tags == key]), function(kid) {
+      spdx_typed_value(spdx_xml_node(kid, ctx), key)
     })
     out[[key]] <- if (key %in% spdx_json_arrays || length(values) > 1L) {
       values
@@ -361,7 +383,7 @@ spdx_tv_verification_code <- function(value) {
 spdx_tv_external_document <- function(value) {
   parts <- spdx_tv_split(value, 2L)
   if (length(parts) != 3L) {
-    cli::cli_abort("the external document reference {.val {value}} does not have three parts", call = NULL)
+    cli::cli_abort("an external document reference does not have three parts", call = NULL)
   }
   list(
     externalDocumentId = parts[1], spdxDocument = parts[2],
@@ -372,7 +394,7 @@ spdx_tv_external_document <- function(value) {
 spdx_tv_external_ref <- function(value, version) {
   parts <- spdx_tv_split(value, 2L)
   if (length(parts) != 3L) {
-    cli::cli_abort("the external reference {.val {value}} does not have three parts", call = NULL)
+    cli::cli_abort("an external reference does not have three parts", call = NULL)
   }
   # SPDX 2.2 tag-value writes PACKAGE-MANAGER; its JSON model has PACKAGE_MANAGER.
   if (identical(version, "SPDX-2.2") && parts[1] == "PACKAGE-MANAGER") {
@@ -390,7 +412,7 @@ spdx_tv_range <- function(value, field) {
   start <- spdx_integer_value(m[2])
   end <- spdx_integer_value(m[3])
   if (is.na(start) || is.na(end)) {
-    cli::cli_abort("the snippet range {.val {value}} is not two numbers separated by a colon", call = NULL)
+    cli::cli_abort("a snippet range is not two numbers separated by a colon", call = NULL)
   }
   pointer <- function(at) stats::setNames(list(at), field)
   list(startPointer = pointer(start), endPointer = pointer(end))
@@ -407,7 +429,7 @@ spdx_tv_open <- function(kind, value) {
     relationship = {
       parts <- spdx_tv_split(value, 2L)
       if (length(parts) != 3L) {
-        cli::cli_abort("the relationship {.val {value}} does not have three parts", call = NULL)
+        cli::cli_abort("a relationship does not have three parts", call = NULL)
       }
       list(spdxElementId = parts[1], relationshipType = parts[2], relatedSpdxElement = parts[3])
     }
@@ -586,7 +608,11 @@ spdx_tv_assemble <- function(doc, kinds, elements) {
 # attribute "skipped_tags" when there are any. The bytes are read as UTF-8,
 # whatever the native locale, and a byte-order mark is dropped.
 spdx_tv_read <- function(path) {
-  txt <- read_utf8_text(path)
+  spdx_tv_parse(read_utf8_text(path))
+}
+
+# The same, for the text of a file.
+spdx_tv_parse <- function(txt) {
   pairs <- spdx_tv_pairs(strsplit(txt, "\r?\n")[[1]])
   tags <- pairs$tag
   values <- pairs$value

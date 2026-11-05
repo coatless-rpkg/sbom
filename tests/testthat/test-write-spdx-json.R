@@ -66,3 +66,16 @@ test_that("SPDX 2.2 drops 2.3-only fields and passes the 2.2 schema", {
   expect_equal(schema_validate(tf, "spdx-json", "2.2")$status, "pass")
   expect_error(spdx_document(x, "2.1"), "2.2")
 })
+
+test_that("SPDX 2.2 leaves out the checksums of algorithms it does not list", {
+  x <- minimal_sbom()
+  x$components$hashes[[1]] <- data.frame(
+    alg = c("SHA-256", "SHA3-256"), content = c(strrep("a", 64), strrep("b", 64)), of = NA_character_
+  )
+  algorithms <- function(version) {
+    package <- Find(function(p) p$name == "a", spdx_document(x, version)$packages)
+    vapply(package$checksums, `[[`, "", "algorithm")
+  }
+  expect_identical(algorithms("2.3"), c("SHA256", "SHA3-256"))
+  expect_identical(algorithms("2.2"), "SHA256")
+})

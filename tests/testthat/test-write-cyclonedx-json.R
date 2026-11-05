@@ -53,7 +53,7 @@ test_that("one-element arrays stay arrays, and notes are written", {
   expect_null(names(r$licenses))
 })
 
-test_that("licences, platform type, part-of and dependencies follow the rulings", {
+test_that("licenses, platform type, part-of and dependencies follow the rulings", {
   x <- fixture_sbom()
   d <- cdx_document(x)
   find <- function(ref) Find(function(c) c$`bom-ref` == ref, d$components)
@@ -104,4 +104,28 @@ test_that("a package reached only through Suggests gets no dependencies entry", 
   x <- sbom_package(top, lib = lib)
   expect_true("pkg:cran/s@1" %in% vapply(cdx_document(x)$dependencies, `[[`, "", "ref"))
   expect_false(note %in% x$metadata$notes)
+})
+
+test_that("dependencies list nested components that have their own, but not a root whose are unknown", {
+  x <- minimal_sbom()
+  x$components$parent_ref[x$components$ref == "pkg:cran/b@2.0"] <- "pkg:cran/a@1.0"
+  x$relationships <- data.frame(
+    from = c("pkg:cran/a@1.0", "pkg:cran/b@2.0"), to = c("pkg:cran/b@2.0", "R"),
+    field = c("contains", "Depends"), spec = NA_character_, evidence = "declared"
+  )
+  refs <- function(x) vapply(cdx_document(x)$dependencies, `[[`, "", "ref")
+  # The nested b has a dependency of its own, so it is listed.
+  expect_identical(refs(x), c("pkg:cran/a@1.0", "pkg:cran/b@2.0"))
+  x$components$deps_known[x$components$is_root] <- FALSE
+  expect_identical(refs(x), "pkg:cran/b@2.0")
+})
+
+test_that("a package listed only under Suggests gets no dependencies entry, whatever its relationships", {
+  x <- minimal_sbom()
+  x$components$scope[x$components$ref == "pkg:cran/b@2.0"] <- "optional"
+  x$relationships <- data.frame(
+    from = c("pkg:cran/a@1.0", "pkg:cran/b@2.0"), to = c("pkg:cran/b@2.0", "R"),
+    field = c("Suggests", "system_requirement"), spec = NA_character_, evidence = "declared"
+  )
+  expect_identical(vapply(cdx_document(x)$dependencies, `[[`, "", "ref"), "pkg:cran/a@1.0")
 })

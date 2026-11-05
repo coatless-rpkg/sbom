@@ -276,7 +276,11 @@ json_model_problem <- function(doc) {
 # error, whatever jsonlite accepts. So is nesting deeper than json_max_depth
 # levels, measured before parsing; that error has class `sbom_json_limit`.
 json_read_strict <- function(path) {
-  txt <- read_utf8_text(path, subject = "it")
+  json_parse_strict(read_utf8_text(path, subject = "it"))
+}
+
+# The same, for the text of a file.
+json_parse_strict <- function(txt) {
   # JSON has no `/` or `"` outside its strings. Escapes go first and then
   # string literals, so that no single match has to span a long string,
   # which PCRE would give up on.

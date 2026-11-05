@@ -89,7 +89,8 @@ swid_tag <- function(x, version = "2015") {
   # The tag describes only the root, so its overrides' provenance goes here.
   notes <- c(document_notes(x), spdx_asserted_sentences(root))
   swid_node(doc, "Meta", c(
-    generator = paste("sbom", meta$tool_version), product = root$name,
+    generator = if (swid_set(meta$tool_version)) paste("sbom", meta$tool_version) else "sbom",
+    product = root$name,
     description = if (length(notes) > 0L) paste(notes, collapse = " "),
     `sbom:purl` = root$purl, `sbom:license` = root$license_as_written,
     `sbom:systemRequirements` = root$system_requirements
