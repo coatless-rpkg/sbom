@@ -149,22 +149,27 @@ test_that("a file section's tags are not read into the package before it", {
   expect_length(doc$packages, 1L)
   expect_identical(doc$packages[[1]]$SPDXID, "SPDXRef-Package")
   expect_identical(doc$packages[[1]]$licenseConcluded, "NOASSERTION")
+  expect_identical(doc$packages[[1]]$hasFiles, list("SPDXRef-File1"))
+  expect_identical(doc$files, list(list(
+    fileName = "./a.c", SPDXID = "SPDXRef-File1",
+    checksums = list(list(algorithm = "SHA1", checksumValue = strrep("0", 40))),
+    licenseConcluded = "NOASSERTION", copyrightText = "NOASSERTION"
+  )))
   expect_length(doc$relationships, 2L)
-  expect_identical(
-    attr(doc, "skipped_tags"),
-    c("PackageVerificationCode", "FileName", "SPDXID", "FileChecksum",
-      "LicenseConcluded", "FileCopyrightText")
-  )
+  expect_null(attr(doc, "skipped_tags"))
 })
 
 test_that("the partial note names the tags that were not checked", {
   skip_if_not_installed("jsonvalidate")
-  res <- schema_validate(tv_file(tv_with_file()), "spdx-tv")
+  txt <- paste0(
+    tv_with_file(),
+    "PackageFlavour: odd\nReviewer: Person: B\nReviewDate: 2024-01-02T00:00:00Z\n"
+  )
+  res <- schema_validate(tv_file(txt), "spdx-tv")
   expect_equal(res$status, "partial")
   expect_equal(res$findings$message, paste(
     "Tag-value has no schema, so the document was checked after conversion to the JSON model.",
-    "These tags were not checked: PackageVerificationCode, FileName, SPDXID,",
-    "FileChecksum, LicenseConcluded, FileCopyrightText."
+    "These tags were not checked: PackageFlavour, Reviewer, ReviewDate."
   ))
 })
 
@@ -180,7 +185,9 @@ test_that("snippet, licence, annotation and review sections close the package to
     )))
     expect_identical(doc$packages, list(list(name = "pkg", SPDXID = "SPDXRef-Package")), label = start)
     expect_null(doc$SPDXID)
-    expect_identical(attr(doc, "skipped_tags"), c(sub(":.*$", "", start), "SPDXID", "PackageComment"))
+    # Reviews are not read at all; the other sections read their first tag.
+    skipped <- c(if (startsWith(start, "Reviewer")) "Reviewer", "SPDXID", "PackageComment")
+    expect_identical(attr(doc, "skipped_tags"), skipped, label = start)
   }
 })
 
@@ -194,7 +201,11 @@ test_that("an external document reference closes the package but not the creatio
   )))
   expect_identical(doc$creationInfo, list(creators = list("Tool: x"), created = "2024-01-01T00:00:00Z"))
   expect_identical(doc$packages, list(list(name = "pkg")))
-  expect_identical(attr(doc, "skipped_tags"), c("ExternalDocumentRef", "PackageComment"))
+  expect_identical(
+    vapply(doc$externalDocumentRefs, `[[`, "", "externalDocumentId"),
+    c("DocumentRef-x", "DocumentRef-y")
+  )
+  expect_identical(attr(doc, "skipped_tags"), "PackageComment")
 })
 
 test_that("a file that starts with a UTF-8 byte-order mark reads", {

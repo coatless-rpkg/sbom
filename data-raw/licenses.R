@@ -1,9 +1,9 @@
-# Precomputes inst/extdata/licenses.{csv,dcf}: SPDX expressions from R's own licence analysis,
+# Precomputes inst/extdata/licenses.{csv,dcf}: SPDX expressions from R's own license analysis,
 # for every License value on CRAN and Bioconductor. Needs network; run from the package root.
 #
 # The rule is R Observatory's (_obs_sbom_spdx): an expression is kept only when every alternative maps
-# to SPDX, no alternative is `file LICENSE` alone, and no `+ file LICENSE` is attached to a licence
-# that is not a template (extensible in R's licence db).
+# to SPDX, no alternative is `file LICENSE` alone, and no `+ file LICENSE` is attached to a license
+# that is not a template (extensible in R's license db).
 
 analyze <- utils::getFromNamespace("analyze_license", "tools")
 license_db <- utils::getFromNamespace("R_license_db", "tools")()
@@ -56,6 +56,13 @@ tbl <- data.frame(
   spec = specs,
   spdx = vapply(specs, spdx_for, character(1), USE.NAMES = FALSE)
 )
+# SPDX ids that the SPDX License List has deprecated, mapped to their replacements. R's own
+# license database still returns the old id. Applied to every id in every expression.
+spdx_remap <- c("BSD-2-Clause-FreeBSD" = "BSD-2-Clause-Views")
+for (old in names(spdx_remap)) {
+  pattern <- paste0("(?<![A-Za-z0-9.-])", gsub(".", "[.]", old, fixed = TRUE), "(?![A-Za-z0-9.+-])")
+  tbl$spdx <- gsub(pattern, spdx_remap[[old]], tbl$spdx, perl = TRUE)
+}
 utils::write.csv(tbl, "inst/extdata/licenses.csv", row.names = FALSE, na = "", fileEncoding = "UTF-8")
 
 writeLines(c(

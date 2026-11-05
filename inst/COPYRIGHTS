@@ -9,8 +9,11 @@ data-raw/schemas.R reproduces them.
 inst/schemas/cyclonedx/*   (all files in this directory)
   Source:    https://github.com/CycloneDX/specification, tag 1.7.2, schema/
   Copyright: The OWASP Foundation and CycloneDX contributors
-  Licence:   Apache License 2.0 (SPDX: Apache-2.0)
+  Licence:   Apache License 2.0 (SPDX: Apache-2.0),
+             https://www.apache.org/licenses/LICENSE-2.0
              Upstream file LICENSE; the schemas also state this in their headers.
+             The repository has no NOTICE file (checked at tag 1.7.2 and on
+             master at commit 6470e34ef83f915868ece48934cff52e10c9eb49).
   Includes:  bom-1.{4,5,6,7}.schema.json, bom-1.{4,5,6,7}.xsd, spdx.schema.json,
              spdx.xsd, jsf-0.82.schema.json, cryptography-defs.schema.json
   Changes:   bom-1.{4,5,6,7}.xsd have the import
@@ -19,20 +22,28 @@ inst/schemas/cyclonedx/*   (all files in this directory)
              No other file is changed.
 
 inst/schemas/spdx/spdx-2.3.schema.json
-  Source:    https://github.com/spdx/spdx-spec, tag v2.3, schemas/spdx-schema.json
-  Copyright: SPDX Workgroup, a Linux Foundation Project
-  Licence:   Creative Commons Attribution 3.0 Unported (SPDX: CC-BY-3.0)
+  Title:     spdx-schema.json, the JSON schema of the SPDX 2.3 specification
+  Creator:   Linux Foundation and its Contributors (the SPDX project), as the
+             specification at that tag states: "Copyright (c) 2010-2022 Linux
+             Foundation and its Contributors."
+  Source:    https://github.com/spdx/spdx-spec/blob/v2.3/schemas/spdx-schema.json
+  Licence:   Creative Commons Attribution 3.0 Unported (SPDX: CC-BY-3.0),
+             https://creativecommons.org/licenses/by/3.0/
              Upstream file LICENSE at tag v2.3 (GitHub does not detect it
              automatically; the file text is the CC BY 3.0 legal code).
-  Changes:   None.
+  Changes:   None; the file is unmodified apart from its name.
 
 inst/schemas/spdx/spdx-2.2.schema.json
-  Source:    https://github.com/spdx/spdx-spec, tag v2.2.2, schemas/spdx-schema.json
-  Copyright: SPDX Workgroup, a Linux Foundation Project
-  Licence:   Creative Commons Attribution 3.0 Unported (SPDX: CC-BY-3.0)
+  Title:     spdx-schema.json, the JSON schema of the SPDX 2.2.2 specification
+  Creator:   Linux Foundation and its Contributors (the SPDX project), as the
+             specification at that tag states: "Copyright (c) 2010-2020 Linux
+             Foundation and its Contributors."
+  Source:    https://github.com/spdx/spdx-spec/blob/v2.2.2/schemas/spdx-schema.json
+  Licence:   Creative Commons Attribution 3.0 Unported (SPDX: CC-BY-3.0),
+             https://creativecommons.org/licenses/by/3.0/
              Upstream file LICENSE at tag v2.2.2 (GitHub does not detect it
              automatically; the file text is the CC BY 3.0 legal code).
-  Changes:   None.
+  Changes:   None; the file is unmodified apart from its name.
 
 inst/schemas/spdx/spdx-3.0.1.schema.json
   Source:    https://spdx.org/schema/3.0.1/spdx-json-schema.json, the SPDX 3.0.1
@@ -75,4 +86,97 @@ inst/schemas/swid/xml.xsd
   Licence:   W3C Software and Document License
              (SPDX: W3C-20150513), https://www.w3.org/Consortium/Legal/2015/copyright-software-and-document
              The file itself carries no licence header.
+  Changes:   None.
+
+inst/extdata/spdx-licenses.csv, inst/extdata/spdx-licenses.dcf
+  Source:    https://github.com/spdx/license-list-data, tag v3.29.0, json/licenses.json
+             and json/exceptions.json, generated from the SPDX License List XML at
+             https://github.com/spdx/license-list-XML. data-raw/spdx-licenses.R
+             reproduces the files.
+  Copyright: SPDX Workgroup, a Linux Foundation Project
+  Licence:   Neither repository ships a licence file for the list data, and neither
+             states one for it (checked at tag v3.29.0; the license-list-data README
+             defers to the license-list-XML repository, which has none either). The
+             only explicit statement found is the SPDX-License-Identifier: CC0-1.0
+             in the license-list-XML schema, schema/ListedLicense.xsd. Only the
+             short identifiers and each identifier's deprecation flag are kept: no
+             licence text, name or URL. They are listed here with attribution.
+  Changes:   Reduced to the columns id, kind (license or exception) and deprecated,
+             sorted by id.
+
+Test fixtures
+-------------
+
+The files under tests/testthat/fixtures/third-party/ are SBOMs from the
+format specifications, copied unmodified. That directory's SOURCES.md lists
+every file with its exact source, commit and SHA-256 checksum.
+swid/hand.swidtag in that directory was written for this package and is not
+third-party.
+
+tests/testthat/fixtures/third-party/spdx-2.3/*
+  Title:     The SPDX 2.3 specification's example documents:
+             SPDXJSONExample-v2.3.spdx.json, SPDXTagExample-v2.3.spdx,
+             SPDXXMLExample-v2.3.spdx.xml, SPDXYAMLExample-2.3.spdx.yaml
+  Creator:   Linux Foundation and its Contributors (the SPDX project), as the
+             specification on that branch states: "Copyright (c) 2010-2026
+             Linux Foundation and its Contributors."
+  Source:    https://github.com/spdx/spdx-spec/tree/support/2.3/examples
+             (commit 6f2cb47d13db19b12c23885573b22ef32ec1ada5)
+  Licence:   Creative Commons Attribution 3.0 Unported (SPDX: CC-BY-3.0),
+             https://creativecommons.org/licenses/by/3.0/
+             Upstream file LICENSE on that branch.
+  Changes:   None; each file is unmodified.
+
+tests/testthat/fixtures/third-party/spdx-2.2/*
+  Title:     The SPDX 2.2 specification's example documents:
+             SPDXJSONExample-v2.2.spdx.json, SPDXTagExample-v2.2.spdx,
+             SPDXXMLExample-v2.2.spdx.xml, SPDXYAMLExample-2.2.spdx.yaml
+  Creator:   Linux Foundation and its Contributors (the SPDX project), as the
+             specification on that branch states: "Copyright (c) 2010 - 2022
+             Linux Foundation and its Contributors."
+  Source:    https://github.com/spdx/spdx-spec/tree/development/v2.2.2/examples
+             (commit 4694d1fe63ecd269262c26bd4370d4e11e6f7f8f)
+  Licence:   Creative Commons Attribution 3.0 Unported (SPDX: CC-BY-3.0),
+             https://creativecommons.org/licenses/by/3.0/
+             Upstream file LICENSE on that branch.
+  Changes:   None; each file is unmodified.
+
+tests/testthat/fixtures/third-party/spdx-3/package_sbom.json
+  Title:     package_sbom.json, the JSON-LD example of the SPDX 3.0.1
+             specification
+  Creator:   The Linux Foundation and its Contributors, as the specification
+             on that branch states: "SPDX 3.0 Copyright (c) 2010-2026, The Linux
+             Foundation and its Contributors, including SPDX Model
+             contributions from OMG and its Contributors."
+  Source:    https://github.com/spdx/spdx-spec/blob/support/3.0/examples/jsonld/package_sbom.json
+             (commit 0232660029bc66f6e25b33c49379c03c87fdaaed)
+  Licence:   The upstream LICENSE (https://github.com/spdx/spdx-spec/blob/support/3.0/LICENSE)
+             says: "The SPDX Specification is provided under the Community
+             Specification License 1.0 (Community-Spec-1.0)", whose full text
+             it includes and which is listed at
+             https://spdx.org/licenses/Community-Spec-1.0.html; and that
+             "Pre-existing portions of the SPDX Specification from copyright
+             holders who have not subsequently contributed under the Community
+             Specification License 1.0 are provided under Creative Commons
+             Attribution 3.0 Unported (CC-BY-3.0)",
+             https://creativecommons.org/licenses/by/3.0/. Section 1.2 of
+             Community-Spec-1.0 asks for attribution by name, version and
+             source, which this entry gives.
+  Changes:   None; the file is unmodified.
+
+tests/testthat/fixtures/third-party/cyclonedx/*
+  Source:    https://github.com/CycloneDX/specification, branch master (commit
+             6470e34ef83f915868ece48934cff52e10c9eb49),
+             tools/src/test/resources/{1.3,1.4,1.5,1.6,1.7}/
+  Copyright: OWASP Foundation, as the upstream LICENSE states
+  Licence:   Apache License 2.0 (SPDX: Apache-2.0),
+             https://www.apache.org/licenses/LICENSE-2.0
+             Upstream file LICENSE. The repository has no NOTICE file (checked
+             at that commit), so there is no notice text to reproduce.
+  Includes:  invalid-component-type-1.6.json, valid-bom-1.3.json,
+             valid-bom-1.4.json, valid-bom-1.5.xml, valid-bom-1.6.json,
+             valid-bom-1.6.xml, valid-bom-1.7.json, and the .json and .xml of
+             valid-component-hashes-1.6, valid-dependency-1.6,
+             valid-external-reference-1.6, valid-license-expression-1.6,
+             valid-metadata-author-1.6 and valid-metadata-tool-1.6
   Changes:   None.

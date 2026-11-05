@@ -45,6 +45,8 @@ test_that("the shipped table agrees with R's own analysis", {
   plain <- tbl[!grepl("file LICEN[CS]E", tbl$spec), ]
   for (i in seq_len(nrow(plain))) {
     r <- analyze(plain$spec[i])$spdx
+    # The table replaces SPDX ids that the License List has deprecated (data-raw/licenses.R).
+    if (is.character(r) && identical(r, "BSD-2-Clause-FreeBSD")) r <- "BSD-2-Clause-Views"
     has_r <- is.character(r) && length(r) == 1L && !is.na(r) && nzchar(r)
     if (!is.na(plain$spdx[i])) {
       expect_identical(plain$spdx[i], r, label = plain$spec[i])
@@ -53,4 +55,8 @@ test_that("the shipped table agrees with R's own analysis", {
       expect_true(is.na(plain$spdx[i]), label = plain$spec[i])
     }
   }
+})
+
+test_that("R's FreeBSD licence maps to the current SPDX id, not the deprecated one", {
+  expect_equal(license_spdx("FreeBSD"), "BSD-2-Clause-Views")
 })

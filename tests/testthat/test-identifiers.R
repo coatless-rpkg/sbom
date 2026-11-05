@@ -39,3 +39,15 @@ test_that("unknown names and namespaces give NA, not a bogus identifier", {
   )
   expect_error(purl("x", "1", source = "github", namespace = NULL), "namespace")
 })
+
+test_that("purl() recycles only length-1 or common-length arguments", {
+  expect_error(purl(c("a", "b", "c"), c("1", "2")), "length 1 or")
+  expect_error(purl(c("a", "b"), "1", source = "github", namespace = c("x", "y", "z")), "name")
+  expect_equal(purl(c("a", "b"), "1"), c("pkg:cran/a@1", "pkg:cran/b@1"))
+})
+
+test_that("an empty version is unknown, like NA", {
+  expect_equal(purl("x", ""), "pkg:cran/x")
+  expect_equal(purl("x", NA), "pkg:cran/x")
+  expect_equal(purl(c("a", "b"), c("", "2")), c("pkg:cran/a", "pkg:cran/b@2"))
+})

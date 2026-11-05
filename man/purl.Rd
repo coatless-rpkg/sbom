@@ -18,8 +18,8 @@ cran_doi(pkg)
 \arguments{
 \item{name}{Package names, as a character vector.}
 
-\item{version}{Package versions, as a character vector. \code{NA} omits the
-version.}
+\item{version}{Package versions, as a character vector. \code{NA} or \code{""} omits
+the version.}
 
 \item{source}{Where the package comes from: \code{"cran"}, \code{"github"},
 \code{"gitlab"} or \code{"bitbucket"}.}
@@ -36,7 +36,8 @@ server of one's own.}
 }
 \value{
 A character vector. \code{purl()} recycles \code{name}, \code{version},
-\code{namespace} and \code{repository_url} to a common length.
+\code{namespace} and \code{repository_url} to a common length: each must have
+length 1 or the length of the longest, otherwise it is an error.
 }
 \description{
 \code{purl()} builds a Package URL (purl) for an R package. \code{cran_doi()} builds
@@ -46,6 +47,7 @@ the DataCite DOI that CRAN assigns to each package.
 Unknown values give \code{NA_character_} for that element. A package name that
 is \code{NA} or \code{""}, or a namespace that is \code{NA} or \code{""}, is unknown.
 Other elements of the vector are unaffected.
+A version that is \code{NA} or \code{""} is left out of the purl.
 }
 \examples{
 purl("dplyr", "1.2.1")

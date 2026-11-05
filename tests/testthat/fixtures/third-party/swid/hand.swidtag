@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Written by hand for the sbom package's tests: a minimal ISO/IEC 19770-2:2015
+     tag with a tag creator, a software creator and two required components. -->
+<SoftwareIdentity xmlns="http://standards.iso.org/iso/19770/-2/2015/schema.xsd"
+    xml:lang="en-US" name="Example Analyzer" version="2.1.0"
+    versionScheme="multipartnumeric" tagId="example.com-example-analyzer-2.1.0"
+    tagVersion="1">
+  <Entity name="Example Tag Authority" regid="tags.example.org" role="tagCreator"/>
+  <Entity name="Example Software Inc." regid="example.com" role="softwareCreator"/>
+  <Meta product="Example Analyzer" colloquialVersion="2" summary="A tool that analyzes example data."/>
+  <Link rel="requires" href="swid:example.com-example-runtime-3.0.0"/>
+  <Link rel="requires" href="swid:example.org-example-parser-1.4.2"/>
+</SoftwareIdentity>

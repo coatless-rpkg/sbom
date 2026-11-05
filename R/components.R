@@ -86,6 +86,21 @@ github_repo_url <- function(text) {
   sub("\\.git$", "", m)
 }
 
+# A git remote's URL as a vcs reference: only a URL with a scheme other than
+# file://, without credentials, query or fragment. An scp-style remote,
+# user@host:path, becomes ssh://host/path. A local or relative path, or a
+# file:// URL, would leak a machine path, so it gives NA.
+remote_vcs_url <- function(url) {
+  scp <- regmatches(url, regexec("^[^/@[:space:]]+@([^/:[:space:]]+):([^[:space:]]+)$", url))[[1]]
+  if (!is_url(url) && length(scp) == 3L) {
+    url <- paste0("ssh://", scp[2], "/", sub("^/+", "", scp[3]))
+  }
+  if (!is_url(url) || startsWith(tolower(url), "file://")) {
+    return(NA_character_)
+  }
+  strip_url(url)
+}
+
 # The host of a GitHub Enterprise server named by RemoteHost, or NA for
 # github.com. remotes records the API address, such as
 # https://github.acme.com/api/v3, so the scheme and API path are dropped.
@@ -182,7 +197,7 @@ package_ecosystem <- function(desc) {
     return(result("bitbucket", id, "Bitbucket", url, url))
   }
   if (remote_type %in% c("git", "git2r", "xgit")) {
-    return(result("git", NA_character_, vcs_url = f("RemoteUrl")))
+    return(result("git", NA_character_, vcs_url = remote_vcs_url(f("RemoteUrl"))))
   }
   if (!is.na(repository)) {
     remote <- f("RemoteRepos")

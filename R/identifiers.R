@@ -6,10 +6,11 @@
 #' Unknown values give `NA_character_` for that element. A package name that
 #' is `NA` or `""`, or a namespace that is `NA` or `""`, is unknown.
 #' Other elements of the vector are unaffected.
+#' A version that is `NA` or `""` is left out of the purl.
 #'
 #' @param name Package names, as a character vector.
-#' @param version Package versions, as a character vector. `NA` omits the
-#'   version.
+#' @param version Package versions, as a character vector. `NA` or `""` omits
+#'   the version.
 #' @param source Where the package comes from: `"cran"`, `"github"`,
 #'   `"gitlab"` or `"bitbucket"`.
 #' @param namespace Owner of the source repository. Required when `source` is
@@ -21,7 +22,8 @@
 #' @param pkg Package names, as a character vector.
 #'
 #' @return A character vector. `purl()` recycles `name`, `version`,
-#'   `namespace` and `repository_url` to a common length.
+#'   `namespace` and `repository_url` to a common length: each must have
+#'   length 1 or the length of the longest, otherwise it is an error.
 #' @export
 #' @examples
 #' purl("dplyr", "1.2.1")
@@ -37,7 +39,17 @@ purl <- function(name, version = NA, source = "cran", namespace = NULL,
     return(character(0))
   }
 
-  n <- max(length(name), length(version), length(namespace), length(repository_url))
+  args <- list(name = name, version = version, namespace = namespace,
+               repository_url = repository_url)
+  n <- max(lengths(args))
+  for (arg in names(args)) {
+    len <- length(args[[arg]])
+    if (len > 1L && len != n) {
+      cli::cli_abort(
+        "{.arg {arg}} must have length 1 or the same length as the longest argument."
+      )
+    }
+  }
   name <- rep_len(name, n)
   version <- rep_len(version, n)
 
@@ -49,7 +61,7 @@ purl <- function(name, version = NA, source = "cran", namespace = NULL,
     base <- paste0("pkg:cran/", name)
     unknown <- is_unknown(name)
   }
-  at <- ifelse(is.na(version), "", paste0("@", version))
+  at <- ifelse(is_unknown(version), "", paste0("@", version))
   query <- if (length(repository_url) == 0L) {
     rep("", n)
   } else {

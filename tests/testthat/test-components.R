@@ -221,3 +221,36 @@ test_that("GitLab, Bitbucket and git sources are recognised in an installed DESC
     expect_equal(g$issues$message, "p 1.0 was installed from a git repository, so it has no package URL.")
   }
 })
+
+test_that("a git remote's URL is kept only as a URL, without credentials", {
+  vcs <- function(url) {
+    desc <- c(Package = "p", Version = "1.0", RemoteType = "git", RemoteUrl = url)
+    package_component(desc, "observed", "library")$component$vcs_url
+  }
+  expect_identical(vcs("/Users/me/my repo"), NA_character_)
+  expect_identical(vcs("../relative/repo"), NA_character_)
+  expect_identical(vcs("file:///Users/me/repo.git"), NA_character_)
+  expect_identical(vcs("FILE:///Users/me/repo.git"), NA_character_)
+  expect_identical(vcs("https://user:tok@git.example.org/x/y.git?ref=1#frag"), "https://git.example.org/x/y.git")
+  expect_identical(vcs("git://host/x"), "git://host/x")
+  # scp-style remotes become ssh:// URLs, without the user.
+  expect_identical(vcs("git@github.com:owner/repo.git"), "ssh://github.com/owner/repo.git")
+  expect_identical(vcs("git@host.example:/srv/repo.git"), "ssh://host.example/srv/repo.git")
+})
+
+test_that("a local git remote's path enters no document", {
+  lib <- local_fake_lib(list(gitpkg = c(
+    Version = "1.0", License = "MIT", Maintainer = "A B <a@b.org>",
+    RemoteType = "git", RemoteUrl = "/Users/me/my repo"
+  )))
+  x <- sbom_installed("gitpkg", lib = lib)
+  for (f in sbom_formats()$format) {
+    tf <- withr::local_tempfile(fileext = sbom_formats()$extension[sbom_formats()$format == f])
+    write_sbom(x, tf, format = f)
+    expect_false(grepl("/Users/me", readChar(tf, file.size(tf), useBytes = TRUE), fixed = TRUE), label = f)
+  }
+  skip_if_not_installed("jsonvalidate")
+  tf <- withr::local_tempfile(fileext = ".cdx.json")
+  write_sbom(x, tf, format = "cyclonedx-json")
+  expect_identical(schema_validate(tf, "cyclonedx-json")$status, "pass")
+})
