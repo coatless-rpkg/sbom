@@ -6,7 +6,7 @@ spdx_prefixes <- c(
   cran = "cran", bioconductor = "bioc", github = "github", gitlab = "gitlab",
   bitbucket = "bitbucket", git = "git", repository = "repository",
   local = "local", unknown = "unknown", file = "file", npm = "npm",
-  system = "system", deb = "deb", rpm = "rpm"
+  system = "system", deb = "deb", rpm = "rpm", nix = "nix"
 )
 
 
@@ -65,6 +65,24 @@ spdx_system_requirements <- function(row) {
   }
 }
 
+# What a Nix file says about a package it fetches (its description): the
+# source URL, revision and hash. NULL for any other component.
+spdx_nix_info <- function(row) {
+  if (spdx_is_set(row$description) && identical(row$source_input, "default.nix") &&
+    !row$ecosystem %in% system_ecosystems && !isTRUE(row$is_root)) {
+    row$description
+  }
+}
+
+# SPDX 2's sourceInfo: the source repository, then what Nix says.
+spdx_source_info <- function(row) {
+  parts <- c(
+    if (spdx_is_set(row$vcs_url)) paste0("Source repository ", row$vcs_url),
+    spdx_nix_info(row)
+  )
+  if (length(parts) > 0L) paste(parts, collapse = if (length(parts) > 1L) ". " else "")
+}
+
 spdx_package <- function(row, id, version = "2.3") {
   is_r <- identical(row$ecosystem, "r")
   is_base <- identical(row$parent_ref, "R")
@@ -102,9 +120,8 @@ spdx_package <- function(row, id, version = "2.3") {
     }))
   }
   if (spdx_is_set(row$homepage)) p$homepage <- row$homepage
-  if (spdx_is_set(row$vcs_url)) {
-    p$sourceInfo <- paste0("Source repository ", row$vcs_url)
-  }
+  info <- spdx_source_info(row)
+  if (!is.null(info)) p$sourceInfo <- info
   p$licenseConcluded <- "NOASSERTION"
   p$licenseDeclared <- if (spdx_is_set(row$license_spdx)) {
     row$license_spdx

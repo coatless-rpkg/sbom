@@ -27,3 +27,27 @@ local_mocked_bindings(
   sys_ui_dependencies = function(dir, layout, ...) structure(list(), reason = "not run in tests"),
   .package = "sbom", .env = testthat::teardown_env()
 )
+
+# Nor is Nix ever found: no test sees nix-instantiate or nix-store.
+sys_nix_available_real <- sys_nix_available
+sys_nix_instantiate_real <- sys_nix_instantiate
+sys_nix_query_real <- sys_nix_query
+nix_store_exists_real <- nix_store_exists
+nix_store_description_real <- nix_store_description
+local_mocked_bindings(
+  sys_nix_available = function() FALSE,
+  sys_nix_instantiate = function(file) NULL,
+  sys_nix_query = function(args) NULL,
+  nix_store_exists = function(paths) rep(FALSE, length(paths)),
+  nix_store_description = function(out, pkg) NULL,
+  .package = "sbom", .env = testthat::teardown_env()
+)
+
+# Nor does any test reach the network: the one wrapper that can read a CRAN
+# PACKAGES file from a URL fails for every test. A test that wants a snapshot
+# mocks read_packages_file() itself.
+read_packages_file_real <- read_packages_file
+local_mocked_bindings(
+  read_packages_file = function(location, ...) structure(list(), reason = "not run in tests"),
+  .package = "sbom", .env = testthat::teardown_env()
+)

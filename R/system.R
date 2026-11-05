@@ -312,9 +312,11 @@ ui_child_script <- function() {
 # sees the libraries `lib`. A data frame of name, version, package (NA when
 # not known) and src ("file" or "href"). When it cannot say, it returns an
 # empty list with a `reason` attribute, a short phrase that says why not (R
-# cannot put an attribute on NULL). The process gets a fresh R session
-# (--vanilla) and no environment but R_LIBS, and is stopped after `timeout`
-# seconds.
+# cannot put an attribute on NULL). The process starts R with --vanilla and
+# inherits this process's environment variables, except that R_LIBS is set
+# to `lib`; R adds the user and site libraries after it. For an app.R app the
+# whole file runs; global.R and the app's R/ folder are not sourced. It is
+# stopped after `timeout` seconds.
 sys_ui_dependencies <- function(dir, layout, lib = .libPaths(), timeout = 60) {
   fail <- function(reason) structure(list(), reason = reason)
   rscript <- file.path(R.home("bin"), "Rscript")
@@ -383,4 +385,88 @@ read_ui_dcf <- function(path) {
     if (col %in% colnames(dcf)) enc2utf8_bytes(unname(dcf[, col])) else rep(NA_character_, nrow(dcf))
   })
   data.frame(stats::setNames(out, cols), stringsAsFactors = FALSE)
+}
+
+# Whether Nix is installed: both nix-instantiate and nix-store are on the
+# path. It runs no command.
+sys_nix_available <- function() {
+  all(nzchar(Sys.which(c("nix-instantiate", "nix-store"))))
+}
+
+# The derivation `nix-instantiate file` makes, as its store path: the last
+# line it prints. NULL when Nix is missing, or the evaluation fails or takes
+# longer than 600 seconds (the first one may download nixpkgs).
+sys_nix_instantiate <- function(file) {
+  lines <- sys_run("nix-instantiate", shQuote(file), timeout = 600)
+  lines <- lines[nzchar(lines)]
+  if (length(lines) == 0L) {
+    return(NULL)
+  }
+  lines[[length(lines)]]
+}
+
+# The lines of `nix-store --query <args>`, such as --references, --outputs,
+# --requisites or --graph and the store paths they apply to. NULL when Nix is
+# missing or the query fails or takes longer than 600 seconds.
+sys_nix_query <- function(args) {
+  sys_run("nix-store", c("--query", shQuote(args)), timeout = 600)
+}
+
+# Whether each store path exists: whether an output has been built.
+nix_store_exists <- function(paths) {
+  file.exists(paths)
+}
+
+# The DESCRIPTION of R package `pkg` in the store output `out`, as
+# read_description() gives it, or NULL when it cannot be read.
+nix_store_description <- function(out, pkg) {
+  file <- file.path(out, "library", pkg, "DESCRIPTION")
+  if (!file.exists(file)) {
+    return(NULL)
+  }
+  tryCatch(read_description(file), error = function(e) NULL)
+}
+
+# A CRAN PACKAGES file as a data frame with the columns Package, Version,
+# Depends, Imports and LinkingTo (NA where the file lacks a field), from a
+# local path or a URL. This is the only place sbom uses the network, and only
+# when the user passes a snapshot. On failure it returns an empty list with
+# the attribute `reason`, a fixed phrase that never holds a path.
+read_packages_file <- function(location, timeout = 60) {
+  fields <- c("Package", "Version", "Depends", "Imports", "LinkingTo")
+  fail <- function(reason) structure(list(), reason = reason)
+  remote <- grepl("^(https?|ftp|file)://", location)
+  dcf <- tryCatch(
+    {
+      if (remote) {
+        old <- options(timeout = timeout)
+        on.exit(options(old), add = TRUE)
+        con <- url(location)
+        on.exit(try(close(con), silent = TRUE), add = TRUE)
+        read.dcf(con, fields = fields)
+      } else {
+        read.dcf(location, fields = fields)
+      }
+    },
+    warning = function(w) {
+      m <- regmatches(conditionMessage(w), regexpr("HTTP status was '[0-9]{3}", conditionMessage(w)))
+      structure(list(), status = sub("^HTTP status was '", "", m))
+    },
+    error = function(e) structure(list(), status = character())
+  )
+  if (!is.matrix(dcf)) {
+    if (!remote) {
+      return(fail("the snapshot file could not be read"))
+    }
+    code <- attr(dcf, "status")
+    return(fail(paste0(
+      "the snapshot could not be downloaded",
+      if (length(code) == 1L) paste0(", HTTP status ", code)
+    )))
+  }
+  if (nrow(dcf) == 0L || all(is.na(dcf[, "Package"]))) {
+    return(fail("the snapshot lists no packages"))
+  }
+  out <- lapply(fields, function(f) enc2utf8_bytes(unname(dcf[, f])))
+  data.frame(stats::setNames(out, fields), stringsAsFactors = FALSE)
 }

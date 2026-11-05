@@ -1,6 +1,6 @@
 shiny_fixture <- function(...) test_path("fixtures", "shiny", ...)
 
-test_that("each Shiny layout is recognised, and other folders are not", {
+test_that("each Shiny layout is recognized, and other folders are not", {
   f <- function(x) shiny_layout(shiny_fixture(x))
   expect_equal(f("app-r"), "app.R")
   expect_equal(f("ui-server"), "ui-server")
@@ -78,14 +78,27 @@ test_that("replace_root() rewrites every ref that is, or is under, the old root"
   expect_false(any(y$issues$ref == old, na.rm = TRUE))
   expect_equal(sum(y$components$is_root), 1L)
   expect_equal(nrow(y$components), nrow(x$components))
-  # The old root's licence is kept; its package URL is not.
+  # The old root's license is kept; its package URL is not.
   root <- y$components[y$components$is_root, ]
   expect_equal(root$license_spdx, "MIT")
   expect_true(is.na(root$purl))
 })
 
+test_that("no fixture holds a hidden file, which R CMD check would note", {
+  hidden <- list.files(
+    test_path("fixtures"), all.files = TRUE, recursive = TRUE, include.dirs = TRUE,
+    pattern = "(^|/)[.][^/]+$"
+  )
+  expect_identical(hidden, character())
+})
+
 test_that("rhino's npm files are an issue, and a folder that is not an app is an error", {
-  x <- sbom_shiny(shiny_fixture("rhino"), system = FALSE)
+  dir <- local_fixture_copy(file.path("fixtures", "shiny", "rhino"))
+  expect_false("npm-not-covered" %in% sbom_issues(sbom_shiny(dir, system = FALSE))$code)
+  dir.create(file.path(dir, ".rhino"))
+  write_text('{"name": "rhinoapp", "dependencies": {}}\n', file.path(dir, ".rhino", "package.json"))
+  expect_equal(shiny_layout(dir), "rhino")
+  x <- sbom_shiny(dir, system = FALSE)
   issues <- sbom_issues(x)
   expect_equal(sum(issues$code == "npm-not-covered"), 1L)
   expect_equal(
@@ -340,4 +353,81 @@ test_that("two evaluated dependencies with one ref give one component", {
   expect_equal(sum(comps$ref == ref), 1L)
   expect_false(any(duplicated(comps$ref)))
   expect_false(any(duplicated(x$relationships[c("from", "to", "field")])))
+})
+
+test_that("a golem root keeps its DESCRIPTION's license and maintainer when a lockfile builds the SBOM", {
+  dir <- file.path(withr::local_tempdir(), "golemapp")
+  dir.create(dir)
+  file.copy(list.files(shiny_fixture("golem"), full.names = TRUE), dir, recursive = TRUE)
+  desc <- paste(readLines(file.path(dir, "DESCRIPTION"), warn = FALSE), collapse = "\n")
+  write_text(paste0(desc, "\nMaintainer: Ann App <ann@example.org>\n"), file.path(dir, "DESCRIPTION"))
+  lock <- list(
+    R = list(Version = "4.4.1", Repositories = list(list(Name = "CRAN", URL = "https://cloud.r-project.org"))),
+    Packages = list(
+      shiny = list(Package = "shiny", Version = "1.8.0", Source = "Repository", Repository = "CRAN"),
+      golem = list(Package = "golem", Version = "0.4.1", Source = "Repository", Repository = "CRAN")
+    )
+  )
+  write_text(as.character(jsonlite::toJSON(lock, auto_unbox = TRUE)), file.path(dir, "renv.lock"))
+  x <- sbom(dir, system = FALSE, timestamp = 0, lib = character())
+  expect_equal(x$metadata$inputs$kind[[1L]], "renv.lock")
+  root <- sbom_components(x)[sbom_components(x)$is_root, ]
+  expect_equal(root$ref, "project/golemapp")
+  expect_equal(root$license_as_written, "MIT + file LICENSE")
+  expect_equal(root$license_spdx, "MIT")
+  expect_equal(root$maintainer, "Ann App")
+  # The same root from its DESCRIPTION.
+  file.remove(file.path(dir, "renv.lock"))
+  y <- sbom(dir, system = FALSE, timestamp = 0, lib = character())
+  root_y <- sbom_components(y)[sbom_components(y)$is_root, ]
+  expect_equal(root_y[c("license_spdx", "maintainer")], root[c("license_spdx", "maintainer")], ignore_attr = TRUE)
+})
+
+test_that("evaluated dependencies whose text sbom does not accept are left out and counted", {
+  local_mocked_bindings(sys_ui_dependencies = function(dir, layout, ...) data.frame(
+    name = c("jquery", "bad name", "x<script>", "okname", "", "pkgdep"),
+    version = c("3.7.1", "1.0", "1.0", "1.0 beta", "1.0", "2.0"),
+    package = c("shiny", NA, NA, NA, NA, "not a pkg!"),
+    src = "file"
+  ))
+  x <- sbom_shiny(shiny_fixture("app-r"), evaluate_ui = TRUE, system = FALSE)
+  comps <- sbom_components(x)
+  shiny_ref <- comps$ref[comps$name == "shiny" & !grepl("#", comps$ref)]
+  expect_true(paste0(shiny_ref, "#js/jquery@3.7.1") %in% comps$ref)
+  expect_false(any(grepl("bad name|script|okname|pkgdep", comps$ref)))
+  iss <- sbom_issues(x)
+  hit <- iss[iss$code == "evaluate-ui-skipped", ]
+  expect_equal(nrow(hit), 1L)
+  expect_equal(hit$severity, "info")
+  expect_equal(hit$ref, x$metadata$root)
+  expect_equal(
+    hit$message,
+    "5 html dependencies from the evaluated UI have names or versions sbom does not accept, so they are not listed."
+  )
+  local_mocked_bindings(sys_ui_dependencies = function(dir, layout, ...) data.frame(
+    name = c("jquery", "a b"), version = c("3.7.1", NA), package = c("shiny", NA), src = "file"
+  ))
+  y <- sbom_shiny(shiny_fixture("app-r"), evaluate_ui = TRUE, system = FALSE)
+  expect_equal(
+    sbom_issues(y)$message[sbom_issues(y)$code == "evaluate-ui-skipped"],
+    "1 html dependency from the evaluated UI has a name or version sbom does not accept, so it is not listed."
+  )
+  # A dependency without a version or package is accepted.
+  local_mocked_bindings(sys_ui_dependencies = function(dir, layout, ...) data.frame(
+    name = "plain", version = NA_character_, package = "", src = "href"
+  ))
+  z <- sbom_shiny(shiny_fixture("app-r"), evaluate_ui = TRUE, system = FALSE)
+  expect_true("project/app-r#js/plain" %in% sbom_components(z)$ref)
+  expect_false("evaluate-ui-skipped" %in% sbom_issues(z)$code)
+})
+
+test_that("the sbom_shiny docs say when it uses the network and what evaluate_ui runs", {
+  rd_file <- test_path("..", "..", "man", "sbom_shiny.Rd")
+  skip_if_not(file.exists(rd_file), "The source man/ folder is not available.")
+  rd <- gsub("\\s+", " ", paste(readLines(rd_file), collapse = " "))
+  expect_false(grepl("and it makes no network requests.", rd, fixed = TRUE))
+  expect_match(rd, "nix-instantiate", fixed = TRUE)
+  expect_match(rd, "the whole of", fixed = TRUE)
+  expect_match(rd, "global.R", fixed = TRUE)
+  expect_match(rd, "user and site libraries", fixed = TRUE)
 })

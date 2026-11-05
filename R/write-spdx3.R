@@ -92,6 +92,8 @@ spdx3_package <- function(row, id, supplier, person) {
   if (spdx_is_set(row$download_location)) {
     p$software_downloadLocation <- row$download_location
   }
+  info <- spdx_nix_info(row)
+  if (!is.null(info)) p$software_sourceInfo <- info
   if (spdx_is_set(row$homepage)) p$software_homePage <- row$homepage
   if (spdx_is_set(row$purl)) p$software_packageUrl <- row$purl
   if (spdx_is_set(row$version)) p$software_packageVersion <- row$version

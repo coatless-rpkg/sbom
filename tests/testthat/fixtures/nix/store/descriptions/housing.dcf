@@ -1,0 +1,8 @@
+Package: housing
+Title: Get and Clean Housing Price Data for Luxembourg
+Version: 0.1.0
+Description: Functions to download and clean housing price data for Luxembourg.
+License: GPL (>= 3)
+Imports: dplyr
+Maintainer: A Maintainer <maintainer@example.org>
+Built: R 4.4.1; ; 2024-08-01 00:00:00 UTC; unix

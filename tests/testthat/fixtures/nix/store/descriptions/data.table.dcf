@@ -1,0 +1,12 @@
+Package: data.table
+Version: 1.15.4
+Title: Extension of `data.frame`
+Depends: R (>= 3.3.0)
+Imports: methods
+Description: Fast aggregation of large data, fast ordered joins, fast add/modify/delete of columns by group.
+License: MPL-2.0 | file LICENSE
+URL: https://r-datatable.com, https://Rdatatable.gitlab.io/data.table
+Maintainer: Tyson Barrett <t.barrett88@gmail.com>
+Repository: CRAN
+Date/Publication: 2024-03-26 13:20:02 UTC
+Built: R 4.4.1; x86_64-linux-gnu; 2024-08-01 00:00:00 UTC; unix

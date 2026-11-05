@@ -201,3 +201,18 @@ test_that("a manifest whose files are not an object says so in a full sentence",
   err <- expect_error(sbom_rsconnect(f), class = "rlang_error")
   expect_true("Its files entry is not an object." %in% cli::ansi_strip(err$body))
 })
+
+test_that("a constraint on a package whose description has no Version is kept and raises no issue", {
+  dir <- withr::local_tempdir()
+  write_text(paste0(
+    '{"version": 1, "metadata": {"appmode": "shiny"}, "packages": {',
+    '"a": {"Source": "CRAN", "description": {"Package": "a", "Version": "1.0", "Imports": "b (>= 1.0)"}},',
+    '"b": {"Source": "CRAN", "description": {"Package": "b"}}}, "files": {}}'
+  ), file.path(dir, "manifest.json"))
+  x <- sbom_rsconnect(file.path(dir, "manifest.json"))
+  rels <- sbom_dependencies(x)
+  comps <- sbom_components(x)
+  row <- rels[rels$from == comps$ref[comps$name == "a"] & rels$to == comps$ref[comps$name == "b"], ]
+  expect_equal(row$spec, "b (>= 1.0)")
+  expect_false(any(sbom_issues(x)$code == "constraint-unsatisfied"))
+})

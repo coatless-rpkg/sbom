@@ -684,6 +684,11 @@ test_that("ldd's not found lines are named in links-not-read, with no component"
     })
   iss <- sbom_issues(sbom_installed("a", lib = lib))
   expect_equal(sum(iss$code == "links-not-read" | iss$code == "links-not-checked"), 1L)
+  # The libraries ldd did not find are still named.
+  expect_equal(iss$message[iss$code == "links-not-checked"], paste0(
+    "The shared libraries linked by compiled packages were not checked, because sbom could not ",
+    "read them for any package, and ldd did not find libfoo.so.1, so it is not listed as a component."
+  ))
 })
 
 test_that("a declared minimum stays a minimum when the library is observed, and a required package raises the scope", {
@@ -698,7 +703,7 @@ test_that("a declared minimum stays a minimum when the library is observed, and 
   s <- sbom_components(x)
   s <- s[s$ref == "system/libssl", ]
   expect_equal(s$version_is, "minimum")
-  expect_false(identical(s$evidence, "observed"))
+  expect_equal(s$evidence, "declared")
   expect_match(s$description, "the version is the declared minimum, not an observed one", fixed = TRUE)
   expect_match(s$description, "library version 49.2.0", fixed = TRUE)
   expect_equal(s$scope, "required")

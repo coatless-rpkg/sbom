@@ -314,7 +314,8 @@ build_sbom <- function(root, lookup, root_desc, fields, root_suggests, lib,
   # Constraints on installed packages.
   checked <- edges[!is.na(edges$constraint) & edges$to %in% res$packages, , drop = FALSE]
   for (i in seq_len(nrow(checked))) {
-    have <- trimws(lookup$get(checked$to[[i]])[["Version"]])
+    record <- lookup$get(checked$to[[i]])
+    have <- if ("Version" %in% names(record)) trimws(record[["Version"]]) else NA_character_
     if (isFALSE(constraint_satisfied(have, checked$constraint[[i]]))) {
       issues <- add_issue(
         issues, ref_of[[checked$to[[i]]]], "version", "constraint-unsatisfied",

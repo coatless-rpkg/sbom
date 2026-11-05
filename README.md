@@ -30,9 +30,11 @@ document as a plain sentence, so the file states its own gaps.
 | `sbom_installed()` | The packages in an R library. |
 | `sbom_renv()` | The packages an `renv.lock` pins. |
 | `sbom_rsconnect()` | A content item described by a Posit Connect `manifest.json`. |
+| `sbom_shiny()` | A Shiny app folder: the app is the root, with the JavaScript and CSS it ships. |
+| `sbom_nix()` | A `default.nix` written by rix, read as text or from the Nix store. |
 
-`sbom()` prefers `renv.lock`, then `manifest.json`, then a package's
-`DESCRIPTION`, and falls back to scanning the R code in the folder. Every
+`sbom()` prefers `renv.lock`, then `manifest.json`, then `default.nix`, then a
+package's `DESCRIPTION`, and falls back to scanning the R code in the folder. Every
 source it reads is listed in the SBOM's inputs. Where sources disagree, the
 SBOM keeps the stronger source's answer, and `sbom_issues()` reports each
 package that one source lists and the other does not, and each package they
@@ -45,6 +47,74 @@ project's version is its git commit, read from the files in the nearest
 ``` r
 x <- sbom("path/to/project")
 sbom_issues(x)
+```
+
+## Shiny apps
+
+`sbom()` recognises a Shiny app folder and describes it with `sbom_shiny()`,
+which you can also call directly. The app is the root component, an
+application, and one SBOM covers it whatever sources the folder holds. Four
+layouts are recognised: `rhino` (a `rhino.yml`, static files in `app/static`),
+`golem` (a package `DESCRIPTION` with golem's structure, static files in
+`inst/app/www`), `app.R` and `ui.R` with `server.R` (static files in `www`).
+
+The R packages come from the strongest source in the folder: `renv.lock`, then
+a Posit Connect `manifest.json`, then `default.nix`, then `DESCRIPTION`, then a
+scan of the code. Every other source present cross-checks it, and each
+disagreement is an issue.
+
+The JavaScript and CSS libraries in the static folder are found by the header
+comments of their files, with the same bounds as for a package: no symlinks
+followed, a fixed depth and a fixed number of files. They are inferred
+components under the root, and nothing is invented for a file that is not a
+library.
+
+By default no code from the app runs. `evaluate_ui = TRUE` runs the app's code
+(the whole of `app.R`, or `ui.R`) in a separate R process, with a time limit,
+to find the HTML dependencies its UI holds, and records them as observed. The
+process inherits your environment variables and sees your user and site
+libraries as well as `lib`; `global.R` and the app's `R/` folder are not
+sourced. It needs htmltools, works for `app.R` and `ui.R` apps, and misses
+anything that `renderUI()` or other server code inserts later. If the UI cannot
+be evaluated, an issue says so and the static result stays. A rhino app's npm
+dependencies are not read, and an issue says so when the app has a
+`package.json` or `package-lock.json`, at its top or in `.rhino/`
+(`.rhino/package.json` and `.rhino/package-lock.json`).
+
+``` r
+x <- sbom_shiny("path/to/app")
+sbom_components(x)
+```
+
+## Nix
+
+`sbom_nix()` describes a `default.nix` written by the rix package, and `sbom()`
+reads one as a project source. It has two modes.
+
+Without Nix, or with `nix = FALSE`, it reads the file as text and runs
+nothing. It lists R at the version of rix's `r_ver`, each R package the file
+names, packages from git or from the CRAN archive, Nix system packages and TeX
+Live. The file does not say which version a nixpkgs snapshot holds, so CRAN
+packages have no version and an issue says so. A hand-written Nix file cannot
+be read this way: `sbom_nix()` stops, and `sbom()` records a warning and builds
+the SBOM from the next source.
+
+`snapshot = "ppm"`, or the path or URL of a CRAN `PACKAGES` file, looks the
+versions up in a CRAN snapshot, as inferred. A lookup uses the network only
+when `snapshot` is given.
+
+With Nix installed, `sbom_nix()` reads the environment from the Nix store: the
+runtime closure of the shell's inputs, with each version, the references
+between R packages and Nix libraries, and the system packages. Nix mode is
+experimental. It is built on the output formats documented for Nix 2.18 and
+later, and its tests use recorded examples of that output rather than a Nix
+installation. Nix mode runs nix-instantiate, which may download nixpkgs. Build
+the environment with `nix-shell` or `nix-build` first, or sbom reads the file
+instead and adds an issue.
+
+``` r
+x <- sbom_nix("path/to/default.nix", nix = FALSE)
+y <- sbom_nix("path/to/default.nix", nix = FALSE, snapshot = "ppm")
 ```
 
 ## Inspect

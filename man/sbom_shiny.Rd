@@ -9,16 +9,22 @@ sbom_shiny(path = ".", evaluate_ui = FALSE, ...)
 \arguments{
 \item{path}{A Shiny app folder.}
 
-\item{evaluate_ui}{Whether to run the app's UI code to find the html
-dependencies (JavaScript and CSS) it holds. \code{FALSE} by default.
+\item{evaluate_ui}{Whether to run the app's code to find the html
+dependencies (JavaScript and CSS) its UI holds. \code{FALSE} by default.
 
-\code{evaluate_ui = TRUE} runs the app's UI code in a separate R process,
-which sees the library given by \code{lib}, or else \code{\link[=.libPaths]{.libPaths()}}, and
-stops after 60 seconds. It works for \code{app.R} and \code{ui.R} apps, and needs
-the htmltools package in that library. What it finds are observed
-components, nested under the R package that ships each one. If the UI
-cannot be evaluated, an issue says so and the SBOM keeps the static
-result.
+\code{evaluate_ui = TRUE} runs the app's code in a separate R process, which
+is stopped after 60 seconds. It works for \code{app.R} and \code{ui.R} apps. For an
+\code{app.R} app the whole of \code{app.R} runs, not only its UI code; for a \code{ui.R}
+app, \code{ui.R} runs. \code{global.R} and the app's \verb{R/} folder are not sourced,
+so an app that relies on them fails, with the issue below. The process
+starts R with \code{--vanilla} and inherits this session's environment
+variables, except that \code{R_LIBS} is set to the library given by \code{lib}, or
+else \code{\link[=.libPaths]{.libPaths()}}; R also adds the user and site libraries after it. It
+needs the htmltools package in those libraries. What it finds are
+observed components, nested under the R package that ships each one. A
+dependency whose name, version or package sbom does not accept is left
+out, and one issue counts them. If the UI cannot be evaluated, an issue
+says so and the SBOM keeps the static result.
 
 It finds only the dependencies the UI holds when it is built, and
 misses any that \code{renderUI()} or other server code inserts later.}
@@ -33,7 +39,10 @@ An \verb{<sbom>} object. See \code{\link[=sbom_components]{sbom_components()}} t
 component, an application, the R packages it needs come from the strongest
 source in the folder, and the JavaScript and CSS libraries the app ships
 are recorded under it. It runs no code from the app unless you ask for
-\code{evaluate_ui = TRUE}, and it makes no network requests.
+\code{evaluate_ui = TRUE}, and it makes no network requests, except that, with
+Nix installed, a \code{default.nix} is read by running \code{nix-instantiate} (see
+\code{\link[=sbom_nix]{sbom_nix()}}), which may download nixpkgs, and that \code{snapshot}, passed
+through \code{...}, looks up a CRAN snapshot.
 }
 \details{
 The layouts it recognises, checked in this order:
@@ -42,18 +51,20 @@ The layouts it recognises, checked in this order:
 \code{app/static}.
 \item \code{golem}: a \code{DESCRIPTION} with a \code{Package} field, and either
 \code{inst/golem-config.yml} or both \code{R/app_ui.R} and \code{R/app_server.R}.
-The root is the app, named and versioned by its \code{DESCRIPTION}. Its
-static files are in \code{inst/app/www}.
+The root is the app, named and versioned by its \code{DESCRIPTION}, which
+also gives its licence and maintainer whatever source the packages come
+from. Its static files are in \code{inst/app/www}.
 \item \code{app.R}: the folder has an \code{app.R}. Its static files are in \code{www}.
 \item \code{ui-server}: the folder has both \code{ui.R} and \code{server.R}. Its static
 files are in \code{www}.
 }
 
 The R packages come from the strongest source, as for \code{\link[=sbom]{sbom()}}: \code{renv.lock},
-then a Posit Connect \code{manifest.json}, then a package \code{DESCRIPTION} (a golem
-app's declared Imports are stronger than a code scan), then a scan of the
-code. Every other source present cross-checks it. When the folder holds a
-Posit Connect manifest, a note says the app was deployed there.
+then a Posit Connect \code{manifest.json}, then \code{default.nix}, then a package
+\code{DESCRIPTION} (a golem app's declared Imports are stronger than a code
+scan), then a scan of the code. Every other source present cross-checks
+it. When the folder holds a Posit Connect manifest, a note says the app
+was deployed there.
 
 The libraries in the static folder are found by the header comments of
 their files, as for the JavaScript in a package, with the same bounds: six

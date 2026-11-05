@@ -10,7 +10,8 @@ sbom(path = ".", ...)
 \item{path}{A project folder.}
 
 \item{...}{Named arguments for the reader that \code{sbom()} picks: any
-argument of \code{\link[=sbom_renv]{sbom_renv()}}, \code{\link[=sbom_rsconnect]{sbom_rsconnect()}} or \code{\link[=sbom_package]{sbom_package()}} other
+argument of \code{\link[=sbom_renv]{sbom_renv()}}, \code{\link[=sbom_rsconnect]{sbom_rsconnect()}}, \code{\link[=sbom_nix]{sbom_nix()}} (such as
+\code{nix} and \code{snapshot}) or \code{\link[=sbom_package]{sbom_package()}} other
 than the file or folder it reads, such as \code{library}, \code{lib},
 \code{dependencies}, \code{r_version}, \code{author} or \code{overrides}. The code scan
 takes \code{lib}, \code{author}, \code{organization}, \code{regid}, \code{timestamp},
@@ -27,7 +28,10 @@ An \verb{<sbom>} object. See \code{\link[=sbom_components]{sbom_components()}} t
 \description{
 \code{sbom()} looks at what a folder holds, builds the SBOM from the strongest
 source it finds, and reads every other source to check it. It runs no code
-from the project and makes no network requests.
+from the project and makes no network requests, except that, with Nix
+installed, a \code{default.nix} is read by running \code{nix-instantiate} (see
+\code{\link[=sbom_nix]{sbom_nix()}}), which may download nixpkgs, and that \code{snapshot} looks up a
+CRAN snapshot.
 }
 \details{
 The sources, from strongest to weakest:
@@ -36,6 +40,12 @@ The sources, from strongest to weakest:
 \item \code{manifest.json}, read by \code{\link[=sbom_rsconnect]{sbom_rsconnect()}}, when it is a Posit Connect
 manifest: one with \code{version} and \code{packages}, whose packages and files
 are objects.
+\item \code{default.nix}, read by \code{\link[=sbom_nix]{sbom_nix()}}. A file that rix wrote lists the
+packages it names, without versions, unless \code{snapshot} is given or Nix
+is installed and the environment is built: then it is read from the Nix
+store, with versions. With Nix installed but the environment not built,
+the file itself is read, with an issue. A hand-written file can be read
+only with Nix.
 \item \code{DESCRIPTION}, read by \code{\link[=sbom_package]{sbom_package()}}, when it has a \code{Package} field.
 \item The R code itself, scanned with \code{\link[renv:dependencies]{renv::dependencies()}}. Each package
 it uses is looked up in \code{lib} and listed at the version installed
@@ -58,13 +68,24 @@ The strongest source present makes the SBOM. Every other source present,
 and the code scan when the SBOM does not already come from it, are read
 to cross-check it, and their disagreements become issues: a package that
 one source lists and the other does not, or that they list at different
-versions. A \code{DESCRIPTION} and the code declare no versions, so they report
-only the packages they use that the SBOM does not list. A \code{DESCRIPTION}
+versions. A \code{DESCRIPTION}, the code, and a \code{default.nix} read without Nix
+or a snapshot declare no versions, so they report only the packages they
+use that the SBOM does not list. A \code{DESCRIPTION}
 without a \code{Package} field is not a package, so it is used only to
 cross-check the packages its \code{Depends} and \code{Imports} name. A source that
 cannot be read for a cross-check, or a \code{manifest.json} that is not a
-Posit Connect manifest, is an issue, not an error. A \code{default.nix} is not
-read yet, and an issue says so.
+Posit Connect manifest, is an issue, not an error. So is a hand-written
+\code{default.nix} that sbom cannot read, even when it is the strongest source:
+one on a machine without Nix, or, under the default \code{nix = NA}, one that
+Nix fails to evaluate or whose environment has not been built. A warning
+says so, and the SBOM is built from the next source. Any other failure to
+read the strongest source, such as \code{nix = TRUE} on a machine without Nix,
+is an error. A cross-check reads \code{default.nix} with \code{nix} as given (by
+default, Nix is used when it is installed, and \code{nix = FALSE} never calls
+it) and without a snapshot. Under \code{nix = TRUE}, a \code{default.nix} that Nix
+cannot read is an error even as a cross-check. When Nix runs for that
+cross-check and cannot read the environment, its issue is carried into the
+SBOM.
 
 A project folder's git commit is read from the files in the nearest
 \code{.git} in it or a folder above it, without running git. A folder that is

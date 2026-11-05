@@ -1,0 +1,10 @@
+Package: AER
+Version: 1.2-8
+Title: Applied Econometrics with R
+Depends: R (>= 3.0.0), car (>= 2.0-19), lmtest, sandwich (>= 2.4-0), survival (>= 2.37-5), zoo
+Imports: stats, Formula (>= 0.2-0)
+Description: Functions, data sets, examples, demos, and vignettes for the book Applied Econometrics with R.
+License: GPL-2 | GPL-3
+Maintainer: Achim Zeileis <Achim.Zeileis@R-project.org>
+Repository: CRAN
+Built: R 4.4.1; ; 2024-08-01 00:00:00 UTC; unix

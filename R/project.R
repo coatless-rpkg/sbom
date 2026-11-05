@@ -6,7 +6,10 @@
 #'
 #' `sbom()` looks at what a folder holds, builds the SBOM from the strongest
 #' source it finds, and reads every other source to check it. It runs no code
-#' from the project and makes no network requests.
+#' from the project and makes no network requests, except that, with Nix
+#' installed, a `default.nix` is read by running `nix-instantiate` (see
+#' [sbom_nix()]), which may download nixpkgs, and that `snapshot` looks up a
+#' CRAN snapshot.
 #'
 #' The sources, from strongest to weakest:
 #'
@@ -14,8 +17,14 @@
 #' 2. `manifest.json`, read by [sbom_rsconnect()], when it is a Posit Connect
 #'    manifest: one with `version` and `packages`, whose packages and files
 #'    are objects.
-#' 3. `DESCRIPTION`, read by [sbom_package()], when it has a `Package` field.
-#' 4. The R code itself, scanned with [renv::dependencies()]. Each package
+#' 3. `default.nix`, read by [sbom_nix()]. A file that rix wrote lists the
+#'    packages it names, without versions, unless `snapshot` is given or Nix
+#'    is installed and the environment is built: then it is read from the Nix
+#'    store, with versions. With Nix installed but the environment not built,
+#'    the file itself is read, with an issue. A hand-written file can be read
+#'    only with Nix.
+#' 4. `DESCRIPTION`, read by [sbom_package()], when it has a `Package` field.
+#' 5. The R code itself, scanned with [renv::dependencies()]. Each package
 #'    it uses is looked up in `lib` and listed at the version installed
 #'    there, as inferred; one that is not installed is listed as unknown,
 #'    with an issue. renv itself, which renv infers from a `renv.lock`, is
@@ -35,13 +44,24 @@
 #' and the code scan when the SBOM does not already come from it, are read
 #' to cross-check it, and their disagreements become issues: a package that
 #' one source lists and the other does not, or that they list at different
-#' versions. A `DESCRIPTION` and the code declare no versions, so they report
-#' only the packages they use that the SBOM does not list. A `DESCRIPTION`
+#' versions. A `DESCRIPTION`, the code, and a `default.nix` read without Nix
+#' or a snapshot declare no versions, so they report only the packages they
+#' use that the SBOM does not list. A `DESCRIPTION`
 #' without a `Package` field is not a package, so it is used only to
 #' cross-check the packages its `Depends` and `Imports` name. A source that
 #' cannot be read for a cross-check, or a `manifest.json` that is not a
-#' Posit Connect manifest, is an issue, not an error. A `default.nix` is not
-#' read yet, and an issue says so.
+#' Posit Connect manifest, is an issue, not an error. So is a hand-written
+#' `default.nix` that sbom cannot read, even when it is the strongest source:
+#' one on a machine without Nix, or, under the default `nix = NA`, one that
+#' Nix fails to evaluate or whose environment has not been built. A warning
+#' says so, and the SBOM is built from the next source. Any other failure to
+#' read the strongest source, such as `nix = TRUE` on a machine without Nix,
+#' is an error. A cross-check reads `default.nix` with `nix` as given (by
+#' default, Nix is used when it is installed, and `nix = FALSE` never calls
+#' it) and without a snapshot. Under `nix = TRUE`, a `default.nix` that Nix
+#' cannot read is an error even as a cross-check. When Nix runs for that
+#' cross-check and cannot read the environment, its issue is carried into the
+#' SBOM.
 #'
 #' A project folder's git commit is read from the files in the nearest
 #' `.git` in it or a folder above it, without running git. A folder that is
@@ -55,7 +75,8 @@
 #'
 #' @param path A project folder.
 #' @param ... Named arguments for the reader that `sbom()` picks: any
-#'   argument of [sbom_renv()], [sbom_rsconnect()] or [sbom_package()] other
+#'   argument of [sbom_renv()], [sbom_rsconnect()], [sbom_nix()] (such as
+#'   `nix` and `snapshot`) or [sbom_package()] other
 #'   than the file or folder it reads, such as `library`, `lib`,
 #'   `dependencies`, `r_version`, `author` or `overrides`. The code scan
 #'   takes `lib`, `author`, `organization`, `regid`, `timestamp`,
@@ -81,7 +102,8 @@ sbom <- function(path = ".", ...) {
 }
 
 # The checks that every front door makes: `...` is named and known, the path
-# is a folder, and `lib` is usable. Returns the arguments.
+# is a folder, and `lib`, `nix` and `snapshot` are usable. Returns the
+# arguments.
 check_project_args <- function(path, dots, call = parent.frame()) {
   args <- check_sbom_dots(dots, call = call)
   if (!is.character(path) || length(path) != 1L || is.na(path)) {
@@ -96,6 +118,10 @@ check_project_args <- function(path, dots, call = parent.frame()) {
   if (!is.null(args$lib)) {
     check_lib(args$lib)
   }
+  if ("nix" %in% names(args)) {
+    check_nix_arg(args$nix, call = call)
+  }
+  check_snapshot_arg(args$snapshot, call = call)
   args
 }
 
@@ -103,13 +129,40 @@ check_project_args <- function(path, dots, call = parent.frame()) {
 # For a Shiny app, `layout` is its layout, and the app becomes the root.
 sbom_project <- function(path, args, layout = NA, evaluate_ui = FALSE) {
   sources <- project_sources(path)
-  primary <- sources[[1L]]
-  x <- primary$build(args[intersect(names(args), setdiff(primary$args, "overrides"))])
+  # A default.nix that cannot be read at all, as the strongest source, is an
+  # issue, and the SBOM comes from the next source. Every other error is the
+  # user's to see.
+  unread <- NULL
+  repeat {
+    primary <- sources[[1L]]
+    read <- tryCatch(
+      read_source(primary, args[intersect(names(args), setdiff(primary$args, "overrides"))]),
+      sbom_nix_unreadable = function(e) e
+    )
+    if (!inherits(read, "error")) {
+      break
+    }
+    unread <- read
+    sources <- project_sources(path, skip = "default.nix")
+  }
+  x <- read$sbom
   inputs <- source_inputs(x, primary)
-  recorded <- drift_view(x, primary$records)
+  recorded <- drift_view(x, read$records)
 
-  cross_check_issue <- function(issues, code, message) {
-    add_issue(issues, x$metadata$root, "dependencies", code, message, severity = "info")
+  cross_check_issue <- function(issues, code, message, severity = "info") {
+    add_issue(issues, x$metadata$root, "dependencies", code, message, severity = severity)
+  }
+  if (!is.null(unread)) {
+    reason <- condition_reason(unread, path)
+    # The SBOM comes from a weaker source than the folder holds.
+    x$issues <- cross_check_issue(
+      x$issues, "cross-check-failed",
+      paste0(
+        "sbom could not read default.nix", if (nzchar(reason)) paste0(" (", reason, ")"),
+        ", so the SBOM was built from ", primary$label, "."
+      ),
+      severity = "warning"
+    )
   }
   for (src in sources[-1L]) {
     if (!is.null(src$skipped)) {
@@ -119,38 +172,41 @@ sbom_project <- function(path, args, layout = NA, evaluate_ui = FALSE) {
     # A cross-check compares packages only, so it looks neither inside them
     # nor at the operating system.
     quick <- list(embedded = FALSE, system = FALSE)
-    other <- tryCatch(
-      src$build(c(
-        args[intersect(names(args), intersect(src$args, "lib"))],
+    got <- tryCatch(
+      read_source(src, c(
+        args[intersect(names(args), intersect(src$args, c("lib", "nix")))],
         quick[intersect(names(quick), src$args)]
       )),
       error = function(e) e
     )
-    if (inherits(other, "error")) {
-      x$issues <- cross_check_issue(x$issues, "cross-check-failed", src$failed(other))
+    if (inherits(got, "error")) {
+      # Asked for Nix, a default.nix that Nix cannot read is an error here too.
+      if (src$name == "default.nix" && isTRUE(args$nix)) {
+        stop(got)
+      }
+      x$issues <- cross_check_issue(x$issues, "cross-check-failed", src$failed(got))
       next
     }
+    other <- got$sbom
+    records <- got$records
     if (!is.null(src$partial)) {
       x$issues <- cross_check_issue(x$issues, "cross-check-partial", src$partial)
     }
+    # That Nix ran and could not read default.nix is the user's to see.
+    nix_ran <- other$issues[other$issues$code %in% c("nix-failed", "nix-not-built"), , drop = FALSE]
+    nix_ran$ref <- rep(x$metadata$root, nrow(nix_ran))
+    x$issues <- rbind(x$issues, nix_ran)
     found <- drift_issues(
-      empty_issues(), recorded, drift_view(other, src$records, suggests = FALSE),
+      empty_issues(), recorded, drift_view(other, records, suggests = FALSE),
       primary$label, src$label
     )
-    if (identical(src$records, "direct")) {
+    if (identical(records, "direct")) {
       found <- found[found$code == "drift-extra", , drop = FALSE]
     }
     x$issues <- rbind(x$issues, found)
     inputs <- rbind(inputs, source_inputs(other, src))
   }
 
-  if (file.exists(file.path(path, "default.nix"))) {
-    x$issues <- add_issue(
-      x$issues, x$metadata$root, "dependencies", "nix-not-read",
-      "default.nix is present but sbom does not read Nix files yet.",
-      severity = "info"
-    )
-  }
   if (!is.na(layout)) {
     x <- apply_app_layout(
       x, path, layout, evaluate_ui = evaluate_ui,
@@ -178,6 +234,7 @@ reader_args <- function() {
     renv = setdiff(names(formals(sbom_renv)), "lockfile"),
     manifest = setdiff(names(formals(sbom_rsconnect)), "manifest"),
     package = setdiff(names(formals(sbom_package)), "path"),
+    nix = setdiff(names(formals(sbom_nix)), "path"),
     code = c("author", "organization", "regid", "timestamp", "overrides", "lib",
       "embedded", "system"),
     shiny = "evaluate_ui"
@@ -207,7 +264,9 @@ check_sbom_dots <- function(args, call = parent.frame()) {
 # - `args`, the arguments of sbom() its reader takes, and `build`, a function
 #   of those arguments that returns its <sbom>;
 # - `records`, "all" when it lists every package with a version, or "direct"
-#   when it names only the root's direct dependencies and no versions;
+#   when it names only the root's direct dependencies and no versions; for
+#   default.nix it depends on how it was read, so its `build` returns
+#   list(sbom, records) instead of the <sbom> (see read_source());
 # - `failed`, a function of the error that gives the issue sentence when it
 #   cannot be read for a cross-check;
 # - `skipped`, the issue sentence when it is not read at all, and `partial`,
@@ -216,8 +275,9 @@ check_sbom_dots <- function(args, call = parent.frame()) {
 # A manifest.json that is not a Posit Connect manifest, and a DESCRIPTION
 # without a Package field, are never the SBOM's source. Such a DESCRIPTION
 # still cross-checks the packages its Depends and Imports name.
-project_sources <- function(path) {
+project_sources <- function(path, skip = character()) {
   takes <- reader_args()
+  nix_file <- file.path(path, "default.nix")
   lock <- file.path(path, "renv.lock")
   manifest <- file.path(path, "manifest.json")
   desc <- file.path(path, "DESCRIPTION")
@@ -248,6 +308,11 @@ project_sources <- function(path) {
       },
       build = function(args) do.call(sbom_rsconnect, c(list(manifest = manifest), args))
     ),
+    list(
+      name = "default.nix", label = "default.nix", file = nix_file, records = "direct",
+      args = takes$nix, failed = failed("default.nix"),
+      build = function(args) do.call(read_nix_sbom, c(list(path = nix_file), args))
+    ),
     if (desc_kind == "no-package") {
       list(
         name = "DESCRIPTION", label = "DESCRIPTION", file = desc, records = "direct",
@@ -274,11 +339,22 @@ project_sources <- function(path) {
       build = function(args) do.call(code_scan, c(list(dir = path), args))
     )
   )
-  present <- c(is_file(lock), manifest_kind != "absent", desc_kind != "absent", TRUE)
-  usable <- present & c(TRUE, manifest_kind == "connect", desc_kind == "package", TRUE)
+  present <- c(
+    is_file(lock), manifest_kind != "absent", is_file(nix_file) && !"default.nix" %in% skip,
+    desc_kind != "absent", TRUE
+  )
+  usable <- present & c(TRUE, manifest_kind == "connect", TRUE, desc_kind == "package", TRUE)
   primary <- which(usable)[[1L]]
   present[[primary]] <- FALSE
   c(all[primary], all[present])
+}
+
+# A source read with `args`, as list(sbom, records): `records` is how its
+# SBOM records the packages, "all" or "direct", which is the source's own
+# setting unless its reader says (default.nix).
+read_source <- function(src, args) {
+  out <- src$build(args)
+  if (inherits(out, "sbom")) list(sbom = out, records = src$records) else out
 }
 
 # "connect" for a Posit Connect manifest, "other" for JSON that is not one,
@@ -371,13 +447,13 @@ condition_reason <- function(e, path) {
   sub("[.]$", "", trimws(line))
 }
 
-# A source's rows for metadata$inputs: the source itself, then the libraries
-# its reader read.
+# A source's rows for metadata$inputs: the source itself, then the snapshot
+# and the libraries its reader read.
 source_inputs <- function(x, src) {
   read <- x$metadata$inputs
   rbind(
     data.frame(kind = src$name, path = as.character(src$file), stringsAsFactors = FALSE),
-    read[read$kind %in% "library", c("kind", "path"), drop = FALSE]
+    read[read$kind %in% c("snapshot", "library"), c("kind", "path"), drop = FALSE]
   )
 }
 

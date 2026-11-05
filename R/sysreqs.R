@@ -585,6 +585,7 @@ linked_system_libraries <- function(components, lib_dirs, relationships = empty_
   dll_labels <- character()
   reads <- 0L
   failures <- 0L
+  unfound_all <- character()
   for (i in seq_len(nrow(pkgs))) {
     dir <- installed_dir(pkgs$name[[i]], pkgs$version[[i]], lib_dirs)
     if (is.null(dir)) {
@@ -657,6 +658,7 @@ linked_system_libraries <- function(components, lib_dirs, relationships = empty_
     # A library that ldd did not find is not a component, since it is not
     # there; the runtimes every package links are left out as elsewhere.
     unfound <- sort(unique(unfound[!ignored_base_name(library_base_name(unfound))]), method = "radix")
+    unfound_all <- c(unfound_all, unfound)
     if (failed || length(unfound) > 0L) {
       issues <- add_issue(
         issues, pkg_ref, "system", "links-not-read",
@@ -729,9 +731,21 @@ linked_system_libraries <- function(components, lib_dirs, relationships = empty_
     return(out)
   }
   if (reads > 0L && failures == reads) {
+    # The notes for each package collapse into one, which still names the
+    # libraries that ldd did not find.
+    unfound_all <- sort(unique(unfound_all), method = "radix")
+    one <- length(unfound_all) == 1L
     issues <- not_checked(
       issues[!issues$code %in% "links-not-read", , drop = FALSE],
-      "compiled packages were not checked, because sbom could not read them for any package"
+      paste0(
+        "compiled packages were not checked, because sbom could not read them for any package",
+        if (length(unfound_all) > 0L) {
+          paste0(
+            ", and ldd did not find ", and_list(unfound_all), ", so ",
+            if (one) "it is not listed as a component" else "they are not listed as components"
+          )
+        }
+      )
     )
   }
   if (length(dll_labels) > 0L) {

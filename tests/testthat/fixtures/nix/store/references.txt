@@ -1,0 +1,11 @@
+/nix/store/nxdaybg6nk9yrf7nd208cxdi9vvsj3k1-R-4.4.1.drv
+/nix/store/kc5mkb72rx4xiic5pr01amik0n90qxvf-r-dplyr-1.1.4.drv
+/nix/store/f1gjjxl7837sf8hjv4c2rzd45fc1rhyq-r-data.table-1.15.4.drv
+/nix/store/jz1b4yb1sy5bwlwi5mmgfhaf18i8g0l6-r-ggplot2-3.5.1.drv
+/nix/store/xi93596k5psw8vzc2axs7wh985pjk8xr-r-curl-5.2.1.drv
+/nix/store/hn1xg3a7pygq6g0dsibqa48w8800ddaa-r-housing.drv
+/nix/store/nr1spq0w2bc7gxnnhx6pj2v5dmp9mi5k-r-AER-1.2-8.drv
+/nix/store/xnxsri341lsv91sajwc1djcb6gvybxlh-curl-8.9.1.drv
+/nix/store/lssvqsv1nqpqv8pmg5lbx8xb6akrbzd5-glibc-locales-2.39-52.drv
+/nix/store/hkqn3bjnl94lcys7v1q85y985xlm109m-bash-5.2p26.drv
+/nix/store/zjbqvdb3138mgka7vvn3ly7ldr3xr94s-default-builder.sh

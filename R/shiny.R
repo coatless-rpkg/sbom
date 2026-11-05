@@ -8,7 +8,10 @@
 #' component, an application, the R packages it needs come from the strongest
 #' source in the folder, and the JavaScript and CSS libraries the app ships
 #' are recorded under it. It runs no code from the app unless you ask for
-#' `evaluate_ui = TRUE`, and it makes no network requests.
+#' `evaluate_ui = TRUE`, and it makes no network requests, except that, with
+#' Nix installed, a `default.nix` is read by running `nix-instantiate` (see
+#' [sbom_nix()]), which may download nixpkgs, and that `snapshot`, passed
+#' through `...`, looks up a CRAN snapshot.
 #'
 #' The layouts it recognises, checked in this order:
 #'
@@ -16,17 +19,19 @@
 #'    `app/static`.
 #' 2. `golem`: a `DESCRIPTION` with a `Package` field, and either
 #'    `inst/golem-config.yml` or both `R/app_ui.R` and `R/app_server.R`.
-#'    The root is the app, named and versioned by its `DESCRIPTION`. Its
-#'    static files are in `inst/app/www`.
+#'    The root is the app, named and versioned by its `DESCRIPTION`, which
+#'    also gives its licence and maintainer whatever source the packages come
+#'    from. Its static files are in `inst/app/www`.
 #' 3. `app.R`: the folder has an `app.R`. Its static files are in `www`.
 #' 4. `ui-server`: the folder has both `ui.R` and `server.R`. Its static
 #'    files are in `www`.
 #'
 #' The R packages come from the strongest source, as for [sbom()]: `renv.lock`,
-#' then a Posit Connect `manifest.json`, then a package `DESCRIPTION` (a golem
-#' app's declared Imports are stronger than a code scan), then a scan of the
-#' code. Every other source present cross-checks it. When the folder holds a
-#' Posit Connect manifest, a note says the app was deployed there.
+#' then a Posit Connect `manifest.json`, then `default.nix`, then a package
+#' `DESCRIPTION` (a golem app's declared Imports are stronger than a code
+#' scan), then a scan of the code. Every other source present cross-checks
+#' it. When the folder holds a Posit Connect manifest, a note says the app
+#' was deployed there.
 #'
 #' The libraries in the static folder are found by the header comments of
 #' their files, as for the JavaScript in a package, with the same bounds: six
@@ -36,16 +41,22 @@
 #' `package-lock.json`.
 #'
 #' @param path A Shiny app folder.
-#' @param evaluate_ui Whether to run the app's UI code to find the html
-#'   dependencies (JavaScript and CSS) it holds. `FALSE` by default.
+#' @param evaluate_ui Whether to run the app's code to find the html
+#'   dependencies (JavaScript and CSS) its UI holds. `FALSE` by default.
 #'
-#'   `evaluate_ui = TRUE` runs the app's UI code in a separate R process,
-#'   which sees the library given by `lib`, or else [.libPaths()], and
-#'   stops after 60 seconds. It works for `app.R` and `ui.R` apps, and needs
-#'   the htmltools package in that library. What it finds are observed
-#'   components, nested under the R package that ships each one. If the UI
-#'   cannot be evaluated, an issue says so and the SBOM keeps the static
-#'   result.
+#'   `evaluate_ui = TRUE` runs the app's code in a separate R process, which
+#'   is stopped after 60 seconds. It works for `app.R` and `ui.R` apps. For an
+#'   `app.R` app the whole of `app.R` runs, not only its UI code; for a `ui.R`
+#'   app, `ui.R` runs. `global.R` and the app's `R/` folder are not sourced,
+#'   so an app that relies on them fails, with the issue below. The process
+#'   starts R with `--vanilla` and inherits this session's environment
+#'   variables, except that `R_LIBS` is set to the library given by `lib`, or
+#'   else [.libPaths()]; R also adds the user and site libraries after it. It
+#'   needs the htmltools package in those libraries. What it finds are
+#'   observed components, nested under the R package that ships each one. A
+#'   dependency whose name, version or package sbom does not accept is left
+#'   out, and one issue counts them. If the UI cannot be evaluated, an issue
+#'   says so and the SBOM keeps the static result.
 #'
 #'   It finds only the dependencies the UI holds when it is built, and
 #'   misses any that `renderUI()` or other server code inserts later.
@@ -116,11 +127,18 @@ app_root <- function(path, layout) {
   version <- desc_field(d, "Version")
   version <- if (is.na(version) || !nzchar(trimws(version))) NA_character_ else enc2utf8_bytes(trimws(version))
   ref <- paste0("project/", name)
+  # The licence and maintainer, read as for any package, whatever source the
+  # packages come from.
+  license <- desc_field(d, "License")
   row <- component_row(
     ref = ref, name = name, version = version,
     version_is = if (is.na(version)) NA_character_ else "exact",
     type = "application", ecosystem = "local", is_root = TRUE,
-    scope = "required", evidence = "declared", source_input = "project"
+    scope = "required", evidence = "declared", source_input = "project",
+    maintainer = unname(desc_maintainer(d)[["name"]]),
+    license_as_written = if (!is.na(license)) license_normalize(license),
+    license_spdx = if (!is.na(license)) license_spdx(license),
+    license_comment = if (!is.na(license)) license_comment(license)
   )
   issues <- empty_issues()
   if (is.na(version)) {
@@ -178,11 +196,26 @@ ui_dependencies <- function(path, layout, components, root, lib = .libPaths()) {
     )
     return(none)
   }
-  deps <- deps[!is.na(deps$name) & nzchar(deps$name), , drop = FALSE]
+  deps <- deps[!duplicated(deps[c("name", "version", "package")]), , drop = FALSE]
+  # The child ran the app's code, so its text is checked before it becomes a
+  # ref or a purl.
+  bad <- !ui_dependency_ok(deps)
+  if (any(bad)) {
+    n <- sum(bad)
+    none$issues <- add_issue(
+      none$issues, root$ref, "dependencies", "evaluate-ui-skipped",
+      paste0(
+        n, if (n == 1L) " html dependency from the evaluated UI has a name or version" else
+          " html dependencies from the evaluated UI have names or versions",
+        " sbom does not accept, so ", if (n == 1L) "it is" else "they are", " not listed."
+      ),
+      severity = "info"
+    )
+    deps <- deps[!bad, , drop = FALSE]
+  }
   if (nrow(deps) == 0L) {
     return(none)
   }
-  deps <- deps[!duplicated(deps[c("name", "version", "package")]), , drop = FALSE]
   deps <- deps[order(deps$name, deps$version, method = "radix"), , drop = FALSE]
   rules <- javascript_rules()
   packages <- components[!grepl("#", components$ref, fixed = TRUE) & !components$is_root, , drop = FALSE]
@@ -234,6 +267,17 @@ ui_dependencies <- function(path, layout, components, root, lib = .libPaths()) {
     components = components, relationships = rel, issues = none$issues,
     observed = unique(c(observed, rel$to))
   )
+}
+
+# Whether each evaluated html dependency (a row of name, version and package)
+# has text sbom accepts: a name and, when given, a version of conservative
+# characters, and a package that is an R package name or empty.
+ui_dependency_ok <- function(deps) {
+  given <- function(x) !is.na(x) & nzchar(x)
+  name_ok <- given(deps$name) & grepl("^[A-Za-z0-9][A-Za-z0-9._@/+-]{0,99}$", deps$name)
+  version_ok <- !given(deps$version) | grepl("^[0-9A-Za-z][0-9A-Za-z.+~_-]{0,49}$", deps$version)
+  package_ok <- !given(deps$package) | grepl("^[A-Za-z][A-Za-z0-9.]*[A-Za-z0-9]$", deps$package)
+  name_ok & version_ok & package_ok
 }
 
 # `x` with the app as its root, its own assets, and the notes a Shiny app
