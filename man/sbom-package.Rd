@@ -5,7 +5,7 @@
 \alias{sbom-package}
 \title{sbom: Software Bills of Materials for R Code}
 \description{
-Generates Software Bills of Materials for R packages and R library installations, as 'CycloneDX' 1.4 to 1.7 (JSON or XML), 'SPDX' 2.2 and 2.3 (JSON, YAML, XML or tag-value) and 'SPDX' 3.0.1 documents and 'SWID' tags, plus a CSV inventory of components for spreadsheet review.
+Generates Software Bills of Materials for R packages and R library installations, as 'CycloneDX' 1.4 to 1.7 (JSON or XML), 'SPDX' 2.2 and 2.3 (JSON, YAML, XML or tag-value) and 'SPDX' 3.0.1 documents and 'SWID' tags, plus a CSV inventory of components for spreadsheet review. It also reads and validates bills of materials in these formats from any tool, against the bundled schema of each format (the 'SPDX' JSON schema for 'SPDX' YAML, XML and tag-value), integrity rules and the minimum elements of the US National Telecommunications and Information Administration.
 }
 \author{
 \strong{Maintainer}: James Balamuta \email{james.balamuta@gmail.com} [copyright holder]

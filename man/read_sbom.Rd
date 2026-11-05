@@ -29,7 +29,9 @@ again in any format.
 as JSON, YAML, XML or tag-value, SPDX 3.0.1 JSON-LD, and SWID tags
 (ISO/IEC 19770-2:2015). It detects the format from the file's content, not
 from its name, so the file can be named anything. Reading SPDX YAML needs
-the yaml package.
+the yaml package. SPDX YAML nested more than 200 levels deep, or holding
+more than one YAML document, is a read error found before the file is
+parsed. A crafted SPDX YAML file can still take tens of seconds to refuse.
 
 Each component or package the document lists becomes a component (SPDX
 files and snippets do not), the one the document describes becomes the
@@ -40,13 +42,16 @@ that names the file and its format. An element without an id takes its
 purl as its ref, then \code{name@version}, then \verb{component-<n>}. The ecosystem
 is the purl type, and \code{"unknown"} without a purl. URLs are kept as sbom
 keeps its own: without credentials, query string or fragment, and never a
-local path or a \verb{file:} URL.
+local path or a \verb{file:} URL, and so are the URLs in a purl's qualifiers,
+such as \code{repository_url}. Each control character of a value (C0 but tab
+and newline, DEL and C1) is replaced with a space, and so are tab and
+newline in names, versions, refs and purls, which are then trimmed.
 
 Some values cannot come back from every format:\tabular{ll}{
    Format \tab Not read back \cr
-   All \tab sbom's own ecosystems (\code{local}, \code{git}, \code{repository}, \code{r}, \code{base-r}), DESCRIPTION dependency fields and asserted overrides; checksums other than MD5, SHA-1, SHA-256, SHA-384, SHA-512 and SHA3; URLs that are not valid IRI references, and local paths \cr
+   All \tab sbom's own ecosystems (\code{local}, \code{git}, \code{repository}, \code{r}, \code{base-r}), DESCRIPTION dependency fields and asserted overrides; CPE identifiers; checksums other than MD5, SHA-1, SHA-256, SHA-384, SHA-512 and SHA3; URLs that are not valid IRI references, local paths, and purl qualifiers whose value is a local path; licences of other SPDX documents (\verb{DocumentRef-}), kept only as written \cr
    CycloneDX \tab licence comments and package file names; a root's maintainer may be the organization in \code{metadata.manufacture}, which SPDX then writes as a person \cr
-   SPDX 2 \tab refs (SPDX ids replace them, so \code{\link[=sbom_diff]{sbom_diff()}} matches components it identifies by ref only partly), supplier URLs, the licence as written, evidence, minimum versions, system requirements and Bioconductor releases; maintainers that are not persons; the descriptions and publication dates that sbom writes in comments. SPDX 2.2 has no primary purpose, so every package is a library; SPDX 2.3 gives R the type \code{application} \cr
+   SPDX 2 \tab refs (SPDX ids replace them, so \code{\link[=sbom_diff]{sbom_diff()}} matches components it identifies by ref only partly), supplier URLs, the licence as written, evidence, minimum versions, system requirements and Bioconductor releases; maintainers that are not persons; the descriptions and publication dates that sbom writes in comments; the texts of extracted licences (\code{hasExtractedLicensingInfos}), so a document written again says that the text is not included; whether a supplier is a person, so a \verb{Person:} supplier is written again as an \verb{Organization:}. SPDX 2.2 has no primary purpose, so every package is a library; SPDX 2.3 gives R the type \code{application}. SPDX 2.2 cannot carry SHA3 checksums, so they are left out \cr
    SPDX 3 \tab refs, as in SPDX 2; supplier URLs, the licence as written, licence comments, evidence, minimum versions, package file names, system requirements and Bioconductor releases; maintainers that are not persons; which component holds another; the descriptions that sbom writes in comments \cr
    SWID \tab refs of code compiled into a package, which gets no link; for the root, licence expressions and comments, checksums, descriptions, publication dates, DOIs, evidence and Bioconductor releases; for the other components, everything but the name, version, purl, minimum version and whether it is optional; relationships other than the root's. A tag creator with a real regid is the organization, any other is an author, except sbom itself \cr
 }
@@ -68,9 +73,11 @@ component, and the first in id order is the root.
 \item \code{read-no-root} (warning): the document describes no component, so a
 placeholder root with the ref \code{"document"} is added.
 \item \code{read-values-dropped} (info): values that sbom's formats cannot carry
-were not kept: URLs that are not valid IRI references, local paths,
-checksums of other algorithms or lengths, and DOIs that cannot form a
-URL.
+were not kept: URLs that are not valid IRI references, local paths
+(purl qualifiers among them), checksums of other algorithms or lengths,
+DOIs that cannot form a URL, and CPE identifiers.
+\item \code{read-control-characters} (info): values held control characters, which
+were replaced with spaces.
 }
 
 When the document has no timestamp, or one that is not ISO 8601, the time
@@ -85,4 +92,8 @@ write_sbom(x, path)
 y <- read_sbom(path)
 y
 sbom_components(y)[, c("ref", "name", "version", "license_spdx")]
+}
+\seealso{
+\code{\link[=validate_sbom]{validate_sbom()}} to check an SBOM file against its schema and the
+NTIA minimum elements.
 }

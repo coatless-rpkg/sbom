@@ -1,7 +1,4 @@
-schema_formats <- c(
-  "cyclonedx-json", "cyclonedx-xml", "spdx-json", "spdx-yaml", "spdx-xml",
-  "spdx-tv", "spdx3-jsonld", "swid"
-)
+# Every format sbom reads has a bundled schema: the formats are read_formats.
 schema_versions <- list(
   `cyclonedx-json` = c("1.4", "1.5", "1.6", "1.7"),
   `cyclonedx-xml` = c("1.4", "1.5", "1.6", "1.7"),
@@ -19,9 +16,9 @@ has_jsonvalidate <- function() {
 }
 
 resolve_schema_version <- function(format, version) {
-  if (!is.character(format) || length(format) != 1L || !format %in% schema_formats) {
+  if (!is.character(format) || length(format) != 1L || !format %in% read_formats) {
     cli::cli_abort(
-      "{.arg format} must be one of {.val {schema_formats}}, not {.val {format}}."
+      "{.arg format} must be one of {.val {read_formats}}, not {.val {format}}."
     )
   }
   supported <- schema_versions[[format]]
@@ -175,7 +172,7 @@ cdx_iri_findings <- function(doc) {
   bad <- values[iri_reference_bad(values)]
   data.frame(
     location = names(bad),
-    message = sprintf("%s is not a valid IRI reference.", unname(bad)),
+    message = sprintf("%s is not a valid IRI reference.", quote_value(unname(bad))),
     stringsAsFactors = FALSE
   )
 }
@@ -205,10 +202,33 @@ json_model_text <- function(doc) {
 #   such validator, the code throws, and the check reports that it could not
 #   run.
 #
+# * V8 cannot hold a string longer than its kMaxLength, and a longer one
+#   aborts R. The string literal doubles every escape of the JSON inside it,
+#   so it is the literal that is measured: one longer than json_max_mb()
+#   mebibytes (in characters) is an error of class `sbom_json_too_large`,
+#   whose field `size` is its length in mebibytes, and V8 never sees it.
+#
 # The class "json" stops jsonvalidate from taking the text for a file name.
 json_validator_input <- function(doc) {
   literal <- jsonlite::toJSON(as.character(json_model_text(doc)), auto_unbox = TRUE)
+  size <- nchar(literal, type = "chars") / 2^20
+  if (size > json_max_mb()) {
+    cli::cli_abort(
+      "The document is too large for V8.",
+      class = "sbom_json_too_large", size = size, call = NULL
+    )
+  }
   structure(paste0(json_validator_wrapper, "return JSON.parse(", literal, "); })()"), class = "json")
+}
+
+# The longest string literal handed to V8, in mebibytes of characters: a
+# function, so that tests can lower it.
+json_max_mb <- function() 32
+
+# A number of mebibytes for a sentence, rounded up to one decimal, so that a
+# document over the limit is never shown at the limit.
+json_mb_text <- function(size) {
+  as.character(ceiling(size * 10) / 10)
 }
 
 json_max_errors <- 1000L
@@ -273,14 +293,21 @@ json_model_problem <- function(doc) {
 
 # Reads and parses a JSON file. A NUL byte, invalid UTF-8, a comment, a
 # string that is never closed or any other text outside JSON values is an
-# error, whatever jsonlite accepts. So is nesting deeper than json_max_depth
-# levels, measured before parsing; that error has class `sbom_json_limit`.
+# error, whatever jsonlite accepts. So is the escape \u0000, at which
+# jsonlite would cut the string short. So is nesting deeper than
+# json_max_depth levels, measured before parsing; that error has class
+# `sbom_json_limit`.
 json_read_strict <- function(path) {
   json_parse_strict(read_utf8_text(path, subject = "it"))
 }
 
 # The same, for the text of a file.
 json_parse_strict <- function(txt) {
+  # A backslash escapes the u when an even number of backslashes come before
+  # it.
+  if (grepl("(?<!\\\\)(?:\\\\\\\\)*\\\\[uU]0000", txt, perl = TRUE, useBytes = TRUE)) {
+    cli::cli_abort("it contains a NUL character", call = NULL)
+  }
   # JSON has no `/` or `"` outside its strings. Escapes go first and then
   # string literals, so that no single match has to span a long string,
   # which PCRE would give up on.
@@ -336,10 +363,28 @@ validate_json_model <- function(doc, format, version, what = "valid JSON") {
       )
     ))
   }
+  # The input is built first, so that a document too large for V8 never
+  # reaches it, nor even compiles the schema.
   ok <- tryCatch(
-    suppressWarnings(compiled_json_schema(format, version)$validate(json_validator_input(doc), verbose = TRUE)),
+    {
+      input <- json_validator_input(doc)
+      suppressWarnings(compiled_json_schema(format, version)$validate(input, verbose = TRUE))
+    },
     error = identity
   )
+  if (inherits(ok, "sbom_json_too_large")) {
+    return(validation_result(
+      "skipped",
+      data.frame(
+        location = "",
+        message = sprintf(
+          "The document is too large for the JSON schema check (%s MB; the limit is %s MB), so the schema was not checked.",
+          json_mb_text(ok$size), as.character(json_max_mb())
+        ),
+        stringsAsFactors = FALSE
+      )
+    ))
+  }
   if (inherits(ok, "error")) {
     return(validation_result(
       "skipped",
@@ -372,8 +417,9 @@ has_yaml <- function() {
   requireNamespace("yaml", quietly = TRUE)
 }
 
-# Parses the YAML, writes it as JSON and applies the SPDX JSON schema.
-validate_yaml <- function(path, version) {
+# Parses the YAML, unless `doc` is its model already, and applies the SPDX
+# JSON schema.
+validate_yaml <- function(path, version, doc = NULL) {
   if (!has_yaml()) {
     return(validation_result(
       "skipped",
@@ -384,17 +430,21 @@ validate_yaml <- function(path, version) {
       )
     ))
   }
-  doc <- tryCatch(spdx_yaml_read(path), error = identity)
+  if (is.null(doc)) doc <- tryCatch(spdx_yaml_read(path), error = identity)
+  if (inherits(doc, "sbom_json_limit") || inherits(doc, "sbom_yaml_documents")) {
+    return(parse_failure("valid YAML for an SBOM", doc))
+  }
   if (inherits(doc, "error")) {
     return(parse_failure("valid YAML", doc))
   }
   validate_json_model(doc, "spdx-json", version, what = "valid YAML")
 }
 
-# SPDX has no official XML schema. Reads the XML back into the JSON model and
-# applies the SPDX JSON schema; a pass is only "partial".
-validate_spdx_xml <- function(path, version) {
-  doc <- tryCatch(spdx_xml_read(path), error = identity)
+# SPDX has no official XML schema. Reads the XML back into the JSON model,
+# unless `doc` is that model already, and applies the SPDX JSON schema; a
+# pass is only "partial".
+validate_spdx_xml <- function(path, version, doc = NULL) {
+  if (is.null(doc)) doc <- tryCatch(spdx_xml_read(path), error = identity)
   if (inherits(doc, "sbom_spdx_xml_root")) {
     return(validation_result(
       "fail",
@@ -422,10 +472,11 @@ validate_spdx_xml <- function(path, version) {
   )
 }
 
-# Tag-value has no schema either. Reads the file back into the JSON model and
-# applies the SPDX JSON schema; a pass is only "partial".
-validate_spdx_tv <- function(path, version) {
-  doc <- tryCatch(spdx_tv_read(path), error = identity)
+# Tag-value has no schema either. Reads the file back into the JSON model,
+# unless `doc` is that model already, and applies the SPDX JSON schema; a
+# pass is only "partial".
+validate_spdx_tv <- function(path, version, doc = NULL) {
+  if (is.null(doc)) doc <- tryCatch(spdx_tv_read(path), error = identity)
   if (inherits(doc, "error")) {
     return(parse_failure("valid SPDX tag-value", doc))
   }
@@ -464,9 +515,15 @@ validate_spdx3 <- function(path, version) {
   )
 }
 
+# Checks an XML file against its XSD. The file is parsed from its bytes:
+# xml2 takes a string holding < or > for XML itself, not a path. Entities are
+# never expanded (no NOENT), and libxml2 cannot validate a document whose
+# entities, declared in its DTD, are left as references, so that check is
+# skipped.
 validate_xml <- function(path, format, version) {
   schema_path <- schema_file(format, version)
-  doc <- tryCatch(xml2::read_xml(path, options = c("NOBLANKS", "NONET")), error = identity)
+  bytes <- readBin(path, "raw", n = file.size(path))
+  doc <- tryCatch(xml2::read_xml(bytes, options = c("NOBLANKS", "NONET")), error = identity)
   if (inherits(doc, "error")) {
     return(parse_failure("well-formed XML", doc))
   }
@@ -478,17 +535,44 @@ validate_xml <- function(path, format, version) {
   if (isTRUE(ok)) {
     return(validation_result("pass"))
   }
-  errs <- attr(ok, "errors")
-  location <- ifelse(
-    grepl("^[^ :]*:[0-9]+: ", errs),
-    sub("^[^ :]*:([0-9]+): .*$", "\\1", errs),
-    ""
-  )
-  message <- sub("^[^ :]*:[0-9]+: ", "", errs)
+  errs <- as.character(attr(ok, "errors"))
+  # libxml2's own error, which begins its message, not a value it quotes.
+  internal <- any(startsWith(errs, "Internal error: xmlSchemaVDocWalk"))
+  if (internal && length(grepRaw("<!ENTITY", bytes, fixed = TRUE)) > 0L) {
+    return(validation_result(
+      "skipped",
+      data.frame(
+        location = "",
+        message = "The document uses entities declared in its DTD, which sbom does not expand, so the XSD check did not run.",
+        stringsAsFactors = FALSE
+      )
+    ))
+  }
+  more <- length(errs) - json_max_errors
+  message <- xsd_message(utils::head(errs, json_max_errors))
+  if (more > 0L) {
+    message <- c(message, paste0(more, if (more == 1L) " more error is not listed." else " more errors are not listed."))
+  }
   validation_result(
     "fail",
-    data.frame(location = location, message = message, stringsAsFactors = FALSE)
+    data.frame(location = rep("", length(message)), message = message, stringsAsFactors = FALSE)
   )
+}
+
+# libxml2's messages quote names and values from the document between single
+# quotes, and stop at about 64 KB, inside a quote when the value is long.
+# Each quoted text is quoted short, and the message as a whole is cut at
+# 2,000 characters, which leaves whole the list of the elements a schema
+# expects.
+xsd_message <- function(errs) {
+  errs <- text_utf8(errs)
+  quoted <- gregexpr("'[^']*('|$)", errs)
+  regmatches(errs, quoted) <- lapply(regmatches(errs, quoted), function(q) {
+    closed <- endsWith(q, "'") & nchar(q) > 1L
+    inner <- substr(q, 2L, nchar(q) - closed)
+    paste0("'", quote_value(inner), ifelse(closed, "'", ""))
+  })
+  quote_value(errs, 2000L)
 }
 
 #' Validate a written document against the bundled schema
@@ -498,7 +582,10 @@ validate_xml <- function(path, format, version) {
 #'
 #' * `"pass"`: the document satisfies the schema.
 #' * `"fail"`: it does not, or it could not be parsed; `findings` says why.
-#' * `"skipped"`: the package needed to check it is not installed.
+#' * `"skipped"`: the package needed to check it is not installed, the JSON
+#'   schema check could not run, the document is too large for it, or an XML
+#'   document uses entities declared in its DTD, which libxml2 cannot
+#'   validate unexpanded.
 #' * `"partial"`: the format has no official schema (SPDX XML and tag-value),
 #'   so the document was read back into the SPDX JSON model and that passed;
 #'   or the schema covers only part of the rules (SPDX 3, whose SHACL rules are
@@ -507,8 +594,11 @@ validate_xml <- function(path, format, version) {
 #' @param path Path of the document.
 #' @param format One of the formats with a bundled schema.
 #' @param version The format version; `NULL` for the default.
+#' @param doc For SPDX YAML, XML and tag-value, the document's SPDX JSON model
+#'   when it has been read already, as `read_document()` reads it, so that
+#'   the file is not parsed again; `NULL` to read `path`.
 #' @noRd
-schema_validate <- function(path, format, version = NULL) {
+schema_validate <- function(path, format, version = NULL, doc = NULL) {
   version <- resolve_schema_version(format, version)
   if (!is.character(path) || length(path) != 1L || !file.exists(path)) {
     cli::cli_abort("{.arg path} must be an existing file, not {.val {path}}.")
@@ -516,9 +606,9 @@ schema_validate <- function(path, format, version = NULL) {
   switch(format,
     `cyclonedx-xml` = ,
     swid = validate_xml(path, format, version),
-    `spdx-yaml` = validate_yaml(path, version),
-    `spdx-xml` = validate_spdx_xml(path, version),
-    `spdx-tv` = validate_spdx_tv(path, version),
+    `spdx-yaml` = validate_yaml(path, version, doc),
+    `spdx-xml` = validate_spdx_xml(path, version, doc),
+    `spdx-tv` = validate_spdx_tv(path, version, doc),
     `spdx3-jsonld` = validate_spdx3(path, version),
     validate_json(path, format, version)
   )

@@ -32,3 +32,46 @@
   `SystemRequirements` and the shared libraries a package links, each with its
   evidence level, in every output format. `embedded = FALSE` and
   `system = FALSE` skip the detection.
+
+* `read_sbom()` reads an SBOM in any of the eight formats, made by sbom or by
+  any other tool, into an `<sbom>`. It detects the format from the file's
+  content, not its name, and records as issues what it could not read.
+
+* `validate_sbom()` checks an SBOM file against the bundled schema of its
+  format, and checks the content of a file or an `<sbom>` against integrity
+  rules (ids, relationships, licence expressions against the bundled SPDX
+  License List, purls) and the NTIA 2021 minimum elements. It returns an
+  `<sbom_validation>`, which prints a report with a hint for each check, and
+  whose findings `as.data.frame()` returns. `error_on` turns a failure into an
+  error, for scripts.
+
+* `purl()` requires each of `name`, `version`, `namespace` and
+  `repository_url` to have length 1 or the length of the longest, and errors
+  otherwise rather than recycling silently. A version of `""` is left out, as
+  `NA` is.
+
+* SPDX 2 output defines each `LicenseRef-` it uses, such as one asserted with
+  an override, in `hasExtractedLicensingInfos`, as the SPDX specification
+  requires.
+
+* A package installed from a local git repository no longer has its
+  `RemoteUrl`, a path on the machine that built the SBOM, written as its vcs
+  URL, and a remote URL loses any user name, password or token it holds before
+  it is written. SBOMs made by earlier versions may hold both; check them
+  before sharing them.
+
+* R's `FreeBSD` licence now maps to the SPDX id `BSD-2-Clause-Views`.
+
+* A supplier asserted with an override for R or a base package is now written
+  in SPDX 2.
+
+* SPDX 3 output spells SHA3 checksum algorithms as SPDX 3 does (`sha3_256`
+  and so on), and SPDX 2.2 output leaves out SHA3 checksums, which SPDX 2.2
+  does not list.
+
+* A dependency that is `optional` is written in SPDX 2 and SPDX 3 as an
+  optional dependency, as a `Suggests` dependency already was.
+
+* `print()`, `summary()`, `sbom_tree()` and `sbom_diff()` show the control
+  characters of a value as spaces, so that an SBOM read from a hostile file,
+  or built from a hostile `DESCRIPTION`, cannot rewrite the terminal.

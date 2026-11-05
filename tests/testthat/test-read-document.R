@@ -378,3 +378,46 @@ test_that("the tag-value sniffer looks at the first 1,000 lines and 64 KB only",
     expect_identical(read_document(tf, format = "spdx-tv")$format, "spdx-tv")
   }
 })
+
+test_that("an escaped NUL in JSON is refused, which jsonlite would cut the string at", {
+  tf <- withr::local_tempfile(fileext = ".cdx.json")
+  file <- basename(tf)
+  doc <- function(name) {
+    paste0('{"bomFormat":"CycloneDX","specVersion":"1.6","version":1,"metadata":{"component":{"type":"library","name":"', name, '"}}}')
+  }
+  for (name in c("a\\u0000b", "a\\\\\\u0000b", "a\\U0000b")) {
+    write_text(doc(name), tf)
+    expect_identical(read_error(tf), paste0(file, " is not valid JSON: it contains a NUL character."), label = name)
+    res <- schema_validate(tf, "cyclonedx-json", "1.6")
+    expect_identical(res$status, "fail", label = name)
+    expect_identical(res$findings$message, "The file is not valid JSON: it contains a NUL character.", label = name)
+  }
+  # An escaped backslash before u0000 is text, not a NUL.
+  write_text(doc("a\\\\u0000b"), tf)
+  expect_identical(read_document(tf)$doc$metadata$component$name, "a\\u0000b")
+  write_text(doc("a\\u0001b"), tf)
+  expect_identical(read_document(tf)$doc$metadata$component$name, "a\u0001b")
+})
+
+test_that("a version longer than 20 characters is not one sbom recognises", {
+  tf <- withr::local_tempfile(fileext = ".cdx.json")
+  file <- basename(tf)
+  cdx <- function(version) {
+    paste0('{"bomFormat":"CycloneDX","specVersion":"', version, '","version":1}')
+  }
+  write_text(cdx(paste0("1.", strrep("6", 1e6))), tf)
+  msg <- read_error(tf)
+  expect_identical(msg, paste0(file, " is not valid CycloneDX JSON: its version is not one sbom recognises."))
+  v <- validate_sbom(tf)
+  expect_identical(v$findings$message, msg)
+  expect_lt(sum(nchar(utils::capture.output(print(v)))), 1000L)
+  write_text(cdx(paste0("1.", strrep("6", 18))), tf)
+  expect_identical(read_document(tf)$version, paste0("1.", strrep("6", 18)))
+  write_text(cdx(paste0("1.", strrep("6", 19))), tf)
+  expect_error(read_document(tf), class = "sbom_read_error")
+  spdx <- withr::local_tempfile(fileext = ".spdx.json")
+  write_text(paste0('{"spdxVersion":"SPDX-2.', strrep("3", 1e6), '","SPDXID":"SPDXRef-DOCUMENT"}'), spdx)
+  expect_identical(
+    read_error(spdx), paste0(basename(spdx), " is not valid SPDX JSON: its version is not one sbom recognises.")
+  )
+})

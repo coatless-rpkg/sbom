@@ -1,4 +1,4 @@
-# The SPDX License List and SPDX licence expressions (SPDX 2.3 Annex D; SPDX 3 uses the same grammar).
+# The SPDX License List and SPDX license expressions (SPDX 2.3 Annex D; SPDX 3 uses the same grammar).
 
 spdx_license_list <- function() {
   if (is.null(the$spdx_license_list)) {
@@ -18,11 +18,11 @@ spdx_license_list_version <- function() {
   the$spdx_license_list_version
 }
 
-# Checks licence expressions against the SPDX grammar and the bundled License List.
+# Checks license expressions against the SPDX grammar and the bundled License List.
 #
 # One row per element of `x`. `valid` says whether the expression parses; `problem` is a lower-case
 # clause saying why not. Ids that are not on the list are syntactically fine and are listed in
-# `unknown`, as are an exception id used as a licence and a licence id used after WITH. `licenses` and
+# `unknown`, as are an exception id used as a license and a license id used after WITH. `licenses` and
 # `exceptions` hold the known ids in the list's spelling (matched case-insensitively, `+` dropped, in
 # order of appearance, listed once), `refs` every LicenseRef-, AdditionRef- and DocumentRef- reference,
 # and `deprecated` the known ids that the list marks deprecated. `special` accepts NONE and NOASSERTION
@@ -58,7 +58,7 @@ license_expression_check <- function(x, special = TRUE) {
   lic_dep <- slice(lst$id[lic_k], lic_ok & lst$deprecated[lic_k] %in% TRUE, lic_group)
   exc_dep <- slice(lst$id[exc_k], exc_ok & lst$deprecated[exc_k] %in% TRUE, exc_group)
 
-  # The unknown ids keep their order: licences first, then exceptions.
+  # The unknown ids keep their order: licenses first, then exceptions.
   unknown <- Map(function(a, b) unique(c(a, b)), lic_unknown, exc_unknown)
   deprecated <- Map(function(a, b) unique(c(a, b)), lic_dep, exc_dep)
   data.frame(
@@ -158,7 +158,7 @@ license_expression_parse <- function(expr, special) {
             n_exc <- n_exc + 1L
             exceptions[[n_exc]] <- etok
           } else if (ekd == 9L) {
-            problem <- paste0("it has a + after the exception ", sub("[+]$", "", etok))
+            problem <- paste0("it has a + after the exception ", quote_value(sub("[+]$", "", etok)))
             break
           } else if (ekd == 8L) {
             n_ref <- n_ref + 1L
@@ -173,14 +173,14 @@ license_expression_parse <- function(expr, special) {
         refs[[n_ref]] <- tok
         want_operand <- FALSE
         if (k < n && kind[[k + 1L]] == 5L) {
-          problem <- paste0("it uses WITH after the reference ", tok, ", which is not a licence id")
+          problem <- paste0("it uses WITH after the reference ", quote_value(tok), ", which is not a license id")
           break
         }
       } else if (kd == 8L) {
-        problem <- paste0("it uses ", tok, " as a licence, but an AdditionRef is only allowed after WITH")
+        problem <- paste0("it uses ", quote_value(tok), " as a license, but an AdditionRef is only allowed after WITH")
         break
       } else {
-        problem <- license_expression_unexpected(kd, tok, "a licence was expected", special)
+        problem <- license_expression_unexpected(kd, tok, "a license was expected", special)
         break
       }
     } else if (kd == 3L || kd == 4L) {
@@ -192,7 +192,7 @@ license_expression_parse <- function(expr, special) {
       }
       depth <- depth - 1L
     } else if (kd == 5L) {
-      problem <- "it has WITH where it does not follow a single licence"
+      problem <- "it has WITH where it does not follow a single license"
       break
     } else {
       problem <- license_expression_unexpected(kd, tok, "an operator was expected", special)
@@ -202,7 +202,7 @@ license_expression_parse <- function(expr, special) {
   }
   if (is.na(problem)) {
     if (want_operand) {
-      problem <- "it ends where a licence was expected"
+      problem <- "it ends where a license was expected"
     } else if (depth > 0L) {
       problem <- "it has an unclosed parenthesis"
     }
@@ -219,17 +219,19 @@ license_expression_parse <- function(expr, special) {
   )
 }
 
-# The problem clause for a token that cannot stand where it is.
+# The problem clause for a token that cannot stand where it is. The token
+# comes from a document, so it is quoted short, its control characters shown
+# as spaces, and in plain double quotes, the same in every locale.
 license_expression_unexpected <- function(kd, tok, wanted, special = TRUE) {
+  tok <- quote_value(tok)
   if (kd == lex[["special"]]) {
     if (special) {
       return(paste0("it uses ", tok, ", which is only allowed as the whole expression"))
     }
-    return(paste0("it uses ", tok, ", which is not a licence"))
+    return(paste0("it uses ", tok, ", which is not a license"))
   }
   if (kd == lex[["bad"]]) {
-    return(paste0("it has an invalid licence identifier or reference, ",
-                  encodeString(tok, quote = "\"")))
+    return(paste0("it has an invalid license identifier or reference, \"", tok, "\""))
   }
-  paste0("it has ", encodeString(tok, quote = "\""), " where ", wanted)
+  paste0("it has \"", tok, "\" where ", wanted)
 }

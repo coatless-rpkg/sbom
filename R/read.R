@@ -6,7 +6,9 @@
 # keeps its own, without credentials, query or fragment and never as a local
 # path, and a value that a writer could not write validly (a URL that is not
 # an IRI reference, a checksum not every format takes) is dropped and
-# counted, so that a read SBOM writes valid documents.
+# counted, so that a read SBOM writes valid documents. A control character
+# could rewrite the terminal the SBOM is printed on, and SPDX YAML cannot
+# hold one, so every value keeps none (read_clean()).
 
 # The checksum algorithms sbom writes in every format, in CycloneDX's
 # spelling, with the number of hex digits of each. SPDX 2.2 has no SHA3,
@@ -36,7 +38,9 @@ read_evidence <- c("declared", "observed", "inferred", "unknown")
 #' as JSON, YAML, XML or tag-value, SPDX 3.0.1 JSON-LD, and SWID tags
 #' (ISO/IEC 19770-2:2015). It detects the format from the file's content, not
 #' from its name, so the file can be named anything. Reading SPDX YAML needs
-#' the yaml package.
+#' the yaml package. SPDX YAML nested more than 200 levels deep, or holding
+#' more than one YAML document, is a read error found before the file is
+#' parsed. A crafted SPDX YAML file can still take tens of seconds to refuse.
 #'
 #' Each component or package the document lists becomes a component (SPDX
 #' files and snippets do not), the one the document describes becomes the
@@ -47,15 +51,18 @@ read_evidence <- c("declared", "observed", "inferred", "unknown")
 #' purl as its ref, then `name@version`, then `component-<n>`. The ecosystem
 #' is the purl type, and `"unknown"` without a purl. URLs are kept as sbom
 #' keeps its own: without credentials, query string or fragment, and never a
-#' local path or a `file:` URL.
+#' local path or a `file:` URL, and so are the URLs in a purl's qualifiers,
+#' such as `repository_url`. Each control character of a value (C0 but tab
+#' and newline, DEL and C1) is replaced with a space, and so are tab and
+#' newline in names, versions, refs and purls, which are then trimmed.
 #'
 #' Some values cannot come back from every format:
 #'
 #' | Format    | Not read back |
 #' |:----------|:--------------|
-#' | All       | sbom's own ecosystems (`local`, `git`, `repository`, `r`, `base-r`), DESCRIPTION dependency fields and asserted overrides; checksums other than MD5, SHA-1, SHA-256, SHA-384, SHA-512 and SHA3; URLs that are not valid IRI references, and local paths |
+#' | All       | sbom's own ecosystems (`local`, `git`, `repository`, `r`, `base-r`), DESCRIPTION dependency fields and asserted overrides; CPE identifiers; checksums other than MD5, SHA-1, SHA-256, SHA-384, SHA-512 and SHA3; URLs that are not valid IRI references, local paths, and purl qualifiers whose value is a local path; licences of other SPDX documents (`DocumentRef-`), kept only as written |
 #' | CycloneDX | licence comments and package file names; a root's maintainer may be the organization in `metadata.manufacture`, which SPDX then writes as a person |
-#' | SPDX 2    | refs (SPDX ids replace them, so [sbom_diff()] matches components it identifies by ref only partly), supplier URLs, the licence as written, evidence, minimum versions, system requirements and Bioconductor releases; maintainers that are not persons; the descriptions and publication dates that sbom writes in comments. SPDX 2.2 has no primary purpose, so every package is a library; SPDX 2.3 gives R the type `application` |
+#' | SPDX 2    | refs (SPDX ids replace them, so [sbom_diff()] matches components it identifies by ref only partly), supplier URLs, the licence as written, evidence, minimum versions, system requirements and Bioconductor releases; maintainers that are not persons; the descriptions and publication dates that sbom writes in comments; the texts of extracted licences (`hasExtractedLicensingInfos`), so a document written again says that the text is not included; whether a supplier is a person, so a `Person:` supplier is written again as an `Organization:`. SPDX 2.2 has no primary purpose, so every package is a library; SPDX 2.3 gives R the type `application`. SPDX 2.2 cannot carry SHA3 checksums, so they are left out |
 #' | SPDX 3    | refs, as in SPDX 2; supplier URLs, the licence as written, licence comments, evidence, minimum versions, package file names, system requirements and Bioconductor releases; maintainers that are not persons; which component holds another; the descriptions that sbom writes in comments |
 #' | SWID      | refs of code compiled into a package, which gets no link; for the root, licence expressions and comments, checksums, descriptions, publication dates, DOIs, evidence and Bioconductor releases; for the other components, everything but the name, version, purl, minimum version and whether it is optional; relationships other than the root's. A tag creator with a real regid is the organization, any other is an author, except sbom itself |
 #'
@@ -75,9 +82,11 @@ read_evidence <- c("declared", "observed", "inferred", "unknown")
 #' * `read-no-root` (warning): the document describes no component, so a
 #'   placeholder root with the ref `"document"` is added.
 #' * `read-values-dropped` (info): values that sbom's formats cannot carry
-#'   were not kept: URLs that are not valid IRI references, local paths,
-#'   checksums of other algorithms or lengths, and DOIs that cannot form a
-#'   URL.
+#'   were not kept: URLs that are not valid IRI references, local paths
+#'   (purl qualifiers among them), checksums of other algorithms or lengths,
+#'   DOIs that cannot form a URL, and CPE identifiers.
+#' * `read-control-characters` (info): values held control characters, which
+#'   were replaced with spaces.
 #'
 #' When the document has no timestamp, or one that is not ISO 8601, the time
 #' in the `SOURCE_DATE_EPOCH` environment variable is used when it is set, and
@@ -90,6 +99,8 @@ read_evidence <- c("declared", "observed", "inferred", "unknown")
 #' @return An `<sbom>` object. Its `metadata$inputs` holds `path`. When the
 #'   file is not an SBOM in a format sbom reads, the error has class
 #'   `sbom_read_error`.
+#' @seealso [validate_sbom()] to check an SBOM file against its schema and the
+#'   NTIA minimum elements.
 #' @export
 #' @examples
 #' x <- sbom_package(system.file("DESCRIPTION", package = "sbom"), system = FALSE)
@@ -115,30 +126,47 @@ read_family_of <- function(format) {
 # The <sbom> of the document `d`, from its tables `t`.
 read_sbom_build <- function(d, t) {
   family <- read_family_of(d$format)
-  file <- basename(d$path)
+  file <- read_file_label(d$path)
   el <- t$elements
   is_comp <- el$kind == "component"
   n_files <- sum(!is_comp)
   el <- el[is_comp, , drop = FALSE]
   n <- nrow(el)
+  # The number of values that held control characters.
+  seen <- new.env(parent = emptyenv())
+  seen$n <- 0L
 
+  # Relationships name elements by their ids as written; the refs are made
+  # from the cleaned values.
   id <- tables_present(el$id)
-  doc_name <- tables_present(el$name)
-  version <- tables_present(el$version)
-  purl <- tables_present(el$purl)
-  creators <- if (family == "swid") read_swid_creators(d$doc)
+  doc_name <- read_clean(tables_present(el$name), seen)
+  version <- read_clean(tables_present(el$version), seen)
+  purls <- read_purls(read_clean(tables_present(el$purl), seen))
+  purl <- purls$value
+  # The <sbom> has no column for a CPE.
+  identifiers <- as.character(unlist(el$identifiers, use.names = FALSE))
+  n_cpe <- sum(startsWith(identifiers, "cpe:"))
+  # The lookups document_tables() made, which are not made again.
+  entities <- if (family == "swid") tables_coalesce_attr(t, "entities", tables_swid_entities(d$doc))
+  creators <- if (family == "swid") read_swid_creators(entities)
   fields <- switch(family,
     cdx = read_cdx_fields(el, d$doc),
     spdx2 = read_spdx2_fields(el),
-    spdx3 = read_spdx3_fields(el, d$doc),
-    swid = read_swid_fields(el, d$doc)
+    spdx3 = read_spdx3_fields(el, tables_coalesce_attr(
+      t, "index", tables_spdx3_index(unname(json_items(json_member(d$doc, "@graph"))))
+    )),
+    swid = read_swid_fields(el, d$doc, entities)
   )
   ref_id <- if (family == "swid") read_swid_ref_ids(id, el$location, creators$regid) else id
+  # A ref that is a purl is kept as the purl is, without credentials.
+  ref_id <- read_purls(read_clean(ref_id, seen))$value
   unique_refs <- read_unique_refs(read_fallback_refs(ref_id, purl, doc_name, version))
   ref <- unique_refs$ref
   licenses <- read_licenses(t$licenses, el, family, fields$written)
+  dropped <- c(fields$dropped, purls$dropped, rep(read_dropped_kinds[["cpe"]], n_cpe))
   rels <- read_relationships(t, d$doc, family, id, ref)
   edges <- rels$relationships
+  edges$spec <- read_clean(edges$spec, seen, lines = TRUE)
 
   roots <- which(el$is_root)
   roots <- roots[order(ref[roots], method = "radix")]
@@ -148,7 +176,7 @@ read_sbom_build <- function(d, t) {
   optional_edge <- depends$field %in% c("Suggests", "optional")
   only_optional <- ref %in% depends$to[optional_edge] & !ref %in% depends$to[!optional_edge]
   parent_ref <- switch(family,
-    cdx = ref[match(el$parent, id, incomparables = NA)],
+    cdx = ref[match(el$parent, el$location, incomparables = NA)],
     spdx2 = read_single_parent(edges, ref),
     rep(NA_character_, n)
   )
@@ -172,11 +200,12 @@ read_sbom_build <- function(d, t) {
     deps_known = ref %in% c(rels$stated, depends$from), hashes = fields$hashes,
     deps = rep(list(empty_deps()), n), asserted = rep(list(empty_asserted()), n)
   )
+  cols[read_text_columns] <- lapply(cols[read_text_columns], read_clean, seen = seen, lines = TRUE)
   if (is.na(root)) {
     # "document", or "document-2" and so on when an element has that ref.
     root_ref <- spdx3_unique_local("document", ref)
     placeholder <- list(
-      ref = root_ref, name = tables_coalesce(tables_present(t$document$name), file),
+      ref = root_ref, name = tables_coalesce(read_clean(tables_present(t$document$name), seen), file),
       type = "application", ecosystem = "unknown", is_root = TRUE, scope = "required",
       evidence = "unknown", source_input = file, deps_known = FALSE
     )
@@ -195,14 +224,39 @@ read_sbom_build <- function(d, t) {
   o <- order(cols$ref, method = "radix")
   components <- read_frame(lapply(cols, function(col) col[o]))
 
+  metadata <- read_metadata(d, t, family, root_ref, file, creators, seen)
   issues <- read_issues(
-    unique_refs, root_ref, length(roots), is.na(root), n_files, rels, fields$dropped
+    unique_refs, root_ref, length(roots), is.na(root), n_files, rels, dropped, seen$n
   )
-  new_sbom(read_metadata(d, t, family, root_ref, file, creators), components, edges, issues)
+  new_sbom(metadata, components, edges, issues)
+}
+
+# The component columns of free text that read_sbom_build() cleans keeping
+# tab and newline. The others are names, versions, refs and purls, cleaned
+# before the refs are made, or values from a fixed set.
+read_text_columns <- c(
+  "supplier_name", "supplier_url", "maintainer", "license_as_written", "license_spdx",
+  "license_comment", "published", "homepage", "vcs_url", "download_location",
+  "package_file_name", "doi", "description", "bioc_release", "system_requirements"
+)
+
+# The values `x` as the <sbom> keeps them: each control character replaced
+# with a space, keeping tab and newline when `lines`, and otherwise trimmed
+# (text_strip()). Adds the number of values that held one to `seen$n`.
+read_clean <- function(x, seen, lines = FALSE) {
+  seen$n <- seen$n + sum(text_has_controls(x, lines))
+  text_strip(x, lines)
+}
+
+# The name of the file at `path` as sentences and the <sbom> give it: its
+# basename, without control characters.
+read_file_label <- function(path) {
+  tables_coalesce(text_strip(basename(path)), "The file")
 }
 
 # At most `max` items of a list taken from the document, as a sentence's
-# list: "a, b and c", or the first `max` then ", and <k> more".
+# list: "a, b and c", or the first `max` then ", and <k> more". The callers
+# quote each item with quote_value().
 read_list <- function(x, max = 20L) {
   if (length(x) <= max) {
     return(and_list(x))
@@ -212,14 +266,16 @@ read_list <- function(x, max = 20L) {
 
 # The issues of a read: one for each id that elements shared, then those about
 # the document, which name the root. `dropped` holds the kind of each value
-# that was not kept.
-read_issues <- function(unique_refs, root_ref, n_roots, placeholder, n_files, rels, dropped) {
+# that was not kept, and `n_controls` counts the values that held control
+# characters.
+read_issues <- function(unique_refs, root_ref, n_roots, placeholder, n_files, rels, dropped,
+                        n_controls = 0L) {
   issues <- empty_issues()
   if (length(unique_refs$id) > 0L) {
     issues <- add_issue(
       issues, unique_refs$id, "ref", "read-duplicate-id",
       paste0(
-        unique_refs$count, " elements share the id ", unique_refs$id, ", so sbom renamed the later ",
+        unique_refs$count, " elements share the id ", quote_value(unique_refs$id), ", so sbom renamed the later ",
         ifelse(unique_refs$count == 2L, "one ", "ones "), unique_refs$renamed, "."
       )
     )
@@ -231,7 +287,7 @@ read_issues <- function(unique_refs, root_ref, n_roots, placeholder, n_files, re
     issues <- document_issue(
       issues, "root", "read-several-roots",
       paste0(
-        "The document has ", n_roots, " root components, so sbom took ", root_ref,
+        "The document has ", n_roots, " root components, so sbom took ", quote_value(root_ref),
         ", the first in id order, as the root."
       ),
       "info"
@@ -242,7 +298,7 @@ read_issues <- function(unique_refs, root_ref, n_roots, placeholder, n_files, re
       issues, "root", "read-no-root",
       paste0(
         "The document names no root component, so sbom added a placeholder root with the ref ",
-        root_ref, "."
+        quote_value(root_ref), "."
       ),
       "warning"
     )
@@ -265,7 +321,7 @@ read_issues <- function(unique_refs, root_ref, n_roots, placeholder, n_files, re
       paste0(
         rels$n_skipped, if (rels$n_skipped == 1L) " relationship" else " relationships",
         if (length(types) == 1L) " of a type" else " of types", " sbom does not model (",
-        read_list(types), if (rels$n_skipped == 1L) ") was not read." else ") were not read."
+        read_list(quote_value(types)), if (rels$n_skipped == 1L) ") was not read." else ") were not read."
       ),
       "info"
     )
@@ -291,7 +347,17 @@ read_issues <- function(unique_refs, root_ref, n_roots, placeholder, n_files, re
       paste0(
         length(dropped), if (one) " value was" else " values were",
         " not kept because sbom's formats cannot carry ", if (one) "it" else "them", " (",
-        and_list(sort(unique(dropped), method = "radix")), ")."
+        paste(read_dropped_kinds[read_dropped_kinds %in% dropped], collapse = "; "), ")."
+      ),
+      "info"
+    )
+  }
+  if (n_controls > 0L) {
+    issues <- document_issue(
+      issues, "component", "read-control-characters",
+      paste0(
+        n_controls, if (n_controls == 1L) " value in the document" else " values in the document",
+        " held control characters, which sbom replaced with spaces."
       ),
       "info"
     )
@@ -318,12 +384,17 @@ read_first <- function(value, owner, n, keep) {
 }
 
 # The kinds of value that are not kept, as the read-values-dropped issue
-# names them.
+# names them, in this order and separated by semicolons, since each but local
+# paths ends in a clause that an "and" would run on into the next.
 read_dropped_kinds <- c(
   iri = "URLs that are not valid IRI references", path = "local paths",
   hash = "checksums of algorithms or lengths sbom does not write",
-  doi = "DOIs that cannot form a valid URL"
+  doi = "DOIs that cannot form a valid URL", cpe = "CPE identifiers"
 )
+
+# A file: URL or a local path: absolute, from the home folder, relative to the
+# current folder or its parent, or on a Windows drive.
+read_path_pattern <- "^(file:|/|\\\\|~|\\.\\.?([/\\\\]|$)|[A-Za-z]:[/\\\\])"
 
 # URLs as sbom keeps its own (remote_vcs_url()): without credentials, query or
 # fragment (strip_url()). A file: URL or a local path would leak a machine
@@ -332,12 +403,66 @@ read_dropped_kinds <- c(
 # the kind of each value dropped.
 read_urls <- function(x) {
   x <- strip_url(tables_present(x))
-  path <- !is.na(x) & grepl("^(file:|/|\\\\|~|\\.\\.?([/\\\\]|$)|[A-Za-z]:[/\\\\])", x, ignore.case = TRUE)
+  path <- !is.na(x) & grepl(read_path_pattern, x, ignore.case = TRUE)
   bad <- !is.na(x) & !path
   bad[bad] <- iri_reference_bad(x[bad])
   x[path | bad] <- NA_character_
   dropped <- c(rep(read_dropped_kinds[["path"]], sum(path)), rep(read_dropped_kinds[["iri"]], sum(bad)))
   list(value = x, dropped = dropped)
+}
+
+# Purls as read_sbom() keeps them, as it keeps URLs (read_urls()): a
+# qualifier whose value is a URL, holding "://", loses its credentials, query
+# and fragment (strip_url()), and a qualifier whose value is a file: URL or a
+# local path is dropped. Values are compared percent-decoded, and a value
+# that changes is written again with %, &, #, ? and spaces encoded. Each
+# distinct purl is cleaned once. Returns list(value, dropped), with the kind
+# of each qualifier dropped.
+read_purls <- function(x) {
+  has <- !is.na(x) & grepl("?", x, fixed = TRUE)
+  if (!any(has)) {
+    return(list(value = x, dropped = character()))
+  }
+  distinct <- unique(x[has])
+  cleaned <- lapply(distinct, read_purl_qualifiers)
+  at <- match(x[has], distinct)
+  x[has] <- vapply(cleaned, `[[`, character(1), "value")[at]
+  n <- vapply(cleaned, `[[`, integer(1), "dropped")[at]
+  list(value = x, dropped = rep(read_dropped_kinds[["path"]], sum(n)))
+}
+
+# One purl with a `?`, cleaned as read_purls() says: list(value, dropped),
+# the number of qualifiers dropped.
+read_purl_qualifiers <- function(purl) {
+  head <- sub("\\?.*$", "", purl)
+  rest <- substring(purl, nchar(head) + 2L)
+  subpath <- if (grepl("#", rest, fixed = TRUE)) sub("^[^#]*", "", rest) else ""
+  qualifiers <- sub("#.*$", "", rest)
+  pairs <- strsplit(qualifiers, "&", fixed = TRUE)[[1]]
+  value <- sub("^[^=]*=", "", pairs)
+  key <- substr(pairs, 1L, nchar(pairs) - nchar(value))
+  valued <- grepl("=", pairs, fixed = TRUE)
+  decoded <- value
+  ok <- valued & !grepl("%(?![0-9A-Fa-f]{2})", value, perl = TRUE)
+  decoded[ok] <- pct_decode(value[ok])
+  decoded[!validUTF8(decoded)] <- value[!validUTF8(decoded)]
+  path <- valued & grepl(read_path_pattern, decoded, ignore.case = TRUE)
+  url <- valued & !path & grepl("://", decoded, fixed = TRUE)
+  stripped <- strip_url(decoded)
+  changed <- url & stripped != decoded
+  pairs[changed] <- paste0(key[changed], read_purl_encode(stripped[changed]))
+  pairs <- pairs[!path]
+  value <- paste0(head, if (length(pairs) > 0L) paste0("?", paste(pairs, collapse = "&")), subpath)
+  list(value = value, dropped = sum(path))
+}
+
+# Percent-encodes the characters a purl qualifier's value cannot hold as
+# they are.
+read_purl_encode <- function(x) {
+  for (ch in c("%", "&", "#", "?", " ")) {
+    x <- gsub(ch, sprintf("%%%02X", utf8ToInt(ch)), x, fixed = TRUE)
+  }
+  x
 }
 
 # DOIs, which the writers also give as https://doi.org/<doi>: one that cannot
@@ -502,10 +627,10 @@ read_spdx2_fields <- function(el) {
   )
 }
 
-read_spdx3_fields <- function(el, doc) {
+# `ix` is the graph's index, tables_spdx3_index().
+read_spdx3_fields <- function(el, ix) {
   raw <- el$raw
   n <- length(raw)
-  ix <- tables_spdx3_index(unname(json_items(json_member(doc, "@graph"))))
   originators <- json_flatten(raw, "originatedBy")
   agents <- tables_spdx3_agents(originators$items, ix)
   refs <- json_flatten(raw, "externalRef")
@@ -541,20 +666,19 @@ read_spdx3_fields <- function(el, doc) {
   )
 }
 
-read_swid_fields <- function(el, doc) {
+# `ent` is what tables_swid_entities() gives.
+read_swid_fields <- function(el, doc, ent) {
   n <- nrow(el)
   root <- el$location == "/tag"
-  entities <- json_items(json_member(doc, "entities"))
   links <- json_items(json_member(doc, "links"))
   meta <- json_items(json_member(doc, "meta"))
-  roles <- strsplit(tables_coalesce(tables_swid_values(entities, "role"), ""), "[ \t\r\n]+")
-  entity_names <- tables_present(tables_swid_values(entities, "name"))
+  entity_names <- ent$name
   # The first entity with the role and a name.
   entity <- function(role) {
-    which(vapply(roles, function(r) role %in% r, logical(1)) & !is.na(entity_names))[1L]
+    which(ent$has_role(role) & !is.na(entity_names))[1L]
   }
   distributor <- entity("distributor")
-  supplier_url <- read_urls(tables_swid_values(entities, "regid")[distributor])
+  supplier_url <- read_urls(ent$regid[distributor])
   rel <- tables_swid_values(links, "rel")
   pages <- rel %in% c("describedby", "related", "installationmedia")
   href <- read_urls(ifelse(pages, tables_swid_values(links, "href"), NA_character_))
@@ -586,13 +710,12 @@ read_swid_fields <- function(el, doc) {
 # What the SWID tag creators say: the regid of the first one with a real
 # regid, the organization it names, and the authors. A tag creator with the
 # placeholder regid http://invalid.unavailable (the default when it has none)
-# is an author, unless it is sbom itself, the tool.
-read_swid_creators <- function(doc) {
-  entities <- json_items(json_member(doc, "entities"))
-  roles <- strsplit(tables_coalesce(tables_swid_values(entities, "role"), ""), "[ \t\r\n]+")
-  creator <- vapply(roles, function(r) "tagCreator" %in% r, logical(1))
-  name <- tables_present(tables_swid_values(entities, "name"))[creator]
-  regid <- tables_present(tables_swid_values(entities, "regid"))[creator]
+# is an author, unless it is sbom itself, the tool. `ent` is what
+# tables_swid_entities() gives.
+read_swid_creators <- function(ent) {
+  creator <- ent$has_role("tagCreator")
+  name <- ent$name[creator]
+  regid <- ent$regid[creator]
   real <- !is.na(regid) & regid != swid_placeholder_regid
   organization <- which(real & !is.na(name))[1L]
   list(
@@ -615,6 +738,13 @@ read_swid_ref_ids <- function(id, location, regid) {
     id[strip] <- substring(id[strip], nchar(prefix) + 1L)
   }
   id
+}
+
+# The attribute `which` of the tables `t`, or `default` when they lack it,
+# as tables built by hand may.
+tables_coalesce_attr <- function(t, which, default) {
+  value <- attr(t, which, exact = TRUE)
+  if (is.null(value)) default else value
 }
 
 # Refs and ecosystems -----------------------------------------------------------
@@ -664,7 +794,7 @@ read_unique_refs <- function(ref) {
   groups <- split(out[later], factor(shared, levels = sort(unique(shared), method = "radix")))
   list(
     ref = out, id = names(groups), count = lengths(groups) + 1L,
-    renamed = vapply(groups, read_list, character(1), USE.NAMES = FALSE)
+    renamed = vapply(groups, function(g) read_list(quote_value(g)), character(1), USE.NAMES = FALSE)
   )
 }
 
@@ -722,12 +852,18 @@ read_licenses <- function(licenses, el, family, written) {
   owner <- owner[!is.na(owner)]
   single <- tabulate(owner, n)[owner] == 1L
   valid <- kind == "expression" & license_expression_check(expression, special = FALSE)$valid
+  # A licence of another SPDX document needs that document's reference, which
+  # is not kept, so it is kept as written only.
+  other_document <- grepl("DocumentRef-", expression, fixed = TRUE)
   spdx <- rep(NA_character_, n)
   as_written <- rep(NA_character_, n)
   if (family != "swid") {
-    spdx[owner[single & valid]] <- expression[single & valid]
+    keep <- single & valid & !other_document
+    spdx[owner[keep]] <- expression[keep]
   }
-  if (family %in% c("cdx", "swid")) {
+  if (family %in% c("spdx2", "spdx3")) {
+    as_written[owner[single & other_document]] <- expression[single & other_document]
+  } else {
     stated <- single & (family == "cdx" | !valid)
     as_written[owner[stated]] <- expression[stated]
     joined <- vapply(split(expression[!single], owner[!single]), paste, character(1), collapse = ", ")
@@ -911,8 +1047,13 @@ read_timestamp <- function(x) {
   time
 }
 
-# `creators` is what read_swid_creators() returns, for a SWID tag.
-read_metadata <- function(d, t, family, root, file, creators = NULL) {
+# `creators` is what read_swid_creators() returns, for a SWID tag. The
+# values are cleaned as read_clean() cleans them, and counted in `seen`.
+read_metadata <- function(d, t, family, root, file, creators = NULL, seen = NULL) {
+  if (is.null(seen)) {
+    seen <- new.env(parent = emptyenv())
+    seen$n <- 0L
+  }
   doc <- t$document
   authors <- doc$authors
   person <- authors$name[authors$kind %in% "person"]
@@ -929,11 +1070,15 @@ read_metadata <- function(d, t, family, root, file, creators = NULL) {
     regid <- creators$regid
   }
   person <- tables_present(sub("[ \t\r\n]*\\([^()]*\\)[ \t\r\n]*$", "", person))
+  person <- read_clean(person[!is.na(person)], seen)
   person <- person[!is.na(person)]
+  organization <- read_clean(organization, seen)
+  regid <- read_clean(regid, seen)
+  tool_version <- read_clean(doc$tools$version[doc$tools$name %in% "sbom"][1L], seen)
   timestamp <- read_timestamp(doc$timestamp)
   notes <- c(
-    paste0("Read from ", file, " (", read_format_name(d$format), " ", d$version, ")."),
-    doc$notes,
+    paste0("Read from ", file, " (", read_format_name(d$format), " ", quote_value(d$version), ")."),
+    read_clean(doc$notes, seen, lines = TRUE),
     if (is.null(timestamp)) {
       if (nzchar(source_date_epoch())) {
         "The document has no timestamp, so the time in SOURCE_DATE_EPOCH is used."
@@ -947,7 +1092,7 @@ read_metadata <- function(d, t, family, root, file, creators = NULL) {
     timestamp = resolve_timestamp(timestamp),
     author = if (length(person) > 0L) person else NA_character_,
     organization = organization,
-    tool_version = doc$tools$version[doc$tools$name %in% "sbom"][1L],
+    tool_version = tool_version,
     notes = notes,
     inputs = data.frame(kind = "sbom", path = d$path, stringsAsFactors = FALSE),
     regid = regid

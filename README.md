@@ -131,6 +131,27 @@ sbom_tree(x, max_depth = 2)
 sbom_diff(old, new)
 ```
 
+## Read and validate any SBOM
+
+`read_sbom()` reads an SBOM in any of the eight formats, made by sbom or by
+any other tool, into an `<sbom>` that you can inspect, compare or write again.
+`validate_sbom()` checks a file against the bundled schema of its format, and
+checks the content of a file or an `<sbom>` against integrity rules and the
+NTIA 2021 minimum elements, without network access. It prints a report with a
+hint for each problem, and `as.data.frame()` gives the findings for review.
+
+``` r
+y <- read_sbom("path/to/sbom.spdx.json")
+validate_sbom("path/to/sbom.spdx.json")
+```
+
+The status is `fail` when any layer fails, `skipped` when every layer that ran
+was skipped (as with `checks = "schema"` on a version sbom has no schema for),
+`partial` when a layer was skipped or could check only part of the rules (SPDX
+XML and tag-value have no official schema, SPDX's SHACL rules for SPDX 3 are
+not checked, and without jsonvalidate the JSON schemas are not checked), and
+`pass` otherwise.
+
 ## Inside packages
 
 A package can carry code that is not an R package. With `embedded = TRUE` (the

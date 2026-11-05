@@ -70,6 +70,11 @@ summary.sbom <- function(object, ...) {
 #' @export
 #' @rdname summary.sbom
 print.sbom_summary <- function(x, ...) {
+  # The values may come from a file of any origin.
+  x$root <- printable(x$root)
+  x$counts$value <- printable(x$counts$value)
+  x$licenses$license <- printable(x$licenses$license)
+  x$drift$message <- printable(x$drift$message)
   lines <- cli::cli_fmt({
     cli::cli_text("{.strong {x$root}}")
     cli::cli_h2("Components")
@@ -160,7 +165,7 @@ sbom_tree <- function(x, max_depth = Inf) {
 
   tree <- data.frame(id = unname(ids), stringsAsFactors = FALSE)
   tree$children <- unname(kids)
-  tree$label <- unname(lab)
+  tree$label <- printable(unname(lab))
   print(cli::tree(tree, root = "n1"))
   invisible(x)
 }

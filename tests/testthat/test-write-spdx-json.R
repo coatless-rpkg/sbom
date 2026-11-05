@@ -34,7 +34,7 @@ test_that("R, base packages and omitted fields follow the sample", {
   u <- Find(function(p) p$SPDXID == "SPDXRef-R-utils", d$packages)
   expect_null(u$versionInfo)
   expect_null(u$supplier)
-  expect_equal(u$licenseComments, "Part of R, under R's own licence.")
+  expect_equal(u$licenseComments, "Part of R, under R's own license.")
   contains <- Filter(function(r) r$relationshipType == "CONTAINS" && r$spdxElementId == "SPDXRef-R", d$relationships)
   expect_true(all(vapply(contains, function(r) r$comment == "Part of R", logical(1))))
   expect_true(all(vapply(contains, function(r) r$spdxElementId == "SPDXRef-R", logical(1))))
@@ -78,4 +78,50 @@ test_that("SPDX 2.2 leaves out the checksums of algorithms it does not list", {
   }
   expect_identical(algorithms("2.3"), c("SHA256", "SHA3-256"))
   expect_identical(algorithms("2.2"), "SHA256")
+})
+
+test_that("each LicenseRef a package uses is defined once, in hasExtractedLicensingInfos", {
+  x <- minimal_sbom()
+  x$components$license_spdx <- c(
+    "MIT OR LicenseRef-Zeta", "(LicenseRef-Alpha.1 AND LicenseRef-Zeta) OR DocumentRef-x:LicenseRef-Other",
+    NA_character_
+  )
+  d <- spdx_document(x)
+  text <- "The text of this license is not included in this SBOM."
+  expect_identical(d$hasExtractedLicensingInfos, list(
+    list(licenseId = "LicenseRef-Alpha.1", extractedText = text, name = "Alpha.1"),
+    list(licenseId = "LicenseRef-Zeta", extractedText = text, name = "Zeta")
+  ))
+  # After the packages, before the relationships, in 2.2 as in 2.3.
+  expect_identical(names(d)[(length(d) - 2L):length(d)], c("packages", "hasExtractedLicensingInfos", "relationships"))
+  expect_identical(spdx_document(x, "2.2")$hasExtractedLicensingInfos, d$hasExtractedLicensingInfos)
+  # Without a LicenseRef, the document has no such field.
+  expect_false("hasExtractedLicensingInfos" %in% names(spdx_document(fixture_sbom())))
+  skip_if_not_installed("jsonvalidate")
+  for (version in c("2.2", "2.3")) {
+    tf <- withr::local_tempfile(fileext = ".spdx.json")
+    write_text(spdx_json(x, version), tf)
+    expect_equal(schema_validate(tf, "spdx-json", version)$status, "pass", label = version)
+  }
+})
+
+test_that("R and base packages carry a supplier only when an override asserts it", {
+  ov <- data.frame(
+    component = c("R", "methods"), field = "supplier_name", value = "The R Foundation",
+    asserted_by = "Test", reason = "Fixture"
+  )
+  x <- sbom_package(test_path("fixtures/pkgs/srcpkg"), lib = fixture_lib(), overrides = ov)
+  # A supplier that is set but not asserted stays out, as R Observatory has it.
+  x$components$supplier_name[x$components$ref == "R/utils"] <- "Someone"
+  supplier <- function(d, id) Find(function(p) p$SPDXID == id, d$packages)$supplier
+  for (version in c("2.2", "2.3")) {
+    d <- spdx_document(x, version)
+    expect_identical(supplier(d, "SPDXRef-R"), "Organization: The R Foundation")
+    expect_identical(supplier(d, "SPDXRef-R-methods"), "Organization: The R Foundation")
+    expect_null(supplier(d, "SPDXRef-R-utils"))
+    # In its usual place, after the package file name and before the originator.
+    expect_identical(names(Find(function(p) p$SPDXID == "SPDXRef-R", d$packages))[1:4],
+      c("name", "SPDXID", "versionInfo", "supplier"))
+  }
+  expect_null(supplier(spdx_document(fixture_sbom()), "SPDXRef-R"))
 })

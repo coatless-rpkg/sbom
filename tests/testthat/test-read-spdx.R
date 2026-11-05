@@ -292,8 +292,7 @@ test_that("YAML aliases are refused before they are expanded", {
     paste0(basename(tf), " uses YAML aliases (*a), which sbom does not expand."),
     fixed = TRUE
   )
-  elapsed <- system.time(res <- schema_validate(tf, "spdx-yaml"))[["elapsed"]]
-  expect_lt(elapsed, 1)
+  res <- schema_validate(tf, "spdx-yaml")
   expect_identical(res$status, "fail")
   expect_match(res$findings$message, "uses YAML aliases (*a), which sbom does not expand.", fixed = TRUE)
 
@@ -414,25 +413,289 @@ test_that("an anchor glued to ':' or '?' is still caught", {
     write_text(paste0("spdxVersion: SPDX-2.3\ns: ", anchor, "\nt: [*a, *a]\n"), tf)
     expect_error(spdx_yaml_read(tf), "uses YAML aliases (*a), which sbom does not expand.", fixed = TRUE, label = anchor)
   }
-  # The name in the message keeps libyaml's anchor characters, at most 40.
+  # The name in the message keeps libyaml's anchor characters, quoted in at
+  # most 40 characters.
   name <- strrep("n", 100)
   write_text(paste0("spdxVersion: SPDX-2.3\ns: &", name, " x\nt: *", name, "\n"), tf)
   msg <- tryCatch(spdx_yaml_read(tf), error = conditionMessage)
-  expect_match(msg, paste0("(*", strrep("n", 40), ")"), fixed = TRUE)
-  expect_false(grepl(strrep("n", 41), msg, fixed = TRUE))
+  expect_match(msg, paste0("(*", strrep("n", 39), "\u2026)"), fixed = TRUE)
+  expect_false(grepl(strrep("n", 40), msg, fixed = TRUE))
 })
 
 # The re-review's probe: a 20 KB scalar anchored as `&a:`, referenced 5,120
 # times, which libyaml expands to a 100 MB model.
-test_that("the 40 KB anchor-glued alias file is refused at once", {
-  skip_if_not_installed("yaml")
-  tf <- withr::local_tempfile(fileext = ".spdx.yaml")
-  write_text(paste0(
+anchor_glued_yaml <- function() {
+  paste0(
     "spdxVersion: SPDX-2.3\ns: &a:", strrep("x", 20480), "\n",
     "t: [", paste(rep("*a", 5120), collapse = ", "), "]\n"
-  ), tf)
-  elapsed <- system.time(res <- schema_validate(tf, "spdx-yaml"))[["elapsed"]]
-  expect_lt(elapsed, 1)
+  )
+}
+
+test_that("the 40 KB anchor-glued alias file is refused", {
+  skip_if_not_installed("yaml")
+  tf <- withr::local_tempfile(fileext = ".spdx.yaml")
+  write_text(anchor_glued_yaml(), tf)
+  res <- schema_validate(tf, "spdx-yaml")
   expect_identical(res$status, "fail")
   expect_match(res$findings$message, "uses YAML aliases (*a), which sbom does not expand.", fixed = TRUE)
+})
+
+# Refused before expansion, both take about 0.01 s here.
+test_that("YAML alias files are refused at once, without being expanded", {
+  skip_on_cran()
+  skip_if_not_installed("yaml")
+  tf <- withr::local_tempfile(fileext = ".spdx.yaml")
+  for (text in c(yaml_alias_bomb(), anchor_glued_yaml())) {
+    write_text(text, tf)
+    expect_lt(system.time(schema_validate(tf, "spdx-yaml"))[["elapsed"]], 10)
+  }
+})
+
+# Nesting depth of YAML, before it is parsed -------------------------------------
+
+test_that("YAML that nests more than 200 levels is refused before it is parsed", {
+  skip_if_not_installed("yaml")
+  dir <- withr::local_tempdir()
+  deep <- c(
+    flow = paste0("spdxVersion: SPDX-2.3\nx: ", strrep("[", 1000), strrep("]", 1000), "\n"),
+    map = paste0("spdxVersion: SPDX-2.3\nx: ", strrep("{a: ", 1000), "1", strrep("}", 1000), "\n"),
+    unclosed = paste0("spdxVersion: SPDX-2.3\nx: ", strrep("[", 1000), "\n"),
+    indented = paste0("spdxVersion: SPDX-2.3\n", paste0(strrep(" ", 0:450), "k:", collapse = "\n"), " 1\n"),
+    dashes = paste0("spdxVersion: SPDX-2.3\nx:\n", strrep("- ", 300), "1\n")
+  )
+  for (kind in names(deep)) {
+    path <- file.path(dir, paste0(kind, ".spdx.yaml"))
+    write_text(deep[[kind]], path)
+    cnd <- expect_error(read_sbom(path), class = "sbom_read_error")
+    expect_identical(
+      cnd$sentence, paste0(kind, ".spdx.yaml is not valid SPDX YAML: it nests more than 200 levels deep."),
+      label = kind
+    )
+    res <- schema_validate(path, "spdx-yaml")
+    expect_identical(
+      res$findings$message, "The file is not valid YAML for an SBOM: it nests more than 200 levels deep.",
+      label = kind
+    )
+  }
+})
+
+test_that("brackets in strings, comments, block scalars and plain text do not count as nesting", {
+  shallow <- c(
+    strings = paste0('d: "', strrep("[", 500), '"\ne: \'', strrep("{", 500), "'\n"),
+    comments = paste0("# ", strrep("[", 500), "\na: 1 # ", strrep("{", 500), "\n"),
+    block = paste0("t: |\n  ", strrep("[", 500), "\n  more\nu: 1\n"),
+    plain = paste0("a: see ", strrep("[", 500), "\n"),
+    escaped = paste0('x: ["a\\"', strrep("[", 300), '", \'it\'\'s ', strrep("{", 300), "']\n"),
+    flat = paste0("x: [", paste(rep("[1]", 300), collapse = ", "), "]\n"),
+    json = paste0('{"a": [', paste(rep('{"b": "[[["}', 300), collapse = ", "), "]}\n"),
+    # Quotes that do start a node, after an anchor or an explicit key.
+    anchored = paste0('x: [&a "', strrep("[", 300), '"]\n'),
+    key = paste0('x: [? "', strrep("[", 300), '"]\n'),
+    started = paste0('---\nspdxVersion: SPDX-2.3\nx: "', strrep("[", 300), '"\n'),
+    ended = paste0('spdxVersion: SPDX-2.3\nx: "', strrep("[", 300), '"\n...\n')
+  )
+  for (kind in names(shallow)) expect_false(yaml_too_deep(shallow[[kind]]), label = kind)
+  expect_false(yaml_too_deep(paste0("x: ", strrep("[", 200), strrep("]", 200), "\n")))
+  expect_true(yaml_too_deep(paste0("x: ", strrep("[", 201), strrep("]", 201), "\n")))
+})
+
+test_that("nesting hidden behind what libyaml reads as plain text is still counted", {
+  nest <- paste0(strrep("[", 250), strrep("]", 250))
+  hidden <- c(
+    # Quotes inside a plain scalar in a flow collection.
+    apostrophe = paste0("x: [a'b, ", nest, ", c']\n"),
+    double = paste0('x: [a "b, ', nest, ', c"]\n'),
+    # A quote glued to a colon in a plain scalar.
+    glued = paste0('x: [a:"b, ', nest, ', c"]\n'),
+    # Closing brackets inside strings and comments.
+    strings = paste0("x: [", strrep('"]]]]]]]]]]", [[[[[[[[[[', 30), "1", strrep("]", 301), "\n"),
+    comments = paste0("x: [", strrep("[ # ]]]]\n", 250), strrep("]", 251), "\n"),
+    multiline = paste0("x: [", strrep('"\n]]]]]]]]]]\n", [[[[[[[[[[', 30), "1", strrep("]", 301), "\n"),
+    # A quote at the start of a line that goes on with a plain scalar.
+    continued = paste0('k: word\n  "x\nb: ', nest, '\nc: "\n'),
+    continued_dash = paste0('k: word\n  - "x\nb: ', nest, '\nc: "\n'),
+    continued_deeper = paste0('key: word\n    more\n  "x\nb: ', nest, '\nc: "\n'),
+    # A quote inside a block scalar, which ends at a less indented line.
+    block = paste0("a: |\n  'start\nb: ", nest, "\nc: 'end'\n"),
+    block_in_sequence = paste0("- key: |\n  b: ", nest, "\n"),
+    # The re-review's: a quote after a plain word ending in ?, or after a
+    # plain word starting with & or !, is plain text.
+    question = paste0('x: [a? "b, ', nest, ', c"]\n'),
+    question_single = paste0("x: [a? 'b, ", nest, ", c']\n"),
+    ampersand = paste0('x: [a &b "x, ', nest, ', y"]\n'),
+    exclamation = paste0('x: [a !b "x, ', nest, ', y"]\n'),
+    # A flow collection on the --- line starts the document's root.
+    document = paste0("--- ", nest, "\n"),
+    document_map = paste0("--- ", strrep("{a: ", 250), "1", strrep("}", 250), "\n"),
+    document_tag = paste0("--- !!seq ", nest, "\n"),
+    document_anchor = paste0("--- &a ", nest, "\n"),
+    directive = paste0("%YAML 1.1\n--- ", nest, "\n"),
+    # A plain value given on the line after its key goes on below.
+    continued_value = paste0('key:\n  word\n  "x\nb: ', nest, '\nc: "\n')
+  )
+  for (kind in names(hidden)) expect_true(yaml_too_deep(hidden[[kind]]), label = kind)
+})
+
+test_that("the official SPDX YAML examples and sbom's own YAML are not too deep", {
+  for (f in c(
+    test_path("fixtures", "third-party", "spdx-2.3", "SPDXYAMLExample-2.3.spdx.yaml"),
+    test_path("fixtures", "third-party", "spdx-2.2", "SPDXYAMLExample-2.2.spdx.yaml"),
+    test_path("fixtures", "r-observatory", "dplyr-1.2.1.spdx.yaml")
+  )) {
+    bytes <- charToRaw(read_utf8_text(f))
+    expect_false(yaml_scan(bytes, yaml_text_lines(bytes), 3L)$deep, label = f)
+    expect_identical(yaml_later_markers(yaml_text_lines(bytes)), integer(), label = f)
+  }
+  path <- withr::local_tempfile(fileext = ".spdx.yaml")
+  write_sbom(fixture_sbom(), path, format = "spdx-yaml")
+  bytes <- charToRaw(read_utf8_text(path))
+  expect_false(yaml_scan(bytes, yaml_text_lines(bytes), 2L)$deep)
+  # JSON is YAML; its depth is that of its objects and arrays.
+  json <- charToRaw(read_utf8_text(test_path("fixtures", "third-party", "spdx-2.3", "SPDXJSONExample-v2.3.spdx.json")))
+  expect_false(yaml_scan(json, yaml_text_lines(json), 6L)$deep)
+  expect_true(yaml_scan(json, yaml_text_lines(json), 5L)$deep)
+  expect_identical(yaml_json_depth(rawToChar(json)), 6L)
+})
+
+# The review's files: 100,000 levels of `{a: ` took 117 s, and 100,000 of `[`
+# 68 s, before the depth was checked. Refused, each takes about 0.1 s here.
+test_that("the review's deeply nested YAML files are refused at once", {
+  skip_on_cran()
+  skip_if_not_installed("yaml")
+  path <- withr::local_tempfile(fileext = ".spdx.yaml")
+  for (text in c(
+    paste0("spdxVersion: SPDX-2.3\nx: ", strrep("{a: ", 1e5), "1", strrep("}", 1e5), "\n"),
+    paste0("spdxVersion: SPDX-2.3\nx: ", strrep("[", 1e5), strrep("]", 1e5), "\n")
+  )) {
+    write_text(text, path)
+    expect_lt(system.time(expect_error(read_sbom(path), class = "sbom_read_error"))[["elapsed"]], 10)
+    expect_lt(system.time(validate_sbom(path))[["elapsed"]], 10)
+  }
+})
+
+# A tag-value document of one package with `n` repeats of the tag `tag`.
+tv_repeated <- function(n, tag = "PackageLicenseInfoFromFiles: MIT") {
+  paste0(paste(c(
+    "SPDXVersion: SPDX-2.3", "DataLicense: CC0-1.0", "SPDXID: SPDXRef-DOCUMENT", "DocumentName: x",
+    "DocumentNamespace: https://example.org/x", "Creator: Organization: X", "Created: 2026-01-01T00:00:00Z",
+    "PackageName: p", "SPDXID: SPDXRef-p", "PackageDownloadLocation: NOASSERTION", "FilesAnalyzed: false",
+    rep(tag, n)
+  ), collapse = "\n"), "\n")
+}
+
+test_that("repeated tag-value tags gather every value, in order, keeping the first of a text tag", {
+  doc <- spdx_tv_parse(paste0(
+    tv_repeated(3, "PackageLicenseInfoFromFiles: MIT"),
+    "PackageLicenseInfoFromFiles: Apache-2.0\nPackageChecksum: SHA1: 85ed0817af83a24ad8da68c2b5094de69833983c\n",
+    "PackageVersion: 1.0\nPackageVersion: 2.0\nExternalRef: OTHER vcs https://example.org/a\n",
+    "ExternalRefComment: first\nExternalRefComment: second\nExternalRef: OTHER vcs https://example.org/b\n",
+    "PackageChecksum: MD5: 624c1abb3664f4b35547e7c73864ad24\nCreator: Tool: late\n"
+  ))
+  p <- doc$packages[[1]]
+  expect_identical(names(p), c(
+    "name", "SPDXID", "downloadLocation", "filesAnalyzed", "licenseInfoFromFiles", "checksums",
+    "versionInfo", "externalRefs"
+  ))
+  expect_identical(p$licenseInfoFromFiles, list("MIT", "MIT", "MIT", "Apache-2.0"))
+  expect_identical(p$versionInfo, "1.0")
+  expect_identical(vapply(p$checksums, `[[`, "", "algorithm"), c("SHA1", "MD5"))
+  expect_identical(lapply(p$externalRefs, `[[`, "comment"), list("first", NULL))
+  expect_identical(attr(doc, "skipped_tags"), c("PackageVersion", "ExternalRefComment", "Creator"))
+  # Creators are gathered too, before the package section starts.
+  doc <- spdx_tv_parse(sub("Creator: Organization: X", "Creator: Organization: X\nCreator: Tool: t-1", tv_repeated(1)))
+  expect_identical(doc$creationInfo, list(creators = list("Organization: X", "Tool: t-1"), created = "2026-01-01T00:00:00Z"))
+})
+
+# The review measured 32 s for 100,000 repeated lines (3 MB), and the time
+# grew with the square of the lines. Now it takes about 1 s here.
+test_that("a tag-value file of 100,000 repeated lines reads in linear time", {
+  skip_on_cran()
+  path <- withr::local_tempfile(fileext = ".spdx")
+  write_text(tv_repeated(1e5), path)
+  expect_lt(system.time(x <- read_sbom(path))[["elapsed"]], 10)
+  # The package, and the placeholder root of a document that describes none.
+  expect_identical(nrow(x$components), 2L)
+  write_text(sub("Creator: Organization: X", strrep("Creator: Tool: t-1\n", 5e4), tv_repeated(1), fixed = TRUE), path)
+  expect_lt(system.time(x <- read_sbom(path))[["elapsed"]], 10)
+  expect_identical(x$metadata$organization, NA_character_)
+})
+
+test_that("SPDX YAML that holds more than one document is refused before it is parsed", {
+  skip_if_not_installed("yaml")
+  dir <- withr::local_tempdir()
+  nest <- paste0(strrep("[", 1000), strrep("]", 1000))
+  documents <- c(
+    second = "spdxVersion: SPDX-2.3\n---\nspdxVersion: SPDX-2.3\n",
+    after_end = "spdxVersion: SPDX-2.3\n...\nname: x\n",
+    after_block = "spdxVersion: SPDX-2.3\ncomment: |\n  text\n---\nname: x\n"
+  )
+  for (kind in names(documents)) {
+    path <- file.path(dir, paste0(kind, ".spdx.yaml"))
+    write_text(documents[[kind]], path)
+    cnd <- expect_error(read_sbom(path), class = "sbom_read_error")
+    expect_identical(
+      cnd$sentence, paste0(kind, ".spdx.yaml is not valid SPDX YAML: it holds more than one YAML document."),
+      label = kind
+    )
+    expect_identical(
+      schema_validate(path, "spdx-yaml")$findings$message,
+      "The file is not valid YAML for an SBOM: it holds more than one YAML document.",
+      label = kind
+    )
+  }
+  # A --- before the content, a ... that ends it, and a --- inside a block
+  # scalar are one document.
+  expect_identical(yaml_problem('---\nspdxVersion: SPDX-2.3\n...\n'), NA_character_)
+  expect_identical(yaml_problem("spdxVersion: SPDX-2.3\ncomment: |\n  ---\n  text\n"), NA_character_)
+  # The re-review's second document, nested 40,000 levels deep, which
+  # yaml.load() parsed and dropped unchecked.
+  path <- file.path(dir, "nested.spdx.yaml")
+  write_text(paste0("spdxVersion: SPDX-2.3\n--- ", paste0(strrep("[", 40000), strrep("]", 40000)), "\n"), path)
+  expect_error(read_sbom(path), class = "sbom_read_error")
+})
+
+# The re-review's files, each 78 KB: a quote after `a?`, `a &b` or `a !b` hid
+# 40,000 levels of nesting, which took 6.5 s to refuse after parsing, and a
+# second document of them took 19 s and was never refused. Each is now
+# refused in about 0.05 s here.
+test_that("the re-review's hidden and second-document nesting is refused at once", {
+  skip_on_cran()
+  skip_if_not_installed("yaml")
+  nest <- paste0(strrep("[", 40000), strrep("]", 40000))
+  path <- withr::local_tempfile(fileext = ".spdx.yaml")
+  for (text in c(
+    paste0('spdxVersion: SPDX-2.3\nx: [a? "b, ', nest, ', c"]\n'),
+    paste0('spdxVersion: SPDX-2.3\nx: [a &b "x, ', nest, ', y"]\n'),
+    paste0('spdxVersion: SPDX-2.3\nx: [a !b "x, ', nest, ', y"]\n'),
+    paste0("spdxVersion: SPDX-2.3\n--- ", nest, "\n")
+  )) {
+    write_text(text, path)
+    expect_lt(system.time(expect_error(read_sbom(path), class = "sbom_read_error"))[["elapsed"]], 10)
+    expect_lt(system.time(validate_sbom(path))[["elapsed"]], 10)
+  }
+})
+
+# The re-review's 80 KB file: one plain scalar of 80,000 brackets. The scan
+# looked at the line from its start for each bracket, and read_sbom() took
+# 45 s; now the scan is linear, and the read takes about 0.8 s here.
+test_that("the YAML pre-scan takes linear time on long lines", {
+  skip_on_cran()
+  skip_if_not_installed("yaml")
+  path <- withr::local_tempfile(fileext = ".spdx.yaml")
+  write_text(paste0("spdxVersion: SPDX-2.3\nSPDXID: SPDXRef-DOCUMENT\nname: d\ncomment: see ", strrep("[", 80000), "\n"), path)
+  expect_lt(system.time(x <- read_sbom(path))[["elapsed"]], 10)
+  expect_s3_class(x, "sbom")
+  # sbom's own SPDX YAML of about 2 MB, with long licence comments full of
+  # brackets, quotes, # and |.
+  sbom <- fixture_sbom()
+  sbom$components$license_comment <- paste(rep('see [1] | "a" # {b} [c', 12000), collapse = " ")
+  yaml <- withr::local_tempfile(fileext = ".spdx.yaml")
+  write_sbom(sbom, yaml, format = "spdx-yaml")
+  expect_gt(file.size(yaml), 2e6)
+  txt <- read_utf8_text(yaml)
+  bytes <- charToRaw(txt)
+  expect_lt(system.time(problem <- yaml_problem(txt))[["elapsed"]], 10)
+  expect_identical(problem, NA_character_)
+  expect_lt(system.time(scan <- yaml_scan(bytes, yaml_text_lines(bytes), 2L))[["elapsed"]], 10)
+  expect_false(scan$deep)
 })

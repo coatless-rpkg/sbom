@@ -203,7 +203,7 @@ check_sbom <- function(x, arg = "x", call = parent.frame()) {
 print.sbom <- function(x, ...) {
   comps <- x$components
   root <- comps[comps$is_root %in% TRUE, , drop = FALSE][1, ]
-  label <- node_label(root)
+  label <- printable(node_label(root))
   n_issues <- nrow(x$issues)
   cat("<sbom> ", label, "\n", sep = "")
   cat("Components: ", nrow(comps), "\n", sep = "")

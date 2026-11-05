@@ -53,3 +53,23 @@ test_that("print.sbom_summary() writes to standard output", {
   expect_gt(length(out), 5L)
   expect_true(any(grepl("Licences", out)))
 })
+
+test_that("print(), summary(), sbom_tree() and sbom_diff() show control characters as spaces", {
+  local_plain_cli()
+  x <- minimal_sbom()
+  x$components$name[1] <- "a\u001b]52;c;eA==\u0007"
+  x$components$version[2] <- "2.0\u009b31m"
+  x$components$license_spdx[2] <- "MIT\u001b[2J"
+  x$issues <- add_issue(
+    x$issues, "pkg:cran/b@2.0", "version", "drift-version", "b is 2.0\u001b[2J in renv.lock but 2.1 in the library."
+  )
+  out <- c(
+    utils::capture.output(print(x)), utils::capture.output(print(summary(x))),
+    utils::capture.output(sbom_tree(x)), utils::capture.output(print(sbom_diff(minimal_sbom(), x)))
+  )
+  expect_false(any(grepl("[\\x{1b}\\x{07}\\x{9b}]", out, perl = TRUE)))
+  expect_true(any(grepl("<sbom> a ]52;c;eA==  1.0", out, fixed = TRUE)))
+  expect_true(any(grepl("MIT [2J (1)", out, fixed = TRUE)))
+  expect_true(any(grepl("b 2.0 31m", out, fixed = TRUE)))
+  expect_true(any(grepl("b is 2.0 [2J in renv.lock", out, fixed = TRUE)))
+})

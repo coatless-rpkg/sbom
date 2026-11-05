@@ -84,6 +84,17 @@ spdx_tv <- function(x, version = "2.3") {
     tv_line("CreatorComment", doc$creationInfo$comment, wrap = TRUE)
   )
   for (p in doc$packages) lines <- c(lines, tv_package(p, version))
+  extracted <- doc$hasExtractedLicensingInfos
+  if (length(extracted) > 0L) lines <- c(lines, "", "## License Information")
+  for (k in seq_along(extracted)) {
+    lines <- c(
+      lines,
+      if (k > 1L) "",
+      tv_line("LicenseID", extracted[[k]]$licenseId),
+      tv_line("ExtractedText", extracted[[k]]$extractedText, wrap = TRUE),
+      tv_line("LicenseName", extracted[[k]]$name)
+    )
+  }
   lines <- c(lines, "", "## Relationships")
   for (r in doc$relationships) {
     lines <- c(

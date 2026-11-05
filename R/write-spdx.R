@@ -57,6 +57,12 @@ spdx_asserted_sentences <- function(row) {
   )
 }
 
+# Whether an override of the component row asserts its `field`.
+spdx_asserted <- function(row, field) {
+  asserted <- row$asserted[[1]]
+  is.data.frame(asserted) && field %in% asserted$field
+}
+
 # The package's SystemRequirements text, as written, for the end of its
 # comment in SPDX 2 and SPDX 3, which have no field for it.
 spdx_system_requirements <- function(row) {
@@ -91,12 +97,16 @@ spdx_package <- function(row, id, version = "2.3") {
   if (spdx_is_set(row$package_file_name)) {
     p$packageFileName <- row$package_file_name
   }
+  # R and its base packages have no supplier, as R Observatory writes them,
+  # unless an override asserts one.
   if (!is_r && !is_base) {
     p$supplier <- if (spdx_is_set(row$supplier_name)) {
       paste0("Organization: ", row$supplier_name)
     } else {
       "NOASSERTION"
     }
+  } else if (spdx_is_set(row$supplier_name) && spdx_asserted(row, "supplier_name")) {
+    p$supplier <- paste0("Organization: ", row$supplier_name)
   }
   if (spdx_is_set(row$maintainer)) {
     p$originator <- paste0("Person: ", row$maintainer)
@@ -255,7 +265,7 @@ spdx_document <- function(x, version = "2.3") {
   } else {
     root$name
   }
-  list(
+  doc <- list(
     spdxVersion = paste0("SPDX-", version),
     dataLicense = "CC0-1.0",
     SPDXID = "SPDXRef-DOCUMENT",
@@ -266,9 +276,35 @@ spdx_document <- function(x, version = "2.3") {
       created = format_timestamp(x$metadata$timestamp),
       creators = as.list(creators)
     ),
-    packages = packages,
-    relationships = spdx_relationships(x, ids)
+    packages = packages
   )
+  extracted <- spdx_extracted_licenses(packages)
+  if (length(extracted) > 0L) doc$hasExtractedLicensingInfos <- extracted
+  doc$relationships <- spdx_relationships(x, ids)
+  doc
+}
+
+# The LicenseRef- ids that the licence expressions `x` use, each once, in radix
+# order. A reference with a DocumentRef- prefix names another document's
+# licence, which this document does not define.
+spdx_license_refs <- function(x) {
+  tokens <- unlist(strsplit(x[!is.na(x)], "[() \t\r\n]+"), use.names = FALSE)
+  refs <- tokens[grepl("^LicenseRef-[A-Za-z0-9.-]+$", tokens)]
+  sort(unique(refs), method = "radix")
+}
+
+# An entry for each LicenseRef- the packages' declared or concluded licences
+# use, which SPDX 2 requires the document to define. sbom has the reference,
+# not the licence's text, and says so.
+spdx_extracted_licenses <- function(packages) {
+  values <- unlist(lapply(packages, function(p) c(p$licenseConcluded, p$licenseDeclared)), use.names = FALSE)
+  lapply(spdx_license_refs(values), function(id) {
+    list(
+      licenseId = id,
+      extractedText = "The text of this licence is not included in this SBOM.",
+      name = sub("^LicenseRef-", "", id)
+    )
+  })
 }
 
 spdx_json <- function(x, version = "2.3") {

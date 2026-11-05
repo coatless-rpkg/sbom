@@ -125,6 +125,8 @@ print.sbom_diff <- function(x, ...) {
   n_chg <- nrow(ch) - n_add - n_rem
   cat(n_add, " added, ", n_rem, " removed, ", n_chg, " changed\n", sep = "")
   show <- function(v) if (is.na(v)) "NOASSERTION" else v
+  # The values may come from a file of any origin.
+  ch[c("name", "old", "new")] <- lapply(ch[c("name", "old", "new")], printable)
   for (i in seq_len(nrow(ch))) {
     row <- ch[i, ]
     line <- switch(row$change,

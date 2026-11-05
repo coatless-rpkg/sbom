@@ -232,3 +232,23 @@ test_that("SPDX 2.2 tag-value spells the category PACKAGE-MANAGER, and reads it 
   skip_if_not_installed("jsonvalidate")
   expect_equal(schema_validate(tf, "spdx-tv", "2.2")$status, "partial")
 })
+
+test_that("LicenseRef definitions follow the packages, and read back as the JSON document's", {
+  x <- minimal_sbom()
+  x$components$license_spdx[1:2] <- c("LicenseRef-Zeta", "MIT AND LicenseRef-Alpha")
+  txt <- spdx_tv(x)
+  expect_match(txt, paste0(
+    "\n\n## License Information\n",
+    "LicenseID: LicenseRef-Alpha\n",
+    "ExtractedText: <text>The text of this licence is not included in this SBOM.</text>\n",
+    "LicenseName: Alpha\n\n",
+    "LicenseID: LicenseRef-Zeta\n",
+    "ExtractedText: <text>The text of this licence is not included in this SBOM.</text>\n",
+    "LicenseName: Zeta\n\n## Relationships\n"
+  ), fixed = TRUE)
+  expect_equal(
+    sort_keys(spdx_tv_read(tv_file(txt))),
+    sort_keys(jsonlite::fromJSON(spdx_json(x), simplifyVector = FALSE))
+  )
+  expect_false(grepl("## License Information", spdx_tv(fixture_sbom()), fixed = TRUE))
+})

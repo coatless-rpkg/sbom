@@ -453,3 +453,108 @@ test_that("the re-review's 5 MB document with 120 stray keys does not abort R", 
   expect_identical(nrow(res$findings), 121L)
   expect_lt(max(nchar(res$findings$message)), 200)
 })
+
+test_that("a document whose escaped text is too long for V8 is never handed to it", {
+  seen <- new.env()
+  local_mocked_bindings(
+    has_jsonvalidate = function() TRUE,
+    compiled_json_schema = function(format, version) {
+      list(validate = function(json, ...) {
+        seen$n <- c(seen$n, nchar(json))
+        TRUE
+      })
+    },
+    json_max_mb = function() 0.01
+  )
+  tf <- withr::local_tempfile(fileext = ".json")
+  # 3,000 backslashes: 6,000 characters in the file, 6,000 in the JSON
+  # jsonlite writes, and 12,000 in the string literal around it, which is
+  # more than 0.01 MB (10,486 characters).
+  write_text(paste0('{"bomFormat":"CycloneDX","specVersion":"1.6","x":"', strrep("\\\\", 3000), '"}'), tf)
+  res <- schema_validate(tf, "cyclonedx-json", "1.6")
+  expect_identical(res$status, "skipped")
+  expect_identical(res$findings, data.frame(
+    location = "",
+    message = "The document is too large for the JSON schema check (0.1 MB; the limit is 0.01 MB), so the schema was not checked."
+  ))
+  expect_null(seen$n)
+  # Half as many fit, and are handed to the validator.
+  write_text(paste0('{"bomFormat":"CycloneDX","specVersion":"1.6","x":"', strrep("\\\\", 1500), '"}'), tf)
+  expect_identical(schema_validate(tf, "cyclonedx-json", "1.6")$status, "pass")
+  expect_length(seen$n, 1L)
+})
+
+test_that("the size limit for V8 is 32 MB", {
+  expect_identical(json_max_mb(), 32)
+})
+
+test_that("the XSD check lists at most 1,000 errors, each quoting a value briefly", {
+  tf <- withr::local_tempfile(fileext = ".cdx.xml")
+  write_text(paste0(
+    '<?xml version="1.0"?><bom xmlns="http://cyclonedx.org/schema/bom/1.6" version="1"><components>',
+    '<component type="', strrep("q", 100), '"><name>a</name></component>',
+    # libxml2 stops its message about this one inside the quoted value.
+    '<component type="', strrep("z", 2e5), '"><name>a</name></component>',
+    strrep('<component type="library"><name>a</name><bogus/></component>', 4998), "</components></bom>"
+  ), tf)
+  res <- schema_validate(tf, "cyclonedx-xml", "1.6")
+  expect_identical(res$status, "fail")
+  expect_identical(nrow(res$findings), 1001L)
+  expect_identical(res$findings$message[1001], "4000 more errors are not listed.")
+  expect_identical(res$findings$location, rep("", 1001L))
+  head <- paste0(
+    "Element '{http://cyclonedx.org/schema/bom/1.6}component', attribute 'type': ",
+    "[facet 'enumeration'] The value '"
+  )
+  ellipsis <- intToUtf8(0x2026)
+  expect_match(
+    res$findings$message[1],
+    paste0(head, strrep("q", 79), ellipsis, "' is not an element of the set {'application', "),
+    fixed = TRUE
+  )
+  expect_identical(res$findings$message[2], paste0(head, strrep("z", 79), ellipsis))
+  expect_lt(max(nchar(res$findings$message)), 2000L)
+})
+
+test_that("one error more than the XSD check lists is named in the singular", {
+  tf <- withr::local_tempfile(fileext = ".cdx.xml")
+  write_text(paste0(
+    '<?xml version="1.0"?><bom xmlns="http://cyclonedx.org/schema/bom/1.6" version="1"><components>',
+    strrep('<component type="library"><name>a</name><bogus/></component>', 1001), "</components></bom>"
+  ), tf)
+  res <- schema_validate(tf, "cyclonedx-xml", "1.6")
+  expect_identical(nrow(res$findings), 1001L)
+  expect_identical(res$findings$message[1001], "1 more error is not listed.")
+})
+
+test_that("an XML file whose name holds < or > is checked from its bytes", {
+  dir <- withr::local_tempdir()
+  path <- file.path(dir, "report<v2>.cdx.xml")
+  file.copy(test_path("fixtures", "third-party", "cyclonedx", "valid-bom-1.6.xml"), path)
+  expect_identical(schema_validate(path, "cyclonedx-xml", "1.6")$status, "pass")
+  expect_identical(validate_sbom(path, checks = "schema")$status, "pass")
+})
+
+test_that("an XML document that uses entities declared in its DTD skips the XSD check", {
+  tf <- withr::local_tempfile(fileext = ".cdx.xml")
+  write_text(paste0(
+    '<?xml version="1.0"?><!DOCTYPE bom [<!ENTITY n "lib">]>',
+    '<bom xmlns="http://cyclonedx.org/schema/bom/1.6" version="1"><components>',
+    '<component type="library"><name>&n;</name></component></components></bom>'
+  ), tf)
+  res <- schema_validate(tf, "cyclonedx-xml", "1.6")
+  expect_identical(res$status, "skipped")
+  expect_identical(
+    res$findings$message,
+    "The document uses entities declared in its DTD, which sbom does not expand, so the XSD check did not run."
+  )
+  v <- validate_sbom(tf, checks = "schema")
+  expect_identical(v$status, "skipped")
+  expect_identical(v$findings$severity, "info")
+  # A value that quotes libxml2's words is still an error.
+  write_text(paste0(
+    '<?xml version="1.0"?><bom xmlns="http://cyclonedx.org/schema/bom/1.6" version="1"><components>',
+    '<component type="xmlSchemaVDocWalk entity reference"><name>a</name></component></components></bom>'
+  ), tf)
+  expect_identical(schema_validate(tf, "cyclonedx-xml", "1.6")$status, "fail")
+})

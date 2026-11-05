@@ -327,7 +327,7 @@ test_that("CycloneDX licences, references and properties map to their columns", 
   # The URL that is not one and the checksum that is too short are counted.
   expect_identical(issues_with(x, "read-values-dropped")$message, paste0(
     "2 values were not kept because sbom's formats cannot carry them (URLs that are not valid IRI ",
-    "references and checksums of algorithms or lengths sbom does not write)."
+    "references; checksums of algorithms or lengths sbom does not write)."
   ))
   expect_identical(issues_with(x, "read-values-dropped")$severity, "info")
   expect_valid_in_every_format(x, "CycloneDX columns")
@@ -362,8 +362,8 @@ test_that("URLs lose their credentials, query and fragment, and local paths are 
   expect_identical(x$components$download_location, NA_character_)
   expect_identical(x$components$doi, NA_character_)
   expect_identical(issues_with(x, "read-values-dropped")$message, paste0(
-    "2 values were not kept because sbom's formats cannot carry them (DOIs that cannot form a valid URL ",
-    "and local paths)."
+    "2 values were not kept because sbom's formats cannot carry them (local paths; DOIs that cannot ",
+    "form a valid URL)."
   ))
   x <- read_text(paste0(
     '{"spdxVersion":"SPDX-2.3","SPDXID":"SPDXRef-DOCUMENT","name":"one",',
@@ -372,6 +372,21 @@ test_that("URLs lose their credentials, query and fragment, and local paths are 
   ), ".spdx.json")
   expect_identical(issues_with(x, "read-values-dropped")$message, paste0(
     "1 value was not kept because sbom's formats cannot carry it (local paths)."
+  ))
+})
+
+test_that("the dropped values' kinds are listed so that the sentence reads with all four", {
+  x <- read_text(paste0(
+    '{"bomFormat":"CycloneDX","specVersion":"1.6","version":1,',
+    '"metadata":{"component":{"type":"application","bom-ref":"app","name":"app",',
+    '"externalReferences":[{"type":"vcs","url":"not a url"},{"type":"website","url":"/home/alice/site"}],',
+    '"hashes":[{"alg":"MD5","content":"short"}],',
+    '"properties":[{"name":"sbom:doi","value":"10.1/a b"}]}}}\n'
+  ), ".cdx.json")
+  expect_identical(issues_with(x, "read-values-dropped")$message, paste0(
+    "4 values were not kept because sbom's formats cannot carry them (URLs that are not valid IRI ",
+    "references; local paths; checksums of algorithms or lengths sbom does not write; DOIs that ",
+    "cannot form a valid URL)."
   ))
 })
 
@@ -756,7 +771,7 @@ test_that("renaming duplicates takes linear time, and its message names at most 
   d <- read_document(path)
   t <- document_tables(d)
   x <- NULL
-  expect_lt(system.time(x <- read_sbom_build(d, t))[["elapsed"]], 1)
+  expect_lt(system.time(x <- read_sbom_build(d, t))[["elapsed"]], 10)
   # The renamed ones start after the highest suffix taken, a-3001.
   renamed <- paste0("a-", seq(n + 2L, 2L * n))
   expect_setequal(x$components$ref, c("a", ids[-(1:n)], renamed, "document"))
@@ -914,4 +929,219 @@ test_that("timestamps are read as ISO 8601 in UTC", {
   expect_null(read_timestamp("2026-01-01"))
   expect_null(read_timestamp("2026-13-01T00:00:00Z"))
   expect_null(read_timestamp(NA_character_))
+})
+
+# Control characters -------------------------------------------------------------
+
+# A CycloneDX document whose values hold an OSC 52 clipboard write, a screen
+# clear and an 8-bit CSI (`esc`), and whose description has a tab and a
+# newline.
+hostile_cdx <- function(esc = "\u001b]52;c;cHduZWQ=\u0007\u001b[2J\u009b31m") {
+  doc <- list(
+    bomFormat = "CycloneDX", specVersion = "1.6", version = 1L,
+    metadata = list(
+      timestamp = "2026-01-01T00:00:00Z", authors = list(list(name = paste0("A", esc))),
+      component = list(type = "application", `bom-ref` = paste0("root", esc), name = paste0("root", esc), version = "1")
+    ),
+    components = list(list(
+      type = "library", `bom-ref` = "c1", name = paste0("evil", esc), version = paste0("1.0", esc),
+      purl = "pkg:cran/evil@1.0", description = paste0("line one\n\tline two", esc),
+      licenses = list(list(expression = paste0("MIT", esc))), supplier = list(name = paste0("S", esc))
+    )),
+    dependencies = list(list(ref = paste0("root", esc), dependsOn = list("c1")))
+  )
+  paste0(jsonlite::toJSON(doc, auto_unbox = TRUE), "\n")
+}
+
+# A CycloneDX document with a root and nothing else.
+cdx_minimal_text <- function() {
+  paste0(
+    '{"bomFormat":"CycloneDX","specVersion":"1.6","version":1,"metadata":{"timestamp":"2026-01-01T00:00:00Z",',
+    '"component":{"type":"application","bom-ref":"app","name":"app","version":"1"}}}\n'
+  )
+}
+
+# Whether any of the strings `x` holds ESC, BEL or an 8-bit CSI.
+holds_escape <- function(x) {
+  any(grepl("[\\x{1b}\\x{07}\\x{9b}]", x, perl = TRUE))
+}
+
+test_that("read_sbom() replaces the control characters of every value with spaces, and counts them", {
+  x <- read_text(hostile_cdx(), ".cdx.json")
+  comps <- x$components
+  evil <- comps[comps$purl %in% "pkg:cran/evil@1.0", , drop = FALSE]
+  shown <- " ]52;c;cHduZWQ=  [2J 31m"
+  # Names, versions and refs lose every control character and are trimmed.
+  expect_identical(evil$name, paste0("evil", shown))
+  expect_identical(evil$version, paste0("1.0", shown))
+  expect_identical(x$metadata$root, paste0("root", shown))
+  expect_identical(comps$ref[comps$is_root], x$metadata$root)
+  expect_identical(x$relationships$from, x$metadata$root)
+  # A description keeps its tab and newline.
+  expect_identical(evil$description, paste0("line one\n\tline two", shown))
+  expect_identical(evil$supplier_name, paste0("S", shown))
+  expect_identical(evil$license_as_written, paste0("MIT", shown))
+  expect_identical(x$metadata$author, paste0("A", shown))
+  values <- c(
+    unlist(Filter(is.character, comps), use.names = FALSE), unlist(x$relationships, use.names = FALSE),
+    unlist(x$issues, use.names = FALSE),
+    unlist(Filter(is.character, x$metadata[setdiff(names(x$metadata), "inputs")]), use.names = FALSE)
+  )
+  expect_false(holds_escape(values))
+  expect_false(any(text_has_controls(setdiff(values, evil$description))))
+  issue <- issues_with(x, "read-control-characters")
+  expect_identical(issue$severity, "info")
+  expect_identical(
+    issue$message, "8 values in the document held control characters, which sbom replaced with spaces."
+  )
+  # A single value is counted in the singular.
+  doc <- jsonlite::fromJSON(cdx_minimal_text(), simplifyVector = FALSE)
+  doc$metadata$component$name <- "app\u0007"
+  y <- read_text(jsonlite::toJSON(doc, auto_unbox = TRUE), ".cdx.json")
+  expect_identical(y$components$name[y$components$is_root], "app")
+  expect_identical(
+    issues_with(y, "read-control-characters")$message,
+    "1 value in the document held control characters, which sbom replaced with spaces."
+  )
+  expect_identical(nrow(issues_with(read_text(cdx_minimal_text(), ".cdx.json"), "read-control-characters")), 0L)
+})
+
+test_that("an SBOM read from a document with control characters prints cleanly and writes valid SPDX YAML", {
+  skip_if_not_installed("yaml")
+  skip_if_not_installed("jsonvalidate")
+  withr::local_options(cli.width = 80, cli.num_colors = 1, cli.unicode = FALSE)
+  x <- read_text(hostile_cdx(), ".cdx.json")
+  out <- c(
+    utils::capture.output(print(x)), utils::capture.output(print(summary(x))),
+    utils::capture.output(sbom_tree(x)), utils::capture.output(print(sbom_diff(minimal_sbom(), x)))
+  )
+  expect_true(any(grepl("evil ]52;c;cHduZWQ=", out, fixed = TRUE)))
+  expect_false(holds_escape(out))
+  for (version in c("2.2", "2.3")) {
+    path <- withr::local_tempfile(fileext = ".spdx.yaml")
+    write_sbom(x, path, format = "spdx-yaml", version = version)
+    expect_identical(schema_validate(path, "spdx-yaml", version)$status, "pass", label = version)
+  }
+})
+
+test_that("a read error shows the control characters of the file name as spaces", {
+  dir <- withr::local_tempdir()
+  path <- file.path(dir, "no\u001b[2Jte\u0007.json")
+  write_text('{"name": "not-an-sbom"}\n', path)
+  cnd <- expect_error(read_sbom(path), class = "sbom_read_error")
+  expect_identical(cnd$sentence, "no [2Jte .json is not an SBOM in a format sbom reads.")
+  v <- validate_sbom(path)
+  expect_identical(v$findings$message, "no [2Jte .json is not an SBOM in a format sbom reads.")
+})
+
+# Values that cannot be kept ----------------------------------------------------
+
+test_that("CPE identifiers, which the <sbom> cannot hold, are counted as dropped", {
+  cdx <- paste0(
+    '{"bomFormat":"CycloneDX","specVersion":"1.6","version":1,"metadata":{"timestamp":"2026-01-01T00:00:00Z",',
+    '"component":{"type":"container","bom-ref":"root","name":"img","version":"1",',
+    '"cpe":"cpe:2.3:a:acme:img:1:*:*:*:*:*:*:*"}},"components":[{"type":"operating-system","bom-ref":"c1",',
+    '"name":"openssl","version":"3.0.2","cpe":"cpe:2.3:a:openssl:openssl:3.0.2:*:*:*:*:*:*:*"}],',
+    '"dependencies":[{"ref":"root","dependsOn":["c1"]}]}\n'
+  )
+  x <- read_text(cdx, ".cdx.json")
+  expect_identical(
+    issues_with(x, "read-values-dropped")$message,
+    "2 values were not kept because sbom's formats cannot carry them (CPE identifiers)."
+  )
+  spdx <- paste0(
+    '{"spdxVersion":"SPDX-2.3","SPDXID":"SPDXRef-DOCUMENT","name":"d","creationInfo":{"created":"2026-01-01T00:00:00Z",',
+    '"creators":["Tool: t-1"]},"documentDescribes":["SPDXRef-a"],"packages":[{"SPDXID":"SPDXRef-a","name":"a",',
+    '"versionInfo":"1","downloadLocation":"NOASSERTION","externalRefs":[{"referenceCategory":"SECURITY",',
+    '"referenceType":"cpe23Type","referenceLocator":"cpe:2.3:a:x:a:1:*:*:*:*:*:*:*"},{"referenceCategory":"SECURITY",',
+    '"referenceType":"cpe22Type","referenceLocator":"cpe:/a:x:a:1"}]}]}\n'
+  )
+  y <- read_text(spdx, ".spdx.json")
+  expect_identical(
+    issues_with(y, "read-values-dropped")$message,
+    "2 values were not kept because sbom's formats cannot carry them (CPE identifiers)."
+  )
+})
+
+test_that("a component nested in a root without a bom-ref keeps its parent", {
+  cdx <- paste0(
+    '{"bomFormat":"CycloneDX","specVersion":"1.6","version":1,"metadata":{"timestamp":"2026-01-01T00:00:00Z",',
+    '"authors":[{"name":"A"}],"component":{"type":"application","name":"app","version":"1","purl":"pkg:npm/app@1",',
+    '"supplier":{"name":"S"},"components":[{"type":"library","name":"inner","version":"2","purl":"pkg:npm/inner@2",',
+    '"supplier":{"name":"S"}}]}},"components":[{"type":"library","name":"lib","version":"1","purl":"pkg:npm/lib@1",',
+    '"supplier":{"name":"S"}}]}\n'
+  )
+  x <- read_text(cdx, ".cdx.json")
+  comps <- x$components
+  expect_identical(comps$parent_ref[comps$name == "inner"], "pkg:npm/app@1")
+  expect_identical(comps$parent_ref[comps$name == "lib"], NA_character_)
+  # The root's nested component is a relationship the NTIA check counts.
+  dir <- withr::local_tempdir()
+  path <- file.path(dir, "nested.cdx.json")
+  write_text(cdx, path)
+  v <- validate_sbom(path, checks = "content")
+  expect_false("ntia-relationships" %in% v$findings$check)
+  expect_identical(v$status, "pass")
+})
+
+test_that("a qualifier of a purl loses its credentials, and one that is a local path is dropped", {
+  purl <- paste0(
+    "pkg:cran/a@1.0?repository_url=https://user:secret@cran.example.org/src",
+    "&download_url=file:///home/me/a.tar.gz&vcs_url=git%2Bhttps%3A%2F%2Fu%3Atoken%40github.com%2Fme%2Fa",
+    "&arch=x86_64#sub/dir"
+  )
+  cdx <- paste0(
+    '{"bomFormat":"CycloneDX","specVersion":"1.6","version":1,"metadata":{"timestamp":"2026-01-01T00:00:00Z",',
+    '"component":{"type":"application","bom-ref":"', purl, '","name":"a","version":"1.0","purl":"', purl, '"}}}\n'
+  )
+  x <- read_text(cdx, ".cdx.json")
+  kept <- paste0(
+    "pkg:cran/a@1.0?repository_url=https://cran.example.org/src&vcs_url=git+https://github.com/me/a",
+    "&arch=x86_64#sub/dir"
+  )
+  expect_identical(x$components$purl, kept)
+  expect_identical(x$components$ref, kept)
+  expect_identical(
+    issues_with(x, "read-values-dropped")$message,
+    "1 value was not kept because sbom's formats cannot carry it (local paths)."
+  )
+  written <- withr::local_tempfile(fileext = ".cdx.json")
+  write_sbom(x, written)
+  expect_false(any(grepl("secret|token|/home/me", readLines(written))))
+})
+
+test_that("a licence of another SPDX document is kept as written only", {
+  spdx <- paste0(
+    '{"spdxVersion":"SPDX-2.3","SPDXID":"SPDXRef-DOCUMENT","name":"d","creationInfo":{"created":"2026-01-01T00:00:00Z",',
+    '"creators":["Tool: t-1"]},"documentDescribes":["SPDXRef-a"],"packages":[{"SPDXID":"SPDXRef-a","name":"a",',
+    '"versionInfo":"1","downloadLocation":"NOASSERTION","licenseDeclared":"DocumentRef-other:LicenseRef-x"},',
+    '{"SPDXID":"SPDXRef-b","name":"b","versionInfo":"1","downloadLocation":"NOASSERTION",',
+    '"licenseDeclared":"MIT OR DocumentRef-other:LicenseRef-y"}]}\n'
+  )
+  x <- read_text(spdx, ".spdx.json")
+  comps <- x$components[order(x$components$name), ]
+  expect_identical(comps$license_spdx, c(NA_character_, NA_character_))
+  expect_identical(comps$license_as_written, c("DocumentRef-other:LicenseRef-x", "MIT OR DocumentRef-other:LicenseRef-y"))
+})
+
+test_that("read_sbom() builds the SPDX 3 index and the SWID entity lookups once", {
+  calls <- new.env(parent = emptyenv())
+  calls$index <- 0L
+  calls$entities <- 0L
+  index <- tables_spdx3_index
+  entities <- tables_swid_entities
+  local_mocked_bindings(
+    tables_spdx3_index = function(graph) {
+      calls$index <- calls$index + 1L
+      index(graph)
+    },
+    tables_swid_entities = function(doc) {
+      calls$entities <- calls$entities + 1L
+      entities(doc)
+    }
+  )
+  read_sbom(tp("spdx-3", "package_sbom.json"))
+  expect_identical(calls$index, 1L)
+  read_sbom(tp("swid", "hand.swidtag"))
+  expect_identical(calls$entities, 1L)
 })

@@ -4,12 +4,13 @@
 # XML and tag-value serializations into the SPDX JSON model; CycloneDX XML
 # into the CycloneDX JSON model; and a SWID tag into a small list. Files come
 # from any tool and may be hostile, so every error is one sentence that names
-# the file by its basename and quotes none of its text.
+# the file by its basename, with its control characters as spaces, and
+# quotes none of its text.
 
-# The formats read_document() reads: every format in format_registry() but
-# the CSV inventory. format_registry() names the writers, which are defined
-# in files collated after this one, so the list is written out here; a test
-# checks it against the registry.
+# The formats read_document() reads, and the schema layer checks: every
+# format in format_registry() but the CSV inventory. format_registry() names
+# the writers, which are defined in files collated after this one, so the
+# list is written out here; a test checks it against the registry.
 read_formats <- c(
   "cyclonedx-json", "cyclonedx-xml", "spdx-json", "spdx-yaml", "spdx-xml",
   "spdx-tv", "spdx3-jsonld", "swid"
@@ -33,8 +34,10 @@ read_json_models <- c(
 
 cdx_xml_ns <- "http://cyclonedx.org/schema/bom/"
 
-# A version sbom recognises: numbers separated by dots.
+# A version sbom recognizes: numbers separated by dots, in at most
+# read_version_max characters.
 read_version_pattern <- "^[0-9]+(\\.[0-9]+)+$"
+read_version_max <- 20L
 
 # Raises the read error whose message is `sentence`, a plain string, which
 # the condition also keeps whole in its field `sentence`: cli may wrap the
@@ -300,7 +303,7 @@ read_document <- function(path, format = NULL, call = parent.frame()) {
   if (!is.null(format)) {
     read_check_format(format, call)
   }
-  file <- basename(path)
+  file <- read_file_label(path)
   bytes <- read_bytes(path, file, call)
   syntax <- if (is.null(format)) read_sniff(bytes) else read_syntax[[format]]
   if (is.na(syntax)) {
@@ -346,8 +349,10 @@ read_document <- function(path, format = NULL, call = parent.frame()) {
   if (!is.null(format) && found$format != format) {
     read_abort(paste0(file, " is ", name, ", not ", read_format_name(format), "."), call)
   }
-  if (found$format != "swid" && !(is_string(found$version) && grepl(read_version_pattern, found$version))) {
-    read_abort(paste0(file, " is not valid ", name, ": its version is not one sbom recognises."), call)
+  recognized <- is_string(found$version) && nchar(found$version, type = "bytes") <= read_version_max &&
+    grepl(read_version_pattern, found$version)
+  if (found$format != "swid" && !recognized) {
+    read_abort(paste0(file, " is not valid ", name, ": its version is not one sbom recognizes."), call)
   }
 
   doc <- read_parse(

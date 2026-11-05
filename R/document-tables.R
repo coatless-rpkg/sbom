@@ -184,9 +184,10 @@ tables_relationships <- function(location = character(), from = character(), to 
   tables_strings(location = location, from = from, to = to, type = type)
 }
 
-# Only authors with a name are listed.
+# Only authors with a name are listed: one that is empty or NOASSERTION is
+# none, as the NTIA profile says of every value (content_present()).
 tables_authors <- function(name = character(), kind = character(), location = character()) {
-  keep <- !is.na(tables_present(name))
+  keep <- content_present(name)
   tables_strings(name = name[keep], kind = kind[keep], location = location[keep])
 }
 
@@ -221,7 +222,8 @@ tables_document <- function(name = NA_character_, timestamp = NA_character_,
 #'     `kind` is `"component"`, `"file"` or `"snippet"`; `identifiers` is a
 #'     list of character vectors (`"purl:<x>"`, `"cpe:<x>"`, `"swid:<x>"`);
 #'     `type` and `scope` are the format's own words (SWID's link `use` is
-#'     its scope); `parent` is the id of the nesting parent (CycloneDX only);
+#'     its scope); `parent` is the location of the nesting parent (CycloneDX
+#'     only), which may have no id;
 #'     `raw` is each element's own list (a named character vector for SWID).
 #'   * `licenses`: `data.frame(location, id, expression, kind, field)`, `kind` being
 #'     `"expression"` or `"name"` (free text), and `field` where it came from:
@@ -234,10 +236,16 @@ tables_document <- function(name = NA_character_, timestamp = NA_character_,
 #'     a CycloneDX `dependencies` entry that lists no dependency gives, which
 #'     records that its component's dependencies were stated. SPDX 3 licence
 #'     relationships are licence rows instead.
+#'   * For SPDX 3, the attribute `index` holds the graph's index
+#'     (`tables_spdx3_index()`), and for SWID the attribute `entities` holds
+#'     the entities' roles (`tables_swid_entities()`), so that `read_sbom()`
+#'     builds neither again.
 #'   * `document`: `list(name, timestamp, timestamp_location, authors, tools,
 #'     root, root_location, notes, defined_refs, external_ids)`. `authors` is
-#'     `data.frame(name, kind, location)`, with only named authors; `tools`
-#'     is `data.frame(name, version)`. `root` holds the root ids the document
+#'     `data.frame(name, kind, location)`, with only named authors, `kind`
+#'     being `"person"`, `"organization"` or `"tool"` (SPDX 2's "Tool:"
+#'     creators, SPDX 3 software agents, CycloneDX tools, and sbom as a SWID
+#'     tag creator); `tools` is `data.frame(name, version)`. `root` holds the root ids the document
 #'     states, NA for a root without one, and `root_location` where each is
 #'     stated. `ids` is every id the document defines: every CycloneDX
 #'     bom-ref (services' and licences' too), SPDX 2's document id and its
@@ -258,9 +266,10 @@ document_tables <- function(d) {
 # CycloneDX -------------------------------------------------------------------
 
 # The components in the array `items` at pointer `at`, nested in the component
-# whose id is `parent`, and every component nested in them, depth-first: a
-# list of chunks, each list(raw, location, parent). `empty` says whether an
-# empty unnamed list is an object (the XML model) or the array [] (JSON).
+# at the location `parent`, and every component nested in them, depth-first:
+# a list of chunks, each list(raw, location, parent). A parent is named by its
+# location, since it may have no bom-ref. `empty` says whether an empty
+# unnamed list is an object (the XML model) or the array [] (JSON).
 tables_cdx_walk <- function(items, at, parent, empty) {
   keep <- vapply(items, json_is_object, logical(1), empty = empty)
   items <- unname(items[keep])
@@ -273,7 +282,6 @@ tables_cdx_walk <- function(items, at, parent, empty) {
   if (length(nested) == 0L) {
     return(list(chunk))
   }
-  ids <- json_strings(items[nested], "bom-ref")
   slice <- function(idx) lapply(chunk, function(col) col[idx])
   # Each component with nested ones is followed by them.
   pieces <- vector("list", 2L * length(nested) + 1L)
@@ -282,7 +290,7 @@ tables_cdx_walk <- function(items, at, parent, empty) {
     i <- nested[k]
     pieces[[2L * k - 1L]] <- list(slice(start:i))
     at_kids <- json_pointer(chunk$location[i], "components")
-    pieces[[2L * k]] <- tables_cdx_walk(kids[[i]], at_kids, ids[k], empty)
+    pieces[[2L * k]] <- tables_cdx_walk(kids[[i]], at_kids, chunk$location[i], empty)
     start <- i + 1L
   }
   if (start <= length(items)) pieces[[length(pieces)]] <- list(slice(start:length(items)))
@@ -297,11 +305,10 @@ tables_cdx <- function(doc, xml) {
   components <- json_items(json_member(doc, "components"))
   chunks <- tables_cdx_walk(components, "/components", NA_character_, xml)
   if (has_root) {
-    root_id <- json_string(json_member(root, "bom-ref"))
     inner <- json_items(json_member(root, "components"))
     chunks <- c(
       list(list(raw = list(root), location = "/metadata/component", parent = NA_character_)),
-      tables_cdx_walk(inner, "/metadata/component/components", root_id, xml),
+      tables_cdx_walk(inner, "/metadata/component/components", "/metadata/component", xml),
       chunks
     )
   }
@@ -372,11 +379,12 @@ tables_cdx <- function(doc, xml) {
   )
 }
 
-# Nesting ("contains", from the element walk), then the dependencies entries:
-# "dependsOn" and "provides" rows, and for an entry that lists neither, one
-# "dependsOn" row with no target.
+# Nesting ("contains", from the element walk, between components that both
+# have an id), then the dependencies entries: "dependsOn" and "provides" rows,
+# and for an entry that lists neither, one "dependsOn" row with no target.
 tables_cdx_relationships <- function(doc, elements) {
-  nest <- !is.na(elements$parent) & !is.na(elements$id)
+  parent_id <- elements$id[match(elements$parent, elements$location, incomparables = NA)]
+  nest <- !is.na(parent_id) & !is.na(elements$id)
   deps <- json_items(json_member(doc, "dependencies"))
   ref <- json_strings(deps, "ref")
   entry_at <- function(i) tables_paste("/dependencies/", i - 1L)
@@ -401,21 +409,29 @@ tables_cdx_relationships <- function(doc, elements) {
   deps <- tables_bind(parts, c("entry", "rank", "index"), c("location", "from", "to", "type"))
   tables_relationships(
     location = c(elements$location[nest], deps$location),
-    from = c(elements$parent[nest], deps$from),
+    from = c(parent_id[nest], deps$from),
     to = c(elements$id[nest], deps$to),
     type = c(rep("contains", sum(nest)), deps$type)
   )
 }
 
+# The tools are authors of kind tool, as SPDX 2's "Tool:" creators are.
 tables_cdx_document <- function(doc, meta, root, has_root) {
   authors <- json_items(json_member(meta, "authors"))
   manufacturer <- json_member(meta, "manufacturer")
   tools <- json_member(meta, "tools")
   # An array in 1.4; {components, services} from 1.5.
-  tools <- if (is.list(tools) && !is.null(names(tools))) {
-    c(json_items(json_member(tools, "components")), json_items(json_member(tools, "services")))
+  if (is.list(tools) && !is.null(names(tools))) {
+    components <- json_items(json_member(tools, "components"))
+    services <- json_items(json_member(tools, "services"))
+    tools <- c(components, services)
+    tool_at <- c(
+      tables_paste("/metadata/tools/components/", seq_along(components) - 1L),
+      tables_paste("/metadata/tools/services/", seq_along(services) - 1L)
+    )
   } else {
-    json_items(tools)
+    tools <- json_items(tools)
+    tool_at <- tables_paste("/metadata/tools/", seq_along(tools) - 1L)
   }
   props <- json_items(json_member(meta, "properties"))
   note <- json_strings(props, "name") %in% "sbom:note"
@@ -423,10 +439,14 @@ tables_cdx_document <- function(doc, meta, root, has_root) {
     timestamp = json_string(json_member(meta, "timestamp")),
     timestamp_location = "/metadata/timestamp",
     authors = tables_authors(
-      name = c(json_strings(authors, "name"), json_string(json_member(manufacturer, "name"))),
-      kind = c(rep("person", length(authors)), "organization"),
+      name = c(
+        json_strings(authors, "name"), json_string(json_member(manufacturer, "name")),
+        json_strings(tools, "name")
+      ),
+      kind = c(rep("person", length(authors)), "organization", rep("tool", length(tools))),
       location = c(
-        tables_paste("/metadata/authors/", seq_along(authors) - 1L), "/metadata/manufacturer"
+        tables_paste("/metadata/authors/", seq_along(authors) - 1L), "/metadata/manufacturer",
+        tool_at
       )
     ),
     tools = tables_strings(
@@ -722,14 +742,17 @@ tables_spdx3 <- function(doc) {
   is_rel <- !is.na(rel_type) & !is.na(from)
   root <- tables_spdx3_root(graph, ix)
   elements$is_root <- elements$id %in% root$id
-  list(
-    elements = elements,
-    licenses = tables_spdx3_licenses(graph, ix, which(is_rel & is_license), rel_type, from, id),
-    purls = tables_purls(purls$location, purls$id, purls$purl),
-    relationships = tables_spdx3_relationships(
-      graph, ix, which(is_rel & !is_license), rel_type, from
+  structure(
+    list(
+      elements = elements,
+      licenses = tables_spdx3_licenses(graph, ix, which(is_rel & is_license), rel_type, from, id),
+      purls = tables_purls(purls$location, purls$id, purls$purl),
+      relationships = tables_spdx3_relationships(
+        graph, ix, which(is_rel & !is_license), rel_type, from
+      ),
+      document = tables_spdx3_document(graph, ix, root)
     ),
-    document = tables_spdx3_document(graph, ix, root)
+    index = ix
   )
 }
 
@@ -900,15 +923,26 @@ tables_swid_values <- function(items, key) {
 # media, not to software.
 tables_swid_rels <- c("requires", "component")
 
+# The entities of a SWID tag, looked up once: each one's name, regid and
+# roles, and a function giving, for a role, which entities have it.
+tables_swid_entities <- function(doc) {
+  entities <- json_items(json_member(doc, "entities"))
+  roles <- strsplit(tables_coalesce(tables_swid_values(entities, "role"), ""), "[ \t\r\n]+")
+  list(
+    name = tables_present(tables_swid_values(entities, "name")),
+    regid = tables_present(tables_swid_values(entities, "regid")),
+    has_role = function(role) vapply(roles, function(r) role %in% r, logical(1))
+  )
+}
+
 tables_swid <- function(doc) {
   tag <- json_member(doc, "tag")
-  entities <- json_items(json_member(doc, "entities"))
+  ent <- tables_swid_entities(doc)
   links <- json_items(json_member(doc, "links"))
   meta <- json_items(json_member(doc, "meta"))
-  roles <- strsplit(tables_coalesce(tables_swid_values(entities, "role"), ""), "[ \t\r\n]+")
-  entity_names <- tables_present(tables_swid_values(entities, "name"))
+  entity_names <- ent$name
   named <- function(role) {
-    has <- vapply(roles, function(r) role %in% r, logical(1)) & !is.na(entity_names)
+    has <- ent$has_role(role) & !is.na(entity_names)
     entity_names[has][1L]
   }
   meta_purl <- tables_swid_values(meta, "sbom:purl")
@@ -944,11 +978,16 @@ tables_swid <- function(doc) {
     json_pointer(link_location[!is.na(link_purl)], "sbom:purl")
   )
   edge <- !is.na(tag_id) & !is.na(href)
-  creator <- vapply(roles, function(r) "tagCreator" %in% r, logical(1))
+  creator <- ent$has_role("tagCreator")
+  # A tag creator with a real regid is an organization. Without one (the
+  # placeholder http://invalid.unavailable is the default) it is a person,
+  # unless it is sbom itself, the tool, as read_sbom() reads it.
+  real <- !is.na(ent$regid) & ent$regid != swid_placeholder_regid
+  creator_kind <- ifelse(real, "organization", ifelse(entity_names %in% "sbom", "tool", "person"))
   # sbom's own licence attribute holds the licence as written: free text.
   license <- tables_swid_values(meta, "sbom:license")
   has_license <- which(!is.na(license))
-  list(
+  out <- list(
     elements = elements,
     licenses = tables_licenses(
       location = json_pointer(tables_paste("/meta/", has_license - 1L), "sbom:license"),
@@ -962,7 +1001,7 @@ tables_swid <- function(doc) {
     document = tables_document(
       name = tables_swid_value(tag, "name"),
       authors = tables_authors(
-        name = entity_names[creator], kind = rep("organization", sum(creator)),
+        name = entity_names[creator], kind = creator_kind[creator],
         location = tables_paste("/entities/", which(creator) - 1L)
       ),
       tools = tables_tool(tables_swid_values(meta, "generator"), " "),
@@ -971,4 +1010,5 @@ tables_swid <- function(doc) {
       ids = tag_id
     )
   )
+  structure(out, entities = ent)
 }
