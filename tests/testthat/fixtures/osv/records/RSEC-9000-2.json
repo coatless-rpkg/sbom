@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.7.3",
+  "id": "RSEC-9000-2",
+  "published": "2099-02-01T00:00:00Z",
+  "modified": "2099-02-01T00:00:00Z",
+  "summary": "Synthetic flaw in openpkg with no fix",
+  "affected": [
+    {
+      "package": {"name": "openpkg", "ecosystem": "CRAN", "purl": "pkg:cran/openpkg"},
+      "ranges": [{"type": "ECOSYSTEM", "events": [{"introduced": "0"}]}]
+    }
+  ]
+}

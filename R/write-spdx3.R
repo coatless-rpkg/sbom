@@ -34,10 +34,10 @@ spdx3_package_comment <- function(row) {
     parts <- c(parts, row$description)
   }
   # license_comment reads "Declared in DESCRIPTION as ..., which has no SPDX
-  # expression ..."; R Observatory words it "Licence declared in ...".
+  # expression ..."; R Observatory words it "License declared in ...".
   if (!spdx_is_set(row$license_spdx) && spdx_is_set(row$license_as_written) &&
         spdx_is_set(row$license_comment)) {
-    parts <- c(parts, paste0("Licence d", substring(row$license_comment, 2L)))
+    parts <- c(parts, paste0("License d", substring(row$license_comment, 2L)))
   }
   parts <- c(parts, spdx_asserted_sentences(row), spdx_system_requirements(row))
   if (length(parts) > 0L) paste(parts, collapse = " ")
@@ -128,7 +128,7 @@ spdx3_creators <- function(metadata, id) {
 }
 
 # For each component in ref order: its supplier and maintainer, the first time
-# each is seen; the package; its licence expression, the first time it is
+# each is seen; the package; its license expression, the first time it is
 # seen; and its hasDeclaredLicense relationship. Ids are made unique.
 spdx3_components <- function(comps, pkg_ids, local_ids, id) {
   ci <- spdx3_creation_info
@@ -280,6 +280,64 @@ spdx3_contains <- function(x, pkg_ids, local_ids, id) {
   })
 }
 
+# One security_Vulnerability per advisory, each followed by a
+# hasAssociatedVulnerability relationship from each package it affects, as R
+# Observatory writes them. The local ids hold the OSV id as it is, as in
+# sbom.php: osv_id_ok() lets through only letters, digits and . _ : -, which
+# an IRI fragment may hold. Any other id, which only an <sbom> built by hand
+# or from a document could hold, is sanitized. A local id already in
+# `taken`, the local ids in the graph, is made unique.
+spdx3_advisories <- function(x, pkg_ids, taken, id) {
+  ci <- spdx3_creation_info
+  comps <- x$components
+  adv <- written_advisories(x)
+  out <- list()
+  for (i in seq_len(nrow(adv))) {
+    advisory <- adv$id[[i]]
+    key <- if (osv_id_ok(advisory)) advisory else spdx_sanitize(advisory)
+    local <- spdx3_unique_local(paste0("advisory-", key), taken)
+    taken <- c(taken, local)
+    v <- list(type = "security_Vulnerability", spdxId = id(local), creationInfo = ci, name = advisory)
+    if (spdx_is_set(adv$summary[[i]])) v$summary <- adv$summary[[i]]
+    v$externalIdentifier <- c(
+      list(list(
+        type = "ExternalIdentifier", externalIdentifierType = "securityOther", identifier = advisory,
+        identifierLocator = list(osv_vulnerability_url(advisory))
+      )),
+      lapply(cve_ids(adv$upstream[[i]]), function(cve) {
+        list(
+          type = "ExternalIdentifier", externalIdentifierType = "cve", identifier = cve,
+          identifierLocator = list(cve_record_url(cve))
+        )
+      })
+    )
+    if (spdx_is_set(adv$source_url[[i]])) {
+      v$externalRef <- list(list(
+        type = "ExternalRef", externalRefType = "securityAdvisory", locator = list(adv$source_url[[i]])
+      ))
+    }
+    if (spdx_is_set(adv$published[[i]])) {
+      v$security_publishedTime <- paste0(adv$published[[i]], "T00:00:00Z")
+    }
+    out[[length(out) + 1L]] <- v
+
+    hits <- adv$affects[[i]]
+    for (j in seq_len(nrow(hits))) {
+      k <- match(hits$ref[[j]], comps$ref)
+      local <- spdx3_unique_local(paste0("rel-advisory-", key, "-", j), taken)
+      taken <- c(taken, local)
+      out[[length(out) + 1L]] <- list(
+        type = "Relationship", spdxId = id(local), creationInfo = ci,
+        comment = paste0(
+          "OSV lists ", comps$name[[k]], " ", hits$version[[j]], " among the versions ", advisory, " affects."
+        ),
+        from = unname(pkg_ids[k]), relationshipType = "hasAssociatedVulnerability", to = list(v$spdxId)
+      )
+    }
+  }
+  out
+}
+
 spdx3_document <- function(x, version = "3.0.1") {
   if (!is.character(version) || length(version) != 1L || !version %in% spdx3_versions) {
     cli::cli_abort(
@@ -307,6 +365,9 @@ spdx3_document <- function(x, version = "3.0.1") {
     spdx3_dependencies(x, pkg_ids, id),
     spdx3_contains(x, pkg_ids, local_ids, id)
   )
+  taken <- substring(vapply(elements, function(e) e$spdxId, character(1)), nchar(ns) + 2L)
+  advisories <- spdx3_advisories(x, pkg_ids, taken, id)
+  elements <- c(elements, advisories)
   element_ids <- vapply(elements, function(e) e$spdxId, character(1))
 
   root <- comps[comps$ref == x$metadata$root, , drop = FALSE][1, ]
@@ -322,6 +383,8 @@ spdx3_document <- function(x, version = "3.0.1") {
   if (nzchar(notes)) doc$comment <- notes
   doc$dataLicense <- "https://spdx.org/licenses/CC0-1.0"
   doc$profileConformance <- list("core", "software", "simpleLicensing")
+  # Vulnerabilities are elements of the security profile.
+  if (length(advisories) > 0L) doc$profileConformance <- c(doc$profileConformance, list("security"))
   doc$rootElement <- list(sbom_id)
   doc$element <- as.list(c(element_ids, sbom_id))
 

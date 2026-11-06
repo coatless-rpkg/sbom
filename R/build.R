@@ -3,7 +3,8 @@
 #' `sbom_package()` describes one package and everything it depends on.
 #' `sbom_installed()` describes the packages in an R library. Both read the
 #' `DESCRIPTION` files that are on disk and nothing else: they run no package
-#' code and make no network requests.
+#' code and make no network requests, except that `advisories = TRUE`
+#' downloads OSV's advisory data.
 #'
 #' The root of `sbom_package()` is the package at `path`, recorded as
 #' declared. Every dependency is looked up in `lib` and recorded as observed,
@@ -53,7 +54,10 @@
 #'   `"maintainer"`, `"purl"` and `"download_location"`. Rows are applied in
 #'   order, and each is recorded with who asserted it and why. An override
 #'   that contradicts a found value wins and adds an `override-conflict` issue.
-#'   Asserting `"version"` or `"purl"` changes only that field, not the `ref`.
+#'   Asserting `"version"` makes it the exact version, and asserting a CRAN
+#'   `"purl"` (`pkg:cran`) makes the component a CRAN package, or a
+#'   Bioconductor package when its `repository_url` names bioconductor.org;
+#'   neither changes the `ref`.
 #'   An unknown component or field, or a missing column, is an error.
 #' @param embedded Whether to record the code that packages carry inside them.
 #'   A package named in `LinkingTo` is recorded as an embedded component of
@@ -75,6 +79,44 @@
 #'   pak's update of those rules, so pak uses the rules it has cached or
 #'   ships and makes no network request. The shared libraries that installed
 #'   compiled code links are read with `otool` (macOS) or `ldd` (Linux).
+#' @param advisories Whether to list the OSV security advisories for the
+#'   SBOM's packages, from the R Consortium advisory database that OSV
+#'   publishes; see [sbom_advisories()]. Only exact versions are compared,
+#'   of the packages whose package URL is a CRAN one (`pkg:cran`), packages
+#'   from CRAN-like repositories among them, matched by name. A package with
+#'   a CRAN package URL and a minimum version, or none, is named in an
+#'   `advisories-no-exact-version` issue. An R package that is not known to
+#'   come from CRAN, because sbom could not tell where it came from (as for a
+#'   package that is not installed), or because it was installed from a
+#'   local source or from GitHub, GitLab, Bitbucket or git, is named in an
+#'   `advisories-not-cran` issue. Bioconductor packages are not compared:
+#'   OSV does not cover them yet, and when the SBOM holds one a note says so.
+#'   Matching is local, with the versions and package URLs after
+#'   `overrides`, so no package name leaves the machine.
+#'
+#'   `FALSE`, the default, lists none, makes no network request and adds a
+#'   note that no advisory data was on hand. `TRUE` downloads OSV's CRAN
+#'   export,
+#'   `https://osv-vulnerabilities.storage.googleapis.com/CRAN/all.zip`, and
+#'   looks up the CVSS ratings of the upstream records it names at
+#'   `https://api.osv.dev`, sending only their public ids. On a machine
+#'   without network access, download that `all.zip` elsewhere and pass its
+#'   path: it is read where it is, without the network and without ratings.
+#'
+#'   The SBOM lists what OSV says about these exact versions: a package
+#'   without an advisory is not shown to be free of flaws, and an upstream
+#'   CVSS rating describes the upstream flaw, not how exposed the R package
+#'   is.
+#' @param advisories_on_error What happens when the advisory data cannot be
+#'   downloaded or read, as when the download fails or the zip is damaged:
+#'   `"error"`, the default, is an error of class `sbom_advisories_error`
+#'   that names the problem; `"continue"` builds the SBOM without
+#'   advisories, with an R warning of class `sbom_advisories_unavailable`, a
+#'   warning issue and a note that no advisory data was on hand. A download
+#'   larger than 50 MB is refused as an error too. A CVSS rating that cannot
+#'   be looked up never fails the call: it is left out, with an issue. The
+#'   lookups stop at the first that times out or fails at the connection,
+#'   and take at most two minutes in all.
 #' @return An `<sbom>` object. See [sbom_components()] to read it.
 #' @examples
 #' x <- sbom_package(system.file("DESCRIPTION", package = "sbom"), system = FALSE)
@@ -87,8 +129,10 @@ sbom_package <- function(path = ".",
                          organization = getOption("sbom.organization"),
                          regid = getOption("sbom.regid"),
                          timestamp = NULL, overrides = NULL,
-                         embedded = TRUE, system = TRUE) {
+                         embedded = TRUE, system = TRUE, advisories = FALSE,
+                         advisories_on_error = c("error", "continue")) {
   dependencies <- match.arg(dependencies, several.ok = TRUE)
+  on_error <- check_advisories_args(advisories, advisories_on_error)
   check_lib(lib)
   regid <- check_regid(regid)
   root_desc <- read_description(path)
@@ -128,7 +172,7 @@ sbom_package <- function(path = ".",
       severity = "info"
     )
   }
-  apply_overrides(x, overrides)
+  apply_advisories(apply_overrides(x, overrides), advisories, on_error)
 }
 
 # The folder that holds a package's files, from a folder or a DESCRIPTION
@@ -155,7 +199,9 @@ sbom_installed <- function(pkgs = NULL, lib = .libPaths(), name = "R library",
                            organization = getOption("sbom.organization"),
                            regid = getOption("sbom.regid"),
                            timestamp = NULL, overrides = NULL,
-                           embedded = TRUE, system = TRUE) {
+                           embedded = TRUE, system = TRUE, advisories = FALSE,
+                           advisories_on_error = c("error", "continue")) {
+  on_error <- check_advisories_args(advisories, advisories_on_error)
   check_lib(lib)
   regid <- check_regid(regid)
   lookup <- library_lookup(lib)
@@ -204,7 +250,7 @@ sbom_installed <- function(pkgs = NULL, lib = .libPaths(), name = "R library",
     inputs = inputs, extra_base = listed_base, embedded = embedded,
     system = system
   )
-  apply_overrides(x, overrides)
+  apply_advisories(apply_overrides(x, overrides), advisories, on_error)
 }
 
 installed_root_name <- function() ".sbom-library-root"

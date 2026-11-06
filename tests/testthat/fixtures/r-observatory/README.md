@@ -15,3 +15,14 @@ copied on 2026-11-05 from
 
 They are the author's own output. The tests use them to check that the bundled
 schemas accept real documents, and later to compare the sbom package's output.
+
+`advisory-RSEC-2026-0.cdx.json` and `advisory-RSEC-2026-0.spdx3.json` come
+from the author's own project too: a sample that R Observatory generated for a
+set of packages, copied on 2026-11-06 from
+`/Users/ronin/Documents/GitHub/community/.worktrees/_sbom/out-set/`. The first
+is the `vulnerabilities` block of `assess-2026-10-20.cdx.json`; the second is
+the `security_Vulnerability` element of RSEC-2026-0 and its
+`hasAssociatedVulnerability` relationship from `assess-2026-10-20.spdx3.jsonld`.
+The tests compare sbom's advisories with them. RSEC-2026-0's summary, CVE id
+and source URL in them come from the R Consortium advisory database
+(`https://github.com/RConsortium/r-advisory-database`), licensed Apache-2.0.

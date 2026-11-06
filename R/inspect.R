@@ -3,7 +3,7 @@
 #' Summarise an SBOM
 #'
 #' Counts the components of an SBOM by ecosystem, type and evidence, tallies
-#' their licences, and collects the drift issues.
+#' their licences, collects the drift issues, and counts the advisories.
 #'
 #' Every component is counted, including the root, R, base packages and
 #' files. A component is unknown when its version is `NA` or its SPDX
@@ -17,9 +17,11 @@
 #' @return `summary()` returns an `<sbom_summary>`, a list with `counts` (a
 #'   data frame with columns `what`, `value` and `n`, for `"ecosystem"`,
 #'   `"type"` and `"evidence"`), `licenses` (columns `license` and `n`, most
-#'   common first), `unknowns` (the number of unknown components) and
-#'   `drift` (the issues whose code starts with `"drift-"`). `print()`
-#'   returns `x` invisibly.
+#'   common first), `unknowns` (the number of unknown components),
+#'   `drift` (the issues whose code starts with `"drift-"`) and `advisories`
+#'   (a list of `status`, `"listed"`, `"not-requested"` or `"unavailable"`,
+#'   and `n`, the number of advisories listed). `print()` returns `x`
+#'   invisibly.
 #' @examples
 #' x <- sbom_package(system.file("DESCRIPTION", package = "sbom"), system = FALSE)
 #' summary(x)
@@ -57,11 +59,16 @@ summary.sbom <- function(object, ...) {
   drift <- object$issues[startsWith(object$issues$code, "drift-"), , drop = FALSE]
   rownames(drift) <- NULL
 
+  advisories <- list(
+    status = advisories_status(object),
+    n = if (is.data.frame(object$advisories)) nrow(object$advisories) else 0L
+  )
+
   structure(
     list(
       root = node_label(comps[comps$is_root %in% TRUE, , drop = FALSE][1, ]),
       counts = counts, licenses = licenses,
-      unknowns = as.integer(unknowns), drift = drift
+      unknowns = as.integer(unknowns), drift = drift, advisories = advisories
     ),
     class = "sbom_summary"
   )
@@ -75,8 +82,14 @@ print.sbom_summary <- function(x, ...) {
   x$counts$value <- printable(x$counts$value)
   x$licenses$license <- printable(x$licenses$license)
   x$drift$message <- printable(x$drift$message)
+  advisories <- if (is.list(x$advisories)) {
+    advisories_line(x$advisories$status, x$advisories$n)
+  } else {
+    advisories_line("not-requested", 0L)
+  }
   lines <- cli::cli_fmt({
     cli::cli_text("{.strong {x$root}}")
+    cli::cli_text("{advisories}")
     cli::cli_h2("Components")
     for (what in unique(x$counts$what)) {
       rows <- x$counts[x$counts$what == what, , drop = FALSE]

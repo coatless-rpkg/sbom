@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.7.3",
+  "id": "RSEC-9000-1",
+  "published": "2099-01-02T03:04:05Z",
+  "modified": "2099-01-02T03:04:05Z",
+  "upstream": ["CVE-2099-0001"],
+  "summary": "Synthetic flaw in fakepkg",
+  "details": "A made-up advisory for a made-up package, for sbom's tests.",
+  "affected": [
+    {
+      "package": {"name": "fakepkg", "ecosystem": "CRAN", "purl": "pkg:cran/fakepkg"},
+      "ranges": [
+        {"type": "ECOSYSTEM", "events": [{"introduced": "0.1.0"}, {"fixed": "1.1.0"}]}
+      ],
+      "versions": ["0.1.0", "0.1.1", "1.0.0"],
+      "database_specific": {"source": "https://example.org/r-advisory-database/vulns/fakepkg/RSEC-9000-1.yaml"}
+    }
+  ],
+  "references": [{"type": "WEB", "url": "https://example.org/fakepkg/news"}]
+}

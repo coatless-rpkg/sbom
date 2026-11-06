@@ -39,6 +39,23 @@ swid_node <- function(parent, name, attrs) {
   invisible(node)
 }
 
+# The notes of a tag. A SWID tag has no place for advisories, so the
+# sentences that say they are listed (R Observatory's two and the note on
+# where the data came from) are taken out wherever they are, a whole note or
+# inside one into which a read document joined its notes. When the SBOM
+# lists advisories (`listed`), or the notes already said that a tag has no
+# place for them, that sentence is given once, where the first sentence
+# taken out was, or at the end. The advisory issues of `issues`, which speak
+# of what the file lists, are left out too when advisories are listed.
+swid_advisory_notes <- function(notes, issues, listed) {
+  if (listed) {
+    notes <- notes[!notes %in% issues$message[startsWith(as.character(issues$code), "advisories-")]]
+  }
+  said <- any(grepl(advisory_notes$swid, notes, fixed = TRUE))
+  pattern <- paste(unlist(advisory_sentences[c("listed", "bioc", "provenance", "swid")]), collapse = "|")
+  notes_without(notes, pattern, with = if (listed || said) advisory_notes$swid)
+}
+
 swid_tag <- function(x, version = "2015") {
   comps <- x$components
   root <- comps[comps$ref == x$metadata$root, , drop = FALSE][1, ]
@@ -87,7 +104,10 @@ swid_tag <- function(x, version = "2015") {
   }
 
   # The tag describes only the root, so its overrides' provenance goes here.
-  notes <- c(document_notes(x), spdx_asserted_sentences(root))
+  notes <- swid_advisory_notes(
+    c(document_notes(x, swid = TRUE), spdx_asserted_sentences(root)), x$issues,
+    identical(advisories_status(x), "listed")
+  )
   swid_node(doc, "Meta", c(
     generator = if (swid_set(meta$tool_version)) paste("sbom", meta$tool_version) else "sbom",
     product = root$name,

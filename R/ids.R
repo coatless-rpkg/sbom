@@ -32,18 +32,27 @@ uuid5 <- function(name, namespace = "6ba7b811-9dad-11d1-80b4-00c04fd430c8") {
 }
 
 # UUID of the content of an sbom. Excludes the timestamp and `inputs`
-# (machine-specific paths), so identical content gives an identical id.
+# (machine-specific paths), so identical content gives an identical id, and
+# `metadata$advisories`, whose source, fetch time and status the notes
+# already say. The advisories count, as the writers give them
+# (written_advisories(), in id order), when there are any, so that two
+# documents that differ only in their advisories have different ids, and
+# one without advisories keeps the id it had before they existed.
 sbom_uuid <- function(x) {
   comps <- x$components
   comps <- comps[order(comps$ref, method = "radix"), , drop = FALSE]
   rownames(comps) <- NULL
-  meta <- x$metadata[setdiff(names(x$metadata), c("timestamp", "inputs"))]
+  meta <- x$metadata[setdiff(names(x$metadata), c("timestamp", "inputs", "advisories"))]
   content <- list(
     components = comps,
     relationships = x$relationships,
     issues = x$issues,
     metadata = meta
   )
+  advisories <- written_advisories(x)
+  if (nrow(advisories) > 0L) {
+    content$advisories <- advisories
+  }
   json <- jsonlite::toJSON(
     content, auto_unbox = FALSE, null = "null", na = "null",
     digits = NA, POSIXt = "ISO8601", dataframe = "rows"

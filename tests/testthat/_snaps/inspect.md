@@ -4,6 +4,7 @@
       print(s)
     Output
       srcpkg 0.1.0
+      Advisories: not requested.
       
       -- Components --
       
@@ -26,6 +27,7 @@
       print(s)
     Output
       a 1.0
+      Advisories: not requested.
       
       -- Components --
       

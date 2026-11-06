@@ -56,15 +56,39 @@ read_evidence <- c("declared", "observed", "inferred", "unknown")
 #' and newline, DEL and C1) is replaced with a space, and so are tab and
 #' newline in names, versions, refs and purls, which are then trimmed.
 #'
+#' The OSV advisory listings the document holds, as sbom and R Observatory
+#' write them, are read too, for [sbom_advisories()]: CycloneDX
+#' vulnerabilities whose source is OSV and that hold no `analysis`; SPDX 2
+#' advisory references (category `SECURITY` in SPDX 2.3, `OTHER` in 2.2)
+#' whose locator is an osv.dev vulnerability page and whose comment says, in
+#' sbom's words, that OSV lists the package that holds it at its version,
+#' naming no other id; and SPDX 3
+#' `security_Vulnerability` elements whose `securityOther` identifier points
+#' to osv.dev, with their `hasAssociatedVulnerability` relationships. Each
+#' names the components it affects, at their versions. Other vulnerability
+#' entries, such as another tool's vulnerabilities and VEX statements, are
+#' not OSV advisory listings: they are not read, since every format sbom
+#' writes says that OSV lists each advisory for the version. Nor is an entry
+#' read for a component it states something else about: a CycloneDX
+#' `affects` target with `versions` none of which has status `affected` for
+#' the component's version, or for no version or range, and an SPDX 3
+#' association beside a VEX relationship of the same vulnerability that
+#' involves the same component. An advisory is
+#' kept only when its id is an OSV id and it names a component of the
+#' document that has a version. The `<sbom>`'s advisory status is
+#' `"listed"` when the document lists an advisory, or says in R
+#' Observatory's words that it lists those OSV gives, and `"not-requested"`
+#' otherwise.
+#'
 #' Some values cannot come back from every format:
 #'
 #' | Format    | Not read back |
 #' |:----------|:--------------|
-#' | All       | sbom's own ecosystems (`local`, `git`, `repository`, `r`, `base-r`), DESCRIPTION dependency fields and asserted overrides; CPE identifiers; checksums other than MD5, SHA-1, SHA-256, SHA-384, SHA-512 and SHA3; URLs that are not valid IRI references, local paths, and purl qualifiers whose value is a local path; licences of other SPDX documents (`DocumentRef-`), kept only as written |
-#' | CycloneDX | licence comments and package file names; a root's maintainer may be the organization in `metadata.manufacture`, which SPDX then writes as a person |
-#' | SPDX 2    | refs (SPDX ids replace them, so [sbom_diff()] matches components it identifies by ref only partly), supplier URLs, the licence as written, evidence, minimum versions, system requirements and Bioconductor releases; maintainers that are not persons; the descriptions and publication dates that sbom writes in comments; the texts of extracted licences (`hasExtractedLicensingInfos`), so a document written again says that the text is not included; whether a supplier is a person, so a `Person:` supplier is written again as an `Organization:`. SPDX 2.2 has no primary purpose, so every package is a library; SPDX 2.3 gives R the type `application`. SPDX 2.2 cannot carry SHA3 checksums, so they are left out |
-#' | SPDX 3    | refs, as in SPDX 2; supplier URLs, the licence as written, licence comments, evidence, minimum versions, package file names, system requirements and Bioconductor releases; maintainers that are not persons; which component holds another; the descriptions that sbom writes in comments |
-#' | SWID      | refs of code compiled into a package, which gets no link; for the root, licence expressions and comments, checksums, descriptions, publication dates, DOIs, evidence and Bioconductor releases; for the other components, everything but the name, version, purl, minimum version and whether it is optional; relationships other than the root's. A tag creator with a real regid is the organization, any other is an author, except sbom itself |
+#' | All       | sbom's own ecosystems (`local`, `git`, `repository`, `r`, `base-r`), DESCRIPTION dependency fields and asserted overrides; CPE identifiers; vulnerability entries that are not OSV advisory listings, such as VEX statements; checksums other than MD5, SHA-1, SHA-256, SHA-384, SHA-512 and SHA3; URLs that are not valid IRI references, local paths, and purl qualifiers whose value is a local path; licences of other SPDX documents (`DocumentRef-`), kept only as written |
+#' | CycloneDX | licence comments and package file names; a root's maintainer may be the organization in `metadata.manufacture`, which SPDX then writes as a person; the versions that fix an advisory, and the upstream record each rating comes from |
+#' | SPDX 2    | refs (SPDX ids replace them, so [sbom_diff()] matches components it identifies by ref only partly), supplier URLs, the licence as written, evidence, minimum versions, system requirements and Bioconductor releases; maintainers that are not persons; the descriptions and publication dates that sbom writes in comments; the texts of extracted licences (`hasExtractedLicensingInfos`), so a document written again says that the text is not included; whether a supplier is a person, so a `Person:` supplier is written again as an `Organization:`; an advisory's summary, publication date, source URL, CVE ids and ratings. SPDX 2.2 has no primary purpose, so every package is a library; SPDX 2.3 gives R the type `application`. SPDX 2.2 cannot carry SHA3 checksums, so they are left out |
+#' | SPDX 3    | refs, as in SPDX 2; supplier URLs, the licence as written, licence comments, evidence, minimum versions, package file names, system requirements and Bioconductor releases; maintainers that are not persons; which component holds another; the descriptions that sbom writes in comments; the versions that fix an advisory, and its ratings |
+#' | SWID      | refs of code compiled into a package, which gets no link; for the root, licence expressions and comments, checksums, descriptions, publication dates, DOIs, evidence and Bioconductor releases; for the other components, everything but the name, version, purl, minimum version and whether it is optional; relationships other than the root's; advisories, which a tag has no place for. A tag creator with a real regid is the organization, any other is an author, except sbom itself |
 #'
 #' @section Issues:
 #' The `<sbom>` records what could not be read as issues ([sbom_issues()]):
@@ -85,6 +109,15 @@ read_evidence <- c("declared", "observed", "inferred", "unknown")
 #'   were not kept: URLs that are not valid IRI references, local paths
 #'   (purl qualifiers among them), checksums of other algorithms or lengths,
 #'   DOIs that cannot form a URL, and CPE identifiers.
+#' * `read-advisories-dropped` (info): vulnerability entries (CycloneDX
+#'   vulnerabilities, SPDX 2 advisory references, SPDX 3 vulnerabilities)
+#'   that were not read, each counted once: those that are not OSV advisory
+#'   listings, such as VEX statements and other sources' vulnerabilities,
+#'   those whose id is not an OSV id, and those that name no component of
+#'   the document that has a version; and the components that an entry
+#'   otherwise read was not read for, since it gives them version statuses
+#'   or VEX statements that are not listings. An entry that is a listing of
+#'   none of the components it names is not an OSV advisory listing.
 #' * `read-control-characters` (info): values held control characters, which
 #'   were replaced with spaces.
 #'
@@ -149,12 +182,13 @@ read_sbom_build <- function(d, t) {
   # The lookups document_tables() made, which are not made again.
   entities <- if (family == "swid") tables_coalesce_attr(t, "entities", tables_swid_entities(d$doc))
   creators <- if (family == "swid") read_swid_creators(entities)
+  ix <- if (family == "spdx3") {
+    tables_coalesce_attr(t, "index", tables_spdx3_index(unname(json_items(json_member(d$doc, "@graph")))))
+  }
   fields <- switch(family,
     cdx = read_cdx_fields(el, d$doc),
     spdx2 = read_spdx2_fields(el),
-    spdx3 = read_spdx3_fields(el, tables_coalesce_attr(
-      t, "index", tables_spdx3_index(unname(json_items(json_member(d$doc, "@graph"))))
-    )),
+    spdx3 = read_spdx3_fields(el, ix),
     swid = read_swid_fields(el, d$doc, entities)
   )
   ref_id <- if (family == "swid") read_swid_ref_ids(id, el$location, creators$regid) else id
@@ -163,7 +197,8 @@ read_sbom_build <- function(d, t) {
   unique_refs <- read_unique_refs(read_fallback_refs(ref_id, purl, doc_name, version))
   ref <- unique_refs$ref
   licenses <- read_licenses(t$licenses, el, family, fields$written)
-  dropped <- c(fields$dropped, purls$dropped, rep(read_dropped_kinds[["cpe"]], n_cpe))
+  advisories <- read_advisories(d, t, family, el, id, ref, version, ix, seen)
+  dropped <- c(fields$dropped, purls$dropped, advisories$dropped, rep(read_dropped_kinds[["cpe"]], n_cpe))
   rels <- read_relationships(t, d$doc, family, id, ref)
   edges <- rels$relationships
   edges$spec <- read_clean(edges$spec, seen, lines = TRUE)
@@ -225,10 +260,17 @@ read_sbom_build <- function(d, t) {
   components <- read_frame(lapply(cols, function(col) col[o]))
 
   metadata <- read_metadata(d, t, family, root_ref, file, creators, seen)
+  # Listed when the document lists advisories, or says, in R Observatory's
+  # words, that it lists those OSV gives, although none matched.
+  listed <- nrow(advisories$advisories) > 0L || any(grepl(advisory_notes$listed, metadata$notes, fixed = TRUE))
+  metadata$advisories <- advisories_metadata(requested = listed, status = if (listed) "listed" else "not-requested")
   issues <- read_issues(
-    unique_refs, root_ref, length(roots), is.na(root), n_files, rels, dropped, seen$n
+    unique_refs, root_ref, length(roots), is.na(root), n_files, rels, dropped, seen$n,
+    read_advisory_messages(
+      advisories$not_listing, advisories$no_id, advisories$no_component, advisories$unlisted
+    )
   )
-  new_sbom(metadata, components, edges, issues)
+  new_sbom(metadata, components, edges, issues, advisories$advisories)
 }
 
 # The component columns of free text that read_sbom_build() cleans keeping
@@ -266,10 +308,11 @@ read_list <- function(x, max = 20L) {
 
 # The issues of a read: one for each id that elements shared, then those about
 # the document, which name the root. `dropped` holds the kind of each value
-# that was not kept, and `n_controls` counts the values that held control
-# characters.
+# that was not kept, `n_controls` counts the values that held control
+# characters, and `advisories_dropped` holds the sentences of
+# read_advisory_messages().
 read_issues <- function(unique_refs, root_ref, n_roots, placeholder, n_files, rels, dropped,
-                        n_controls = 0L) {
+                        n_controls = 0L, advisories_dropped = character()) {
   issues <- empty_issues()
   if (length(unique_refs$id) > 0L) {
     issues <- add_issue(
@@ -351,6 +394,9 @@ read_issues <- function(unique_refs, root_ref, n_roots, placeholder, n_files, re
       ),
       "info"
     )
+  }
+  for (message in advisories_dropped) {
+    issues <- document_issue(issues, "advisories", "read-advisories-dropped", message, "info")
   }
   if (n_controls > 0L) {
     issues <- document_issue(
@@ -960,6 +1006,9 @@ read_known_ids <- function(x, document, family) {
 # their type and of those that name elements the document lacks.
 read_relationships <- function(t, doc, family, id, ref) {
   rel <- t$relationships
+  # What a CycloneDX vulnerability affects is read as an advisory
+  # (read_advisories()).
+  if (family == "cdx") rel <- rel[!rel$type %in% "affects", , drop = FALSE]
   ref_of <- function(x) ref[match(x, id, incomparables = NA)]
   stated <- switch(family,
     cdx = ref_of(rel$from[rel$type != "contains"]),

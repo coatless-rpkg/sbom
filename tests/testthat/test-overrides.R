@@ -107,3 +107,33 @@ test_that("an override names an R package, not a system library of the same name
   expect_equal(comps$supplier_name[comps$ecosystem == "local" & comps$name == "openssl"], "Acme")
   expect_true(is.na(comps$supplier_name[comps$ref == "system/openssl"]))
 })
+
+test_that("an asserted version is exact, and an asserted CRAN package URL sets the ecosystem", {
+  base <- build_with(NULL)
+  comps <- base$components
+  local <- comps$ref[comps$name == "localpkg"]
+  expect_identical(comps$ecosystem[comps$ref == local], "local")
+  at <- function(x) x$components[x$components$ref == local, , drop = FALSE]
+
+  # A version stated as a minimum becomes exact when a version is asserted.
+  minimum <- base
+  minimum$components$version_is[minimum$components$ref == local] <- "minimum"
+  got <- at(apply_overrides(minimum, ov_row(component = "localpkg", field = "version", value = "0.9.1")))
+  expect_identical(got$version, "0.9.1")
+  expect_identical(got$version_is, "exact")
+  expect_identical(got$ecosystem, "local")
+
+  got <- at(apply_overrides(base, ov_row(component = "localpkg", field = "purl", value = "pkg:cran/localpkg@0.1.0")))
+  expect_identical(got$ecosystem, "cran")
+  bioc <- "pkg:cran/localpkg@0.1.0?repository_url=https://bioconductor.org/packages/3.20/bioc"
+  expect_identical(at(apply_overrides(base, ov_row(component = "localpkg", field = "purl", value = bioc)))$ecosystem,
+                   "bioconductor")
+  # Any other package URL leaves the ecosystem as it was.
+  github <- "pkg:github/someone/localpkg@abc123"
+  expect_identical(at(apply_overrides(base, ov_row(component = "localpkg", field = "purl", value = github)))$ecosystem,
+                   "local")
+  # So do the other fields.
+  expect_identical(at(apply_overrides(base, ov_row(component = "localpkg")))$ecosystem, "local")
+  expect_identical(at(apply_overrides(base, ov_row(component = "localpkg")))$version_is,
+                   comps$version_is[comps$ref == local])
+})

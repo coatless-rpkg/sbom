@@ -112,6 +112,17 @@ apply_overrides <- function(x, overrides) {
       )
     }
     comps[[field]][at] <- new
+    # An asserted version is the version, not a minimum; an asserted CRAN
+    # package URL says where the package came from.
+    if (field == "version") {
+      comps$version_is[at] <- "exact"
+    }
+    if (field == "purl") {
+      parsed <- purl_parse(new)
+      if (parsed$valid %in% TRUE && tolower(parsed$type) %in% "cran") {
+        comps$ecosystem[at] <- if (purl_names_bioconductor(parsed$qualifiers)) "bioconductor" else "cran"
+      }
+    }
     if (field == "license_spdx") {
       note <- paste0("Asserted by ", row$asserted_by, ": ", row$reason, ".")
       old_comment <- comps$license_comment[at]

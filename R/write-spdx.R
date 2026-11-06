@@ -89,7 +89,46 @@ spdx_source_info <- function(row) {
   if (length(parts) > 0L) paste(parts, collapse = if (length(parts) > 1L) ". " else "")
 }
 
-spdx_package <- function(row, id, version = "2.3") {
+# The comment of an SPDX 2 advisory reference, in R Observatory's words:
+# the id, the summary when there is one, the version OSV lists, and the fix
+# or that there is none, when OSV says.
+spdx_advisory_comment <- function(id, summary, name, version, fixed, no_fix) {
+  paste0(
+    id, if (spdx_is_set(summary)) paste0(", ", summary), ". OSV lists ", name, " ", version,
+    " among the versions it affects",
+    if (spdx_is_set(fixed)) paste0(", fixed in ", fixed) else if (isTRUE(no_fix)) ", with no fix",
+    "."
+  )
+}
+
+# The advisory references of each row of `comps`: one for each advisory
+# that affects the component, in id order. SPDX 2.3 lists the type advisory
+# under SECURITY; SPDX 2.2 lists only CPEs there, so in 2.2 the reference is
+# OTHER, which takes any type.
+spdx_advisory_refs <- function(x, comps, version = "2.3") {
+  out <- vector("list", nrow(comps))
+  category <- if (version == "2.2") "OTHER" else "SECURITY"
+  adv <- written_advisories(x)
+  for (i in seq_len(nrow(adv))) {
+    id <- adv$id[[i]]
+    hits <- adv$affects[[i]]
+    for (j in seq_len(nrow(hits))) {
+      k <- match(hits$ref[[j]], comps$ref)
+      out[[k]] <- c(out[[k]], list(list(
+        referenceCategory = category, referenceType = "advisory",
+        referenceLocator = osv_vulnerability_url(id),
+        comment = spdx_advisory_comment(
+          id, adv$summary[[i]], comps$name[[k]], hits$version[[j]], hits$fixed[[j]], hits$no_fix[[j]]
+        )
+      )))
+    }
+  }
+  out
+}
+
+# `advisories` are the package's advisory references, which follow the
+# others.
+spdx_package <- function(row, id, version = "2.3", advisories = list()) {
   is_r <- identical(row$ecosystem, "r")
   is_base <- identical(row$parent_ref, "R")
   p <- list(name = row$name, SPDXID = id)
@@ -172,6 +211,7 @@ spdx_package <- function(row, id, version = "2.3") {
   if (spdx_is_set(row$purl)) add_ref(category, "purl", row$purl)
   if (spdx_is_set(row$vcs_url)) add_ref("OTHER", "vcs", row$vcs_url)
   if (spdx_is_set(row$doi)) add_ref("OTHER", "doi", row$doi)
+  refs <- c(refs, advisories)
   if (length(refs) > 0L) p$externalRefs <- refs
 
   if (version != "2.2") {
@@ -242,8 +282,9 @@ spdx_document <- function(x, version = "2.3") {
   comps <- x$components
   ids <- spdx_ids(comps)
   ord <- order(ids, method = "radix")
+  advisories <- spdx_advisory_refs(x, comps, version)
   packages <- lapply(ord, function(i) {
-    spdx_package(comps[i, , drop = FALSE], ids[i], version)
+    spdx_package(comps[i, , drop = FALSE], ids[i], version, advisories[[i]])
   })
 
   tool <- if (spdx_is_set(x$metadata$tool_version)) {

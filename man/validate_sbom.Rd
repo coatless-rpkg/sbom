@@ -176,7 +176,9 @@ Each finding has one of these checks:
 \item \code{schema}: an error where the file fails its schema; otherwise a note.
 \item \code{duplicate-id} (error): elements share an id.
 \item \code{dangling-relationship} (error): a relationship names an element the
-document does not define.
+document does not define. An element of another document is not
+checked: one named through an SPDX \verb{DocumentRef-} or an SPDX 3 import,
+or a CycloneDX BOM-Link (\code{urn:cdx:...}), as in a VEX document.
 \item \code{license-invalid} (error): a licence expression is not a valid SPDX
 expression.
 \item \code{license-unknown} (error): it uses an id that is not on the SPDX License

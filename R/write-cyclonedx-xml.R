@@ -111,6 +111,23 @@ xml_dependency <- function(parent, dep) {
   invisible(node)
 }
 
+xml_vulnerability <- function(parent, v) {
+  xml_source <- function(node, s) xml_element(node, "source", s)
+  xml_element(parent, "vulnerability", v, attrs = "bom-ref", special = list(
+    source = xml_source,
+    references = function(node, refs) {
+      xml_each(node, "references", refs, function(p, r) {
+        xml_element(p, "reference", r, special = list(source = xml_source))
+      })
+    },
+    ratings = function(node, rs) xml_each(node, "ratings", rs, function(p, r) xml_element(p, "rating", r)),
+    advisories = function(node, as) {
+      xml_each(node, "advisories", as, function(p, a) xml_element(p, "advisory", a))
+    },
+    affects = function(node, as) xml_each(node, "affects", as, function(p, a) xml_element(p, "target", a))
+  ))
+}
+
 cdx_xml <- function(x, version = "1.6") {
   doc <- cdx_document(x, version)
   root <- xml2::xml_new_root("bom")
@@ -120,6 +137,9 @@ cdx_xml <- function(x, version = "1.6") {
   xml_metadata(root, doc$metadata)
   xml_each(root, "components", doc$components, function(p, c) xml_component(p, c))
   xml_each(root, "dependencies", doc$dependencies, xml_dependency)
+  if (!is.null(doc$vulnerabilities)) {
+    xml_each(root, "vulnerabilities", doc$vulnerabilities, xml_vulnerability)
+  }
   out <- as.character(root, options = "format")
   enc2utf8(paste0(sub("\n+$", "", out), "\n"))
 }

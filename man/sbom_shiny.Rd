@@ -24,7 +24,7 @@ needs the htmltools package in those libraries. What it finds are
 observed components, nested under the R package that ships each one. A
 dependency whose name, version or package sbom does not accept is left
 out, and one issue counts them. If the UI cannot be evaluated, an issue
-says so and the SBOM keeps the static result.
+gives the reason and the SBOM keeps the static result.
 
 It finds only the dependencies the UI holds when it is built, and
 misses any that \code{renderUI()} or other server code inserts later.}
@@ -41,18 +41,19 @@ source in the folder, and the JavaScript and CSS libraries the app ships
 are recorded under it. It runs no code from the app unless you ask for
 \code{evaluate_ui = TRUE}, and it makes no network requests, except that, with
 Nix installed, a \code{default.nix} is read by running \code{nix-instantiate} (see
-\code{\link[=sbom_nix]{sbom_nix()}}), which may download nixpkgs, and that \code{snapshot}, passed
-through \code{...}, looks up a CRAN snapshot.
+\code{\link[=sbom_nix]{sbom_nix()}}), which may download nixpkgs, and that \code{snapshot} and
+\code{advisories = TRUE}, passed through \code{...}, look up a CRAN snapshot and
+download OSV's advisory data.
 }
 \details{
-The layouts it recognises, checked in this order:
+The layouts it recognizes, checked in this order:
 \enumerate{
 \item \code{rhino}: the folder has \code{rhino.yml}. Its static files are in
 \code{app/static}.
 \item \code{golem}: a \code{DESCRIPTION} with a \code{Package} field, and either
 \code{inst/golem-config.yml} or both \code{R/app_ui.R} and \code{R/app_server.R}.
 The root is the app, named and versioned by its \code{DESCRIPTION}, which
-also gives its licence and maintainer whatever source the packages come
+also gives its license and maintainer whatever source the packages come
 from. Its static files are in \code{inst/app/www}.
 \item \code{app.R}: the folder has an \code{app.R}. Its static files are in \code{www}.
 \item \code{ui-server}: the folder has both \code{ui.R} and \code{server.R}. Its static
@@ -69,9 +70,9 @@ was deployed there.
 The libraries in the static folder are found by the header comments of
 their files, as for the JavaScript in a package, with the same bounds: six
 levels, no symlinked folders, a fixed number of files. They are inferred
-components under the root. A rhino app's npm dependencies are not read,
-and an issue says so when the app has a \code{package.json} or
-\code{package-lock.json}.
+components under the root. A rhino app's npm dependencies are not read;
+when the app has a \code{package.json} or \code{package-lock.json}, an issue records
+that they were left out.
 }
 \examples{
 app <- file.path(tempdir(), "app")

@@ -51,3 +51,14 @@ local_mocked_bindings(
   read_packages_file = function(location, ...) structure(list(), reason = "not run in tests"),
   .package = "sbom", .env = testthat::teardown_env()
 )
+
+# Nor does any test download OSV's advisory data or look up an advisory: the
+# download fails and every lookup finds nothing. A test that wants either
+# mocks osv_download() or osv_lookup() itself.
+osv_download_real <- osv_download
+osv_lookup_real <- osv_lookup
+local_mocked_bindings(
+  osv_download = function(url, dest, ...) structure(FALSE, reason = "not run in tests"),
+  osv_lookup = function(id, ...) NULL,
+  .package = "sbom", .env = testthat::teardown_env()
+)

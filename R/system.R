@@ -470,3 +470,84 @@ read_packages_file <- function(location, timeout = 60) {
   out <- lapply(fields, function(f) enc2utf8_bytes(unname(dcf[, f])))
   data.frame(stats::setNames(out, fields), stringsAsFactors = FALSE)
 }
+
+# OSV's advisory data, downloaded from `url` to `dest`, a temporary file that
+# the caller chose and removes. TRUE when the download finished, otherwise
+# FALSE with the attribute `reason`, a fixed phrase that never holds a path
+# or anything the server sent: "HTTP status <code>" or "the connection
+# failed". With osv_lookup(), the only place sbom reaches OSV, and only when
+# the user passes advisories = TRUE.
+osv_download <- function(url, dest, timeout = 300) {
+  fail <- function(reason) structure(FALSE, reason = reason)
+  old <- options(timeout = timeout)
+  on.exit(options(old), add = TRUE)
+  status <- tryCatch(
+    utils::download.file(url, dest, mode = "wb", quiet = TRUE),
+    warning = function(w) {
+      m <- regmatches(conditionMessage(w), regexpr("HTTP status was '[0-9]{3}", conditionMessage(w)))
+      structure(NA_integer_, code = sub("^HTTP status was '", "", m))
+    },
+    error = function(e) structure(NA_integer_, code = character())
+  )
+  if (identical(as.integer(status), 0L) && file.exists(dest)) {
+    return(TRUE)
+  }
+  code <- attr(status, "code")
+  fail(if (length(code) == 1L) paste("HTTP status", code) else "the connection failed")
+}
+
+# The OSV record of the advisory `id`, as parsed JSON, read from
+# https://api.osv.dev/v1/vulns/<id>; NULL when the server's answer cannot be
+# read or is not a JSON object parsed as read_document() parses JSON, as for
+# an HTTP error status; and FALSE, with the attribute `reason` "the
+# connection failed", when no answer came: the lookup timed out or failed at
+# the connection, so that the caller can stop looking up. Only an id that
+# osv_id_ok() accepts is sent, and nothing else is: no package name leaves
+# the machine.
+osv_lookup <- function(id, timeout = 30) {
+  if (!is_string(id) || !osv_id_ok(id)) {
+    return(NULL)
+  }
+  old <- options(timeout = timeout)
+  on.exit(options(old), add = TRUE)
+  # R's url() names an HTTP status that the server answered with; any other
+  # failure is one of the connection.
+  failed <- function(cnd) {
+    if (grepl("HTTP status was", conditionMessage(cnd), fixed = TRUE)) NULL else FALSE
+  }
+  bytes <- tryCatch(
+    {
+      con <- url(paste0("https://api.osv.dev/v1/vulns/", id), open = "rb")
+      on.exit(try(close(con), silent = TRUE), add = TRUE)
+      read_capped(con, osv_max_mb() * 2^20)
+    },
+    error = failed,
+    warning = failed
+  )
+  if (isFALSE(bytes)) {
+    return(structure(FALSE, reason = "the connection failed"))
+  }
+  if (is.null(bytes)) {
+    return(NULL)
+  }
+  doc <- osv_parse_record(bytes)
+  if (is.list(doc) && !is.null(names(doc))) doc else NULL
+}
+
+# The bytes of an open connection, or NULL when there are more than `cap`.
+read_capped <- function(con, cap) {
+  chunks <- list()
+  total <- 0
+  repeat {
+    chunk <- readBin(con, "raw", n = 65536L)
+    if (length(chunk) == 0L) {
+      break
+    }
+    total <- total + length(chunk)
+    if (total > cap) {
+      return(NULL)
+    }
+    chunks[[length(chunks) + 1L]] <- chunk
+  }
+  if (length(chunks) == 0L) raw() else unlist(chunks)
+}

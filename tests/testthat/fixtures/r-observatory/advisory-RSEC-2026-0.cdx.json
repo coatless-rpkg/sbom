@@ -1,0 +1,39 @@
+[
+    {
+        "bom-ref": "advisory/RSEC-2026-0",
+        "id": "RSEC-2026-0",
+        "source": {
+            "name": "OSV",
+            "url": "https://osv.dev/vulnerability/RSEC-2026-0"
+        },
+        "references": [
+            {
+                "id": "CVE-2018-1000086",
+                "source": {
+                    "name": "CVE",
+                    "url": "https://www.cve.org/CVERecord?id=CVE-2018-1000086"
+                }
+            }
+        ],
+        "ratings": [
+            {
+                "score": 8.8,
+                "severity": "high",
+                "method": "CVSSv3",
+                "vector": "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H"
+            }
+        ],
+        "description": "Cross-site Request Forgery (CSRF) vulnerability",
+        "advisories": [
+            {
+                "url": "https://github.com/RConsortium/r-advisory-database/blob/main/vulns/widgetframe/RSEC-2026-0.yaml"
+            }
+        ],
+        "published": "2026-02-18T00:00:00Z",
+        "affects": [
+            {
+                "ref": "pkg:cran/widgetframe@0.3.1"
+            }
+        ]
+    }
+]

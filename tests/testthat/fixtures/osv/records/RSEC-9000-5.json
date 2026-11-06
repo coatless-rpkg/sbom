@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.7.3",
+  "id": "RSEC-9000-5",
+  "published": "2099-02-15T00:00:00Z",
+  "modified": "2099-03-01T00:00:00Z",
+  "withdrawn": "2099-03-01T00:00:00Z",
+  "summary": "Synthetic withdrawn advisory for every version of fakepkg",
+  "affected": [
+    {
+      "package": {"name": "fakepkg", "ecosystem": "CRAN", "purl": "pkg:cran/fakepkg"},
+      "ranges": [{"type": "ECOSYSTEM", "events": [{"introduced": "0"}]}]
+    }
+  ]
+}

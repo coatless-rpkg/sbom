@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.7.3",
+  "id": "RSEC-9000-3",
+  "published": "2099-03-01T00:00:00Z",
+  "modified": "2099-06-30T12:00:00.5Z",
+  "upstream": ["CVE-2099-0003", "GHSA-xxxx-yyyy-zzzz"],
+  "summary": "Synthetic flaw in lastpkg up to a last affected version",
+  "affected": [
+    {
+      "package": {"name": "lastpkg", "ecosystem": "CRAN", "purl": "pkg:cran/lastpkg"},
+      "ranges": [{"type": "SEMVER", "events": [{"introduced": "1.0"}, {"last_affected": "1.2-3"}]}]
+    }
+  ]
+}

@@ -15,7 +15,9 @@ sbom_nix(
   timestamp = NULL,
   overrides = NULL,
   embedded = TRUE,
-  system = TRUE
+  system = TRUE,
+  advisories = FALSE,
+  advisories_on_error = c("error", "continue")
 )
 }
 \arguments{
@@ -61,7 +63,10 @@ of \code{"version"}, \code{"license_spdx"}, \code{"supplier_name"}, \code{"suppl
 \code{"maintainer"}, \code{"purl"} and \code{"download_location"}. Rows are applied in
 order, and each is recorded with who asserted it and why. An override
 that contradicts a found value wins and adds an \code{override-conflict} issue.
-Asserting \code{"version"} or \code{"purl"} changes only that field, not the \code{ref}.
+Asserting \code{"version"} makes it the exact version, and asserting a CRAN
+\code{"purl"} (\code{pkg:cran}) makes the component a CRAN package, or a
+Bioconductor package when its \code{repository_url} names bioconductor.org;
+neither changes the \code{ref}.
 An unknown component or field, or a missing column, is an error.}
 
 \item{embedded}{Whether to record the code that packages carry inside them.
@@ -85,6 +90,46 @@ with the rules of the pak package, when it is installed. sbom turns off
 pak's update of those rules, so pak uses the rules it has cached or
 ships and makes no network request. The shared libraries that installed
 compiled code links are read with \code{otool} (macOS) or \code{ldd} (Linux).}
+
+\item{advisories}{Whether to list the OSV security advisories for the
+SBOM's packages, from the R Consortium advisory database that OSV
+publishes; see \code{\link[=sbom_advisories]{sbom_advisories()}}. Only exact versions are compared,
+of the packages whose package URL is a CRAN one (\code{pkg:cran}), packages
+from CRAN-like repositories among them, matched by name. A package with
+a CRAN package URL and a minimum version, or none, is named in an
+\code{advisories-no-exact-version} issue. An R package that is not known to
+come from CRAN, because sbom could not tell where it came from (as for a
+package that is not installed), or because it was installed from a
+local source or from GitHub, GitLab, Bitbucket or git, is named in an
+\code{advisories-not-cran} issue. Bioconductor packages are not compared:
+OSV does not cover them yet, and when the SBOM holds one a note says so.
+Matching is local, with the versions and package URLs after
+\code{overrides}, so no package name leaves the machine.
+
+\code{FALSE}, the default, lists none, makes no network request and adds a
+note that no advisory data was on hand. \code{TRUE} downloads OSV's CRAN
+export,
+\verb{https://osv-vulnerabilities.storage.googleapis.com/CRAN/all.zip}, and
+looks up the CVSS ratings of the upstream records it names at
+\verb{https://api.osv.dev}, sending only their public ids. On a machine
+without network access, download that \code{all.zip} elsewhere and pass its
+path: it is read where it is, without the network and without ratings.
+
+The SBOM lists what OSV says about these exact versions: a package
+without an advisory is not shown to be free of flaws, and an upstream
+CVSS rating describes the upstream flaw, not how exposed the R package
+is.}
+
+\item{advisories_on_error}{What happens when the advisory data cannot be
+downloaded or read, as when the download fails or the zip is damaged:
+\code{"error"}, the default, is an error of class \code{sbom_advisories_error}
+that names the problem; \code{"continue"} builds the SBOM without
+advisories, with an R warning of class \code{sbom_advisories_unavailable}, a
+warning issue and a note that no advisory data was on hand. A download
+larger than 50 MB is refused as an error too. A CVSS rating that cannot
+be looked up never fails the call: it is left out, with an issue. The
+lookups stop at the first that times out or fails at the connection,
+and take at most two minutes in all.}
 }
 \value{
 An \verb{<sbom>} object. See \code{\link[=sbom_components]{sbom_components()}} to read it.
@@ -95,7 +140,8 @@ rix package declares: R, R packages, packages from git or from the CRAN
 archive, Nix system packages and TeX Live. Without Nix it reads the file as
 text, runs no code from it and makes no network request unless you pass
 \code{snapshot}. With Nix installed it reads the environment from the Nix store
-instead; see Nix mode.
+instead; see Nix mode. \code{advisories = TRUE} also downloads OSV's advisory
+data.
 }
 \details{
 \subsection{Nix mode}{
@@ -186,8 +232,9 @@ not listed, and an issue says so.
 
 \subsection{Looking up versions}{
 
-\code{snapshot} is the only way \code{sbom_nix()} uses the network, and it does so
-only when you pass it. It looks the versions up in a CRAN \code{PACKAGES} file:
+Apart from \code{advisories}, \code{snapshot} is the only way \code{sbom_nix()} uses the
+network, and it does so only when you pass it. It looks the versions up in
+a CRAN \code{PACKAGES} file:
 \itemize{
 \item \code{NULL}, the default, looks nothing up and makes no network request.
 \item \code{"ppm"} reads the CRAN snapshot that Posit Package Manager keeps for the

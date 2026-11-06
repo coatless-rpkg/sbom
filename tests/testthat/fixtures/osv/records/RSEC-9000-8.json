@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.7.3",
+  "id": "RSEC-9000-8",
+  "published": "2099-01-10T00:00:00Z",
+  "modified": "2099-01-10T00:00:00Z",
+  "summary": "",
+  "affected": [
+    {
+      "package": {"name": "badpkg", "ecosystem": "CRAN", "purl": "pkg:cran/badpkg"},
+      "ranges": [{"type": "ECOSYSTEM", "events": [{"introduced": "not-a-version"}]}]
+    }
+  ]
+}

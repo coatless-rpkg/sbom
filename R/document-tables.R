@@ -232,7 +232,11 @@ tables_document <- function(name = NA_character_, timestamp = NA_character_,
 #'     CycloneDX, or `"license"` for SWID's `sbom:license`.
 #'   * `purls`: `data.frame(location, id, purl)`, one row per purl.
 #'   * `relationships`: `data.frame(location, from, to, type)`, with the
-#'     format's own types. `from` is always an id. `to` is NA only in the row
+#'     format's own types. CycloneDX also gives an `"affects"` row for each
+#'     target of a vulnerability's `affects`, at
+#'     `/vulnerabilities/<i>/affects/<j>`. `from` is always an id, except
+#'     that it is NA in the `"affects"` rows of a vulnerability without a
+#'     bom-ref. `to` is NA only in the row
 #'     a CycloneDX `dependencies` entry that lists no dependency gives, which
 #'     records that its component's dependencies were stated. SPDX 3 licence
 #'     relationships are licence rows instead.
@@ -248,8 +252,9 @@ tables_document <- function(name = NA_character_, timestamp = NA_character_,
 #'     tag creator); `tools` is `data.frame(name, version)`. `root` holds the root ids the document
 #'     states, NA for a root without one, and `root_location` where each is
 #'     stated. `ids` is every id the document defines: every CycloneDX
-#'     bom-ref (services' and licences' too), SPDX 2's document id and its
-#'     elements' SPDXIDs, every SPDX 3 node's spdxId, or the SWID tagId.
+#'     bom-ref (services', licences' and vulnerabilities' too), SPDX 2's
+#'     document id and its elements' SPDXIDs, every SPDX 3 node's spdxId, or
+#'     the SWID tagId.
 #' @noRd
 document_tables <- function(d) {
   doc <- d[["doc"]]
@@ -382,6 +387,8 @@ tables_cdx <- function(doc, xml) {
 # Nesting ("contains", from the element walk, between components that both
 # have an id), then the dependencies entries: "dependsOn" and "provides" rows,
 # and for an entry that lists neither, one "dependsOn" row with no target.
+# Then one "affects" row per target a vulnerability names, from the
+# vulnerability's bom-ref, NA when it has none.
 tables_cdx_relationships <- function(doc, elements) {
   parent_id <- elements$id[match(elements$parent, elements$location, incomparables = NA)]
   nest <- !is.na(parent_id) & !is.na(elements$id)
@@ -407,11 +414,19 @@ tables_cdx_relationships <- function(doc, elements) {
     to = rep(NA_character_, length(empty)), type = rep("dependsOn", length(empty))
   )
   deps <- tables_bind(parts, c("entry", "rank", "index"), c("location", "from", "to", "type"))
+  vulns <- json_items(json_member(doc, "vulnerabilities"))
+  affects <- json_flatten(vulns, "affects")
+  target <- json_strings(affects$items, "ref")
+  hit <- !is.na(target)
+  vuln <- affects$owner[hit]
   tables_relationships(
-    location = c(elements$location[nest], deps$location),
-    from = c(parent_id[nest], deps$from),
-    to = c(elements$id[nest], deps$to),
-    type = c(rep("contains", sum(nest)), deps$type)
+    location = c(
+      elements$location[nest], deps$location,
+      json_pointer(tables_paste("/vulnerabilities/", vuln - 1L), "affects", affects$index[hit])
+    ),
+    from = c(parent_id[nest], deps$from, json_strings(vulns, "bom-ref")[vuln]),
+    to = c(elements$id[nest], deps$to, target[hit]),
+    type = c(rep("contains", sum(nest)), deps$type, rep("affects", length(vuln)))
   )
 }
 

@@ -45,6 +45,40 @@
   whose findings `as.data.frame()` returns. `error_on` turns a failure into an
   error, for scripts.
 
+* Every builder takes `advisories`, off by default. `TRUE` lists the security
+  advisories that OSV publishes from the R Consortium advisory database for
+  the exact versions of the SBOM's CRAN packages: it downloads OSV's CRAN
+  export, matches it locally, so that no package name leaves the machine, and
+  looks up CVSS ratings by their public upstream ids. The path of a copy of
+  that `all.zip` does the same offline, without ratings. Only packages with a
+  CRAN package URL and an exact version are compared; one with a CRAN package
+  URL and no exact version, and an R package not known to come from CRAN, is
+  named in an issue instead. Overrides count: an asserted `version` is
+  exact, and an asserted CRAN `purl` makes the package a CRAN package. Data
+  that cannot be read is an error, or with `advisories_on_error = "continue"`
+  an issue and a warning. `sbom_advisories()` lists the advisories, with
+  the fix or whether there is none, and `print()` and `summary()` count
+  them. The advisories are part of the content that a document's serial
+  number or namespace derives from.
+
+* Advisories are written as R Observatory writes them: CycloneDX
+  `vulnerabilities`, SPDX 2 advisory references (`SECURITY` in SPDX 2.3,
+  `OTHER` in 2.2) and SPDX 3 `security_Vulnerability` elements. A SWID tag
+  says that it has no place for them. `read_sbom()` reads them back, and
+  only them: other tools' vulnerabilities, VEX statements, CycloneDX
+  version statuses that do not say a component's version is affected, and
+  SPDX 2 references whose comment does not say that OSV lists that package
+  at its version are counted in an issue, never read as OSV's.
+  `validate_sbom()` reports a CycloneDX vulnerability that names an element
+  the document does not define, other than an element of another BOM named
+  by a BOM-Link (`urn:cdx:`).
+
+* Every SBOM built without advisories now carries R Observatory's note "No
+  advisory data was on hand for this file, so it lists no advisories.", so a
+  document written from the same inputs differs from one that an earlier
+  version wrote by that note and by its serial number or namespace, which
+  derive from its content.
+
 * `purl()` requires each of `name`, `version`, `namespace` and
   `repository_url` to have length 1 or the length of the longest, and errors
   otherwise rather than recycling silently. A version of `""` is left out, as

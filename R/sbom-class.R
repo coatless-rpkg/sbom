@@ -1,5 +1,6 @@
-# The <sbom> object: four tables (components, relationships, issues) plus
-# metadata. Every later task builds, reads and writes this shape.
+# The <sbom> object: four tables (components, relationships, issues and
+# advisories) plus metadata. Every later task builds, reads and writes this
+# shape.
 
 component_columns <- function() {
   c(
@@ -47,6 +48,55 @@ empty_relationships <- function() empty_df(relationship_columns())
 
 empty_issues <- function() empty_df(issue_columns())
 
+advisory_columns <- function() {
+  c("id", "summary", "published", "source_url", "upstream", "ratings", "affects")
+}
+
+# The advisories table with no rows, as osv_match() makes it: `upstream` is a
+# list of character vectors, `ratings` a list of data frames of
+# empty_ratings()'s columns, and `affects` a list of data frames of ref,
+# version, fixed and no_fix.
+empty_advisories <- function() {
+  empty_df(advisory_columns(), list = c("upstream", "ratings", "affects"))
+}
+
+# The CVSS ratings of one advisory's upstream records, with no rows.
+empty_ratings <- function() {
+  data.frame(
+    upstream = character(), method = character(), vector = character(),
+    score = numeric(), severity = character(), stringsAsFactors = FALSE
+  )
+}
+
+# metadata$advisories: whether advisories were asked for, where the data came
+# from (a URL, or a file's basename), when it was downloaded, the latest
+# `modified` time of its records, and the status, "listed", "not-requested"
+# or "unavailable".
+advisories_metadata <- function(requested = FALSE, source = NA_character_,
+                                fetched = as.POSIXct(NA, tz = "UTC"),
+                                newest_modified = NA_character_, status = "not-requested") {
+  list(
+    requested = requested, source = source, fetched = fetched,
+    newest_modified = newest_modified, status = status
+  )
+}
+
+# The status of an <sbom>'s advisories; "not-requested" when it has none
+# recorded.
+advisories_status <- function(x) {
+  status <- x$metadata$advisories$status
+  if (is_string(status)) status else "not-requested"
+}
+
+# The line of print() and summary() about the advisories.
+advisories_line <- function(status, n) {
+  switch(status,
+    listed = paste0("Advisories: ", n, " listed by OSV for these exact versions."),
+    unavailable = "Advisories: unavailable (see sbom_issues()).",
+    "Advisories: not requested."
+  )
+}
+
 check_columns <- function(x, required, what, call = parent.frame()) {
   missing <- setdiff(required, names(x))
   if (!is.data.frame(x) || length(missing) > 0) {
@@ -60,7 +110,8 @@ check_columns <- function(x, required, what, call = parent.frame()) {
   }
 }
 
-new_sbom <- function(metadata, components, relationships, issues) {
+new_sbom <- function(metadata, components, relationships, issues,
+                     advisories = empty_advisories()) {
   if (!is.list(metadata) || !all(metadata_names() %in% names(metadata))) {
     missing <- setdiff(metadata_names(), names(metadata))
     cli::cli_abort(c(
@@ -72,12 +123,17 @@ new_sbom <- function(metadata, components, relationships, issues) {
   check_unique_refs(components$ref)
   check_columns(relationships, relationship_columns(), "relationships")
   check_columns(issues, issue_columns(), "issues")
+  check_columns(advisories, advisory_columns(), "advisories")
+  if (is.null(metadata$advisories)) {
+    metadata$advisories <- advisories_metadata()
+  }
   structure(
     list(
       metadata = metadata,
       components = components,
       relationships = relationships,
-      issues = issues
+      issues = issues,
+      advisories = advisories
     ),
     class = "sbom"
   )
@@ -103,8 +159,21 @@ add_issue <- function(issues, ref, field, code, message, severity = "warning") {
   rbind(issues, row[, names(issues), drop = FALSE])
 }
 
-document_notes <- function(x) {
-  c(as.character(x$metadata$notes), unique(x$issues$message))
+# The notes a document gives: the metadata's notes, then the issues. A note
+# from a SWID tag read back may say that the tag has no place for
+# advisories, which is said only in a SWID tag (`swid`); every other format
+# leaves that sentence out, and says in its place, once, what is true of
+# the file it writes: that no advisory data was on hand for it, unless it
+# lists advisories.
+document_notes <- function(x, swid = FALSE) {
+  notes <- c(as.character(x$metadata$notes), unique(x$issues$message))
+  if (swid) {
+    return(notes)
+  }
+  said <- any(grepl(advisory_notes$swid, notes, fixed = TRUE))
+  instead <- said && !any(grepl(advisory_notes$no_data, notes, fixed = TRUE)) &&
+    nrow(written_advisories(x)) == 0L
+  notes_without(notes, advisory_sentences$swid, with = if (instead) advisory_notes$no_data)
 }
 
 source_date_epoch <- function() Sys.getenv("SOURCE_DATE_EPOCH", unset = "")
@@ -212,5 +281,7 @@ print.sbom <- function(x, ...) {
     if (n_issues > 0) " (see sbom_issues())", "\n",
     sep = ""
   )
+  n_advisories <- if (is.data.frame(x$advisories)) nrow(x$advisories) else 0L
+  cat(advisories_line(advisories_status(x), n_advisories), "\n", sep = "")
   invisible(x)
 }

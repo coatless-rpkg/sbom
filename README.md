@@ -8,9 +8,10 @@ and `sbom_installed()` describes the packages in a library. They read the
 copies of `LinkingTo` packages that it compiles in, vendored C and C++ code,
 bundled JavaScript and CSS, the system requirements it declares and, for
 installed packages with compiled code, the shared libraries it links. They run
-no package code and make no network requests; the system steps run `otool` or
-`ldd`, `dpkg` or `rpm`, and read pak's rules on disk. Given the same inputs and
-`timestamp` they produce the same document.
+no package code and make no network requests unless you ask for security
+advisories (see below); the system steps run `otool` or `ldd`, `dpkg` or
+`rpm`, and read pak's rules on disk. Given the same inputs and `timestamp`
+they produce the same document.
 
 Each component records its package URL (purl), its distributor as supplier, its
 maintainer, its licence and the dependencies it declares. Licences are mapped to
@@ -129,6 +130,72 @@ source changed.
 summary(x)
 sbom_tree(x, max_depth = 2)
 sbom_diff(old, new)
+```
+
+## Security advisories (opt-in)
+
+With `advisories = TRUE`, every builder lists the security advisories that OSV
+publishes from the R Consortium advisory database for the exact versions of
+the SBOM's CRAN packages. Matching happens on your machine, so no package name
+is sent anywhere. sbom downloads OSV's CRAN export,
+`https://osv-vulnerabilities.storage.googleapis.com/CRAN/all.zip`, and looks
+up the CVSS rating of each upstream record it names at `https://api.osv.dev`,
+sending only those public ids. On a server without network access, download
+that `all.zip` elsewhere and pass its path as `advisories`: it is read where
+it is, without the network and without ratings.
+
+Only exact versions are compared, of the packages whose package URL is a CRAN
+one (`pkg:cran`), packages from CRAN-like repositories among them. A CRAN
+package with a minimum version, or no version, is named in an issue instead
+of being matched, and so is an R package that sbom does not know to come from
+CRAN: one that is not installed, or was installed from a local source or from
+GitHub, GitLab, Bitbucket or git. OSV does not cover Bioconductor packages
+yet, and the SBOM says so when it holds one.
+The SBOM lists what OSV says about these exact versions and nothing more: a
+package without an advisory is not shown to be free of flaws, and an upstream
+CVSS rating describes the upstream flaw, not how exposed the R package is.
+
+When the advisory data cannot be downloaded or read, the call fails with an
+error that names the problem; `advisories_on_error = "continue"` builds the
+SBOM anyway, with a warning, an issue and a note that no advisory data was on
+hand. Every SBOM built without advisories carries that note.
+
+The advisories are written as R Observatory writes them: CycloneDX
+`vulnerabilities`, SPDX 2 advisory references (category `SECURITY` in 2.3,
+`OTHER` in 2.2) and SPDX 3 `security_Vulnerability` elements. A SWID tag has
+no place for them, and says so. `sbom_advisories()` lists them, one row per
+advisory and affected package, and `read_sbom()` reads them back.
+
+``` r
+# Online: downloads OSV's CRAN export, and looks up ratings by public id.
+x <- sbom("path/to/project", advisories = TRUE)
+# Offline: the path of an all.zip downloaded beforehand.
+x <- sbom("path/to/project", advisories = "path/to/all.zip")
+sbom_advisories(x)
+```
+
+This example runs offline. It zips a made-up OSV record for `ppmpkg`, a
+made-up package in the example manifest that ships with sbom, as OSV zips its
+export, and needs a `zip` program:
+
+``` r
+dir <- file.path(tempdir(), "osv")
+dir.create(dir, showWarnings = FALSE)
+record <- file.path(dir, "EXAMPLE-2026-1.json")
+writeLines(c(
+  '{"id": "EXAMPLE-2026-1", "summary": "A made-up advisory for this example",',
+  ' "published": "2026-01-01T00:00:00Z", "modified": "2026-01-01T00:00:00Z",',
+  ' "affected": [{"package": {"ecosystem": "CRAN", "name": "ppmpkg"},',
+  '   "ranges": [{"type": "ECOSYSTEM", "events": [{"introduced": "0"}, {"fixed": "2.1.0"}]}]}]}'
+), record)
+zip <- file.path(tempdir(), "all.zip")
+
+if (nzchar(Sys.which("zip"))) {
+  utils::zip(zip, record, flags = "-j -q")
+  manifest <- system.file("extdata", "manifest.json", package = "sbom")
+  x <- sbom_rsconnect(manifest, system = FALSE, advisories = zip)
+  sbom_advisories(x)[, c("id", "name", "version", "fixed")]
+}
 ```
 
 ## Read and validate any SBOM

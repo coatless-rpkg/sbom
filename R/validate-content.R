@@ -190,17 +190,18 @@ content_duplicate_ids <- function(el, format) {
 
 # Each relationship end that names no id of the document. An end may also name
 # the SPDX 2 document, NONE or NOASSERTION, an element of another document
-# (SPDX 2's DocumentRef-x:y, or an SPDX 3 import), or one of SPDX 3's own
-# individuals such as NoneElement, as a full IRI or, in SPDX 3, in compact
-# form. A relationship with no target (an empty CycloneDX dependsOn) has
+# (SPDX 2's DocumentRef-x:y, an SPDX 3 import, or a CycloneDX BOM-Link,
+# urn:cdx:..., as a VEX document names the SBOM it speaks of), or one of
+# SPDX 3's own individuals such as NoneElement, as a full IRI or, in SPDX 3,
+# in compact form. A relationship with no target (an empty CycloneDX dependsOn) has
 # nothing to dangle. A SWID tag's links name other tags, so they are not
 # checked.
 #
 # A target is reported at its edge. A source is reported once, at the entry
 # that states it: a row of the relationships table is one target of an entry
-# (a CycloneDX dependencies entry, an SPDX 3 Relationship), whose pointer ends
-# in /dependsOn/<i>, /provides/<i> or /to/<i>; an SPDX 2 relationship is its
-# own entry.
+# (a CycloneDX dependencies entry or vulnerability, an SPDX 3 Relationship),
+# whose pointer ends in /dependsOn/<i>, /provides/<i>, /affects/<i> or
+# /to/<i>; an SPDX 2 relationship is its own entry.
 content_dangling <- function(rel, doc, format) {
   if (format %in% "swid") {
     return(content_rows("dangling-relationship", "error"))
@@ -209,11 +210,12 @@ content_dangling <- function(rel, doc, format) {
     doc$ids, doc$external_ids, "SPDXRef-DOCUMENT", "NONE", "NOASSERTION",
     if (format %in% "spdx3-jsonld") content_spdx3_individuals
   )
+  cdx <- format %in% c("cyclonedx-json", "cyclonedx-xml")
   dangles <- function(end) {
     !is.na(end) & !end %in% known & !content_grepl("^DocumentRef-[^:]+:.", end) &
-      !startsWith(end, "https://spdx.org/rdf/3.")
+      !startsWith(end, "https://spdx.org/rdf/3.") & !(cdx & startsWith(end, "urn:cdx:"))
   }
-  entry <- sub("/(dependsOn|provides|to)/[0-9]+$", "", rel$location)
+  entry <- sub("/(dependsOn|provides|affects|to)/[0-9]+$", "", rel$location)
   # An entry has one source, so one finding per entry.
   bad_from <- dangles(rel$from) & !duplicated(entry)
   bad_to <- dangles(rel$to)

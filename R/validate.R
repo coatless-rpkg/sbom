@@ -111,7 +111,9 @@ validation_error_on <- c("never", "error", "warning")
 #' * `schema`: an error where the file fails its schema; otherwise a note.
 #' * `duplicate-id` (error): elements share an id.
 #' * `dangling-relationship` (error): a relationship names an element the
-#'   document does not define.
+#'   document does not define. An element of another document is not
+#'   checked: one named through an SPDX `DocumentRef-` or an SPDX 3 import,
+#'   or a CycloneDX BOM-Link (`urn:cdx:...`), as in a VEX document.
 #' * `license-invalid` (error): a licence expression is not a valid SPDX
 #'   expression.
 #' * `license-unknown` (error): it uses an id that is not on the SPDX License

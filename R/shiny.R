@@ -1,4 +1,4 @@
-# Shiny apps: recognising an app folder, giving the app its own root, and
+# Shiny apps: recognizing an app folder, giving the app its own root, and
 # recording the JavaScript and CSS it ships. Detection reads files as text and
 # runs no code from the app.
 
@@ -10,17 +10,18 @@
 #' are recorded under it. It runs no code from the app unless you ask for
 #' `evaluate_ui = TRUE`, and it makes no network requests, except that, with
 #' Nix installed, a `default.nix` is read by running `nix-instantiate` (see
-#' [sbom_nix()]), which may download nixpkgs, and that `snapshot`, passed
-#' through `...`, looks up a CRAN snapshot.
+#' [sbom_nix()]), which may download nixpkgs, and that `snapshot` and
+#' `advisories = TRUE`, passed through `...`, look up a CRAN snapshot and
+#' download OSV's advisory data.
 #'
-#' The layouts it recognises, checked in this order:
+#' The layouts it recognizes, checked in this order:
 #'
 #' 1. `rhino`: the folder has `rhino.yml`. Its static files are in
 #'    `app/static`.
 #' 2. `golem`: a `DESCRIPTION` with a `Package` field, and either
 #'    `inst/golem-config.yml` or both `R/app_ui.R` and `R/app_server.R`.
 #'    The root is the app, named and versioned by its `DESCRIPTION`, which
-#'    also gives its licence and maintainer whatever source the packages come
+#'    also gives its license and maintainer whatever source the packages come
 #'    from. Its static files are in `inst/app/www`.
 #' 3. `app.R`: the folder has an `app.R`. Its static files are in `www`.
 #' 4. `ui-server`: the folder has both `ui.R` and `server.R`. Its static
@@ -36,9 +37,9 @@
 #' The libraries in the static folder are found by the header comments of
 #' their files, as for the JavaScript in a package, with the same bounds: six
 #' levels, no symlinked folders, a fixed number of files. They are inferred
-#' components under the root. A rhino app's npm dependencies are not read,
-#' and an issue says so when the app has a `package.json` or
-#' `package-lock.json`.
+#' components under the root. A rhino app's npm dependencies are not read;
+#' when the app has a `package.json` or `package-lock.json`, an issue records
+#' that they were left out.
 #'
 #' @param path A Shiny app folder.
 #' @param evaluate_ui Whether to run the app's code to find the html
@@ -56,7 +57,7 @@
 #'   observed components, nested under the R package that ships each one. A
 #'   dependency whose name, version or package sbom does not accept is left
 #'   out, and one issue counts them. If the UI cannot be evaluated, an issue
-#'   says so and the SBOM keeps the static result.
+#'   gives the reason and the SBOM keeps the static result.
 #'
 #'   It finds only the dependencies the UI holds when it is built, and
 #'   misses any that `renderUI()` or other server code inserts later.
@@ -127,7 +128,7 @@ app_root <- function(path, layout) {
   version <- desc_field(d, "Version")
   version <- if (is.na(version) || !nzchar(trimws(version))) NA_character_ else enc2utf8_bytes(trimws(version))
   ref <- paste0("project/", name)
-  # The licence and maintainer, read as for any package, whatever source the
+  # The license and maintainer, read as for any package, whatever source the
   # packages come from.
   license <- desc_field(d, "License")
   row <- component_row(
@@ -340,7 +341,7 @@ apply_app_layout <- function(x, path, layout, evaluate_ui = FALSE, lib = .libPat
 # root, or starts with "<old root>#", is rewritten in the components (`ref`
 # and `parent_ref`), the relationships, the issues and `metadata$root`. The
 # new row keeps what the old root recorded that it does not say itself: its
-# dependencies, licence, maintainer and the like.
+# dependencies, license, maintainer and the like.
 replace_root <- function(x, new) {
   old <- x$metadata$root
   rewrite <- function(ref) {

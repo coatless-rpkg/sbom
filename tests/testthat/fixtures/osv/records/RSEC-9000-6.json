@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.7.3",
+  "id": "RSEC-9000-6",
+  "published": "2099-05-01T00:00:00Z",
+  "modified": "2099-05-01T00:00:00Z",
+  "summary": "Synthetic flaw in a Bioconductor package named fakepkg",
+  "affected": [
+    {
+      "package": {"name": "fakepkg", "ecosystem": "Bioconductor"},
+      "ranges": [{"type": "ECOSYSTEM", "events": [{"introduced": "0"}]}]
+    }
+  ]
+}

@@ -4,7 +4,8 @@
 #'
 #' `sbom_renv()` describes the packages that an `renv.lock` pins. It reads the
 #' lockfile with renv, and it runs no code from the project and makes no
-#' network requests.
+#' network requests, except that `advisories = TRUE` downloads OSV's advisory
+#' data.
 #'
 #' Every locked package is listed at its locked version, as declared, with its
 #' source: CRAN or another repository, Bioconductor, GitHub, GitLab,
@@ -51,7 +52,9 @@ sbom_renv <- function(lockfile = "renv.lock", library = NULL,
                       organization = getOption("sbom.organization"),
                       regid = getOption("sbom.regid"),
                       timestamp = NULL, overrides = NULL,
-                      embedded = TRUE, system = TRUE) {
+                      embedded = TRUE, system = TRUE, advisories = FALSE,
+                      advisories_on_error = c("error", "continue")) {
+  on_error <- check_advisories_args(advisories, advisories_on_error)
   regid <- check_regid(regid)
   lock <- read_renv_lock(lockfile)
   project <- dirname(normalizePath(lockfile, mustWork = TRUE))
@@ -153,7 +156,7 @@ sbom_renv <- function(lockfile = "renv.lock", library = NULL,
     )
   }
   rownames(x$issues) <- NULL
-  apply_overrides(x, overrides)
+  apply_advisories(apply_overrides(x, overrides), advisories, on_error)
 }
 
 # The lockfile as a list, or an error that names the file. renv's own errors

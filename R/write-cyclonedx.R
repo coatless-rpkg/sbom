@@ -136,6 +136,65 @@ cdx_dependencies <- function(x) {
   }))
 }
 
+# The rating methods each CycloneDX version lists: 1.4 has no CVSSv4 or SSVC.
+cdx_rating_methods <- function(version) {
+  methods <- c("CVSSv2", "CVSSv3", "CVSSv31", "CVSSv4", "OWASP", "SSVC", "other")
+  if (version == "1.4") setdiff(methods, c("CVSSv4", "SSVC")) else methods
+}
+
+# The CycloneDX ratings of one advisory, from those of its upstream ratings
+# that have a score, as R Observatory's sbom_cdx_rating() writes them: the
+# severity only when CycloneDX names it, and the vector when there is one.
+# The method is the rating's own, or the vector's when it has none, and a
+# method the version does not list is "other".
+cdx_ratings <- function(ratings, version) {
+  if (!is.data.frame(ratings) || nrow(ratings) == 0L) {
+    return(list())
+  }
+  ratings <- ratings[is.finite(ratings$score), , drop = FALSE]
+  lapply(seq_len(nrow(ratings)), function(i) {
+    r <- ratings[i, , drop = FALSE]
+    out <- list(score = as.numeric(r$score))
+    severity <- tolower(r$severity)
+    if (severity %in% c("critical", "high", "medium", "low", "info", "none")) {
+      out$severity <- severity
+    }
+    method <- if (cdx_is_set(r$method)) r$method else cvss_method(r$vector)
+    out$method <- if (method %in% cdx_rating_methods(version)) method else "other"
+    cdx_put(out, "vector", r$vector)
+  })
+}
+
+# One vulnerability per advisory, as R Observatory writes them, with each
+# field only when it has a value. The keys follow the XSD sequence.
+cdx_vulnerabilities <- function(x, version) {
+  adv <- written_advisories(x)
+  lapply(seq_len(nrow(adv)), function(i) {
+    id <- adv$id[[i]]
+    out <- list(
+      `bom-ref` = paste0("advisory/", id), id = id,
+      source = list(name = "OSV", url = osv_vulnerability_url(id))
+    )
+    cves <- cve_ids(adv$upstream[[i]])
+    if (length(cves) > 0L) {
+      out$references <- lapply(cves, function(cve) {
+        list(id = cve, source = list(name = "CVE", url = cve_record_url(cve)))
+      })
+    }
+    ratings <- cdx_ratings(adv$ratings[[i]], version)
+    if (length(ratings) > 0L) out$ratings <- ratings
+    out <- cdx_put(out, "description", adv$summary[[i]])
+    if (cdx_is_set(adv$source_url[[i]])) {
+      out$advisories <- list(list(url = adv$source_url[[i]]))
+    }
+    if (cdx_is_set(adv$published[[i]])) {
+      out$published <- paste0(adv$published[[i]], "T00:00:00Z")
+    }
+    out$affects <- lapply(adv$affects[[i]]$ref, function(ref) list(ref = ref))
+    out
+  })
+}
+
 cdx_document <- function(x, version = "1.6") {
   if (!is.character(version) || length(version) != 1L ||
         !version %in% cdx_versions) {
@@ -191,7 +250,7 @@ cdx_document <- function(x, version = "1.6") {
     meta$properties <- unname(props)
   }
 
-  list(
+  doc <- list(
     `$schema` = sprintf("http://cyclonedx.org/schema/bom-%s.schema.json", version),
     bomFormat = "CycloneDX",
     specVersion = version,
@@ -201,6 +260,9 @@ cdx_document <- function(x, version = "1.6") {
     components = components,
     dependencies = cdx_dependencies(x)
   )
+  vulnerabilities <- cdx_vulnerabilities(x, version)
+  if (length(vulnerabilities) > 0L) doc$vulnerabilities <- vulnerabilities
+  doc
 }
 
 cdx_json <- function(x, version = "1.6") {

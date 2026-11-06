@@ -3,7 +3,7 @@
 \name{summary.sbom}
 \alias{summary.sbom}
 \alias{print.sbom_summary}
-\title{Summarise an SBOM}
+\title{Summarize an SBOM}
 \usage{
 \method{summary}{sbom}(object, ...)
 
@@ -21,18 +21,20 @@
 \code{summary()} returns an \verb{<sbom_summary>}, a list with \code{counts} (a
 data frame with columns \code{what}, \code{value} and \code{n}, for \code{"ecosystem"},
 \code{"type"} and \code{"evidence"}), \code{licenses} (columns \code{license} and \code{n}, most
-common first), \code{unknowns} (the number of unknown components) and
-\code{drift} (the issues whose code starts with \code{"drift-"}). \code{print()}
-returns \code{x} invisibly.
+common first), \code{unknowns} (the number of unknown components),
+\code{drift} (the issues whose code starts with \code{"drift-"}) and \code{advisories}
+(a list of \code{status}, \code{"listed"}, \code{"not-requested"} or \code{"unavailable"},
+and \code{n}, the number of advisories listed). \code{print()} returns \code{x}
+invisibly.
 }
 \description{
 Counts the components of an SBOM by ecosystem, type and evidence, tallies
-their licences, and collects the drift issues.
+their licenses, collects the drift issues, and counts the advisories.
 }
 \details{
 Every component is counted, including the root, R, base packages and
 files. A component is unknown when its version is \code{NA} or its SPDX
-licence is \code{NA} (reported as \code{"NOASSERTION"}). Base packages have no
+license is \code{NA} (reported as \code{"NOASSERTION"}). Base packages have no
 version, so they are always unknown.
 }
 \examples{

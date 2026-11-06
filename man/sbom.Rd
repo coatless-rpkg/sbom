@@ -13,14 +13,16 @@ sbom(path = ".", ...)
 argument of \code{\link[=sbom_renv]{sbom_renv()}}, \code{\link[=sbom_rsconnect]{sbom_rsconnect()}}, \code{\link[=sbom_nix]{sbom_nix()}} (such as
 \code{nix} and \code{snapshot}) or \code{\link[=sbom_package]{sbom_package()}} other
 than the file or folder it reads, such as \code{library}, \code{lib},
-\code{dependencies}, \code{r_version}, \code{author} or \code{overrides}. The code scan
-takes \code{lib}, \code{author}, \code{organization}, \code{regid}, \code{timestamp},
-\code{overrides}, \code{embedded} and \code{system}. A Shiny app also takes
+\code{dependencies}, \code{r_version}, \code{author}, \code{overrides} or \code{advisories}. The
+code scan takes \code{lib}, \code{author}, \code{organization}, \code{regid}, \code{timestamp},
+\code{overrides}, \code{embedded}, \code{system}, \code{advisories} and
+\code{advisories_on_error}. A Shiny app also takes
 \code{evaluate_ui} (see \code{\link[=sbom_shiny]{sbom_shiny()}}), which other folders ignore. A name
 that no reader takes is an error. The reader ignores those it does not
 take, except that the cross-checks of \code{DESCRIPTION} and the code also
 use \code{lib}. Overrides, given or from \code{sbom-overrides.csv}, apply to the
-SBOM after the cross-checks, which compare what the sources say.}
+SBOM after the cross-checks, which compare what the sources say, and
+advisories are matched after the overrides.}
 }
 \value{
 An \verb{<sbom>} object. See \code{\link[=sbom_components]{sbom_components()}} to read it.
@@ -30,8 +32,8 @@ An \verb{<sbom>} object. See \code{\link[=sbom_components]{sbom_components()}} t
 source it finds, and reads every other source to check it. It runs no code
 from the project and makes no network requests, except that, with Nix
 installed, a \code{default.nix} is read by running \code{nix-instantiate} (see
-\code{\link[=sbom_nix]{sbom_nix()}}), which may download nixpkgs, and that \code{snapshot} looks up a
-CRAN snapshot.
+\code{\link[=sbom_nix]{sbom_nix()}}), which may download nixpkgs, that \code{snapshot} looks up a
+CRAN snapshot, and that \code{advisories = TRUE} downloads OSV's advisory data.
 }
 \details{
 The sources, from strongest to weakest:
@@ -94,6 +96,11 @@ with an issue.
 
 When the folder holds \code{sbom-overrides.csv} and \code{overrides} is not given,
 that file is applied as the overrides.
+
+Advisories, when asked for with \code{advisories}, are matched once, with the
+SBOM, after the overrides (and, for a Shiny app, after the app's own
+components are added). The cross-checks never read advisory data. See
+\code{\link[=sbom_package]{sbom_package()}} for what is matched and what is sent.
 
 The \code{inputs} element of the SBOM's metadata lists every source read.
 }

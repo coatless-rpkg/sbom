@@ -1,0 +1,48 @@
+[
+    {
+        "type": "security_Vulnerability",
+        "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/set/2026-10-20/92f8e761-9ad5-55c5-a636-658eaa84f2fa#advisory-RSEC-2026-0",
+        "creationInfo": "_:creationinfo",
+        "name": "RSEC-2026-0",
+        "summary": "Cross-site Request Forgery (CSRF) vulnerability",
+        "externalIdentifier": [
+            {
+                "type": "ExternalIdentifier",
+                "externalIdentifierType": "securityOther",
+                "identifier": "RSEC-2026-0",
+                "identifierLocator": [
+                    "https://osv.dev/vulnerability/RSEC-2026-0"
+                ]
+            },
+            {
+                "type": "ExternalIdentifier",
+                "externalIdentifierType": "cve",
+                "identifier": "CVE-2018-1000086",
+                "identifierLocator": [
+                    "https://www.cve.org/CVERecord?id=CVE-2018-1000086"
+                ]
+            }
+        ],
+        "externalRef": [
+            {
+                "type": "ExternalRef",
+                "externalRefType": "securityAdvisory",
+                "locator": [
+                    "https://github.com/RConsortium/r-advisory-database/blob/main/vulns/widgetframe/RSEC-2026-0.yaml"
+                ]
+            }
+        ],
+        "security_publishedTime": "2026-02-18T00:00:00Z"
+    },
+    {
+        "type": "Relationship",
+        "spdxId": "https://r-observatory.thecoatlessprofessor.com/spdx3/set/2026-10-20/92f8e761-9ad5-55c5-a636-658eaa84f2fa#rel-advisory-RSEC-2026-0-1",
+        "creationInfo": "_:creationinfo",
+        "comment": "OSV lists widgetframe 0.3.1 among the versions RSEC-2026-0 affects.",
+        "from": "https://r-observatory.thecoatlessprofessor.com/spdx3/set/2026-10-20/92f8e761-9ad5-55c5-a636-658eaa84f2fa#SPDXRef-cran-widgetframe",
+        "relationshipType": "hasAssociatedVulnerability",
+        "to": [
+            "https://r-observatory.thecoatlessprofessor.com/spdx3/set/2026-10-20/92f8e761-9ad5-55c5-a636-658eaa84f2fa#advisory-RSEC-2026-0"
+        ]
+    }
+]

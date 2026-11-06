@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.7.3",
+  "id": "RSEC-9000-4",
+  "published": "2099-04-01T00:00:00Z",
+  "modified": "2099-04-01T00:00:00Z",
+  "summary": "Synthetic flaw in two listed versions of listpkg",
+  "affected": [
+    {
+      "package": {"name": "listpkg", "ecosystem": "CRAN", "purl": "pkg:cran/listpkg"},
+      "versions": ["2.0.1", "2.0-2"]
+    }
+  ]
+}

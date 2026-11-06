@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.7.3",
+  "id": "RSEC-9000-7",
+  "published": "2099-06-01T00:00:00Z",
+  "modified": "2099-06-30T12:00:00Z",
+  "summary": "Synthetic flaw in two release series of twopkg",
+  "affected": [
+    {
+      "package": {"name": "twopkg", "ecosystem": "CRAN", "purl": "pkg:cran/twopkg"},
+      "ranges": [
+        {"type": "ECOSYSTEM", "events": [{"introduced": "1.0"}, {"fixed": "1.5"}, {"introduced": "2.0"}, {"fixed": "2.3"}]},
+        {"type": "GIT", "repo": "https://example.org/twopkg.git", "events": [{"introduced": "0"}]}
+      ]
+    }
+  ]
+}

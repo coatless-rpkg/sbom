@@ -314,20 +314,78 @@ cdx_xml_dependencies <- function(nodes, ctx) {
   c(entries, added[!vapply(added, is.null, logical(1))])
 }
 
+# The items named `names` in the containers `nodes`, gathered from every
+# container, each converted by `convert`, as an array.
+cdx_xml_items <- function(nodes, names, convert, ctx) {
+  kids <- cdx_xml_grandkids(nodes, ctx)
+  unname(lapply(kids[names(kids) %in% names], convert, ctx = ctx))
+}
+
+# A number from the text of an xs:decimal, as jsonlite parses the number in
+# CycloneDX JSON: an integer when it has no fraction. Any other text is kept
+# as it is, for the reader to refuse.
+cdx_xml_number <- function(text) {
+  value <- cdx_xml_trim(text)
+  if (grepl("^[+-]?[0-9]+$", value)) {
+    return(spdx_integer_value(value))
+  }
+  if (grepl("^[+-]?([0-9]+[.][0-9]*|[.][0-9]+)$", value)) as.numeric(value) else text
+}
+
+# An element with its attributes and children, whose children named in
+# `arrays` are containers: each becomes the array of its items named
+# `arrays[[tag]]$item`, converted by `arrays[[tag]]$convert`. Every other
+# child is converted by cdx_xml_field().
+cdx_xml_with_arrays <- function(node, ctx, arrays) {
+  kids <- cdx_xml_kids(node, ctx)
+  tags <- names(kids)
+  fields <- list()
+  for (tag in unique(tags)) {
+    nodes <- kids[tags == tag]
+    a <- arrays[[tag]]
+    fields[tag] <- list(
+      if (is.null(a)) cdx_xml_field(tag, nodes, ctx) else cdx_xml_items(nodes, a$item, a$convert, ctx)
+    )
+  }
+  cdx_xml_merge(cdx_xml_attrs(node, ctx), fields)
+}
+
+# A vulnerability, whose references, ratings, CWEs, advisories and affected
+# targets are arrays, as are a target's versions. A rating's score and a CWE
+# are numbers.
+cdx_xml_vulnerability <- function(node, ctx) {
+  rating <- function(node, ctx) {
+    out <- cdx_xml_object(node, ctx)
+    if (is_string(out[["score"]])) out[["score"]] <- cdx_xml_number(out[["score"]])
+    out
+  }
+  target <- function(node, ctx) {
+    cdx_xml_with_arrays(node, ctx, list(versions = list(item = "version", convert = cdx_xml_object)))
+  }
+  cdx_xml_with_arrays(node, ctx, list(
+    references = list(item = "reference", convert = cdx_xml_object),
+    ratings = list(item = "rating", convert = rating),
+    cwes = list(item = "cwe", convert = function(node, ctx) cdx_xml_number(xml_own_text(node))),
+    advisories = list(item = "advisory", convert = cdx_xml_object),
+    affects = list(item = "target", convert = target)
+  ))
+}
+
 # The value of the children named `tag`, given as the named list of nodes
 # `nodes`. Containers become arrays of their items, gathered from every
 # container of that name; `top` says whether these are children of <bom>,
-# the only place dependencies get their JSON shape. Tools are an array of
-# tools in CycloneDX 1.4, and {components, services} from 1.5. Another
-# element repeated becomes an array.
+# the only place dependencies and vulnerabilities get their JSON shape
+# (compositions also hold elements named vulnerabilities, of another type).
+# Tools are an array of tools in CycloneDX 1.4, and {components, services}
+# from 1.5. Another element repeated becomes an array.
 cdx_xml_field <- function(tag, nodes, ctx, top = FALSE) {
   if (top && tag == "dependencies") {
     return(cdx_xml_dependencies(nodes, ctx))
   }
-  items <- function(names, convert) {
-    kids <- cdx_xml_grandkids(nodes, ctx)
-    unname(lapply(kids[names(kids) %in% names], convert, ctx = ctx))
+  if (top && tag == "vulnerabilities") {
+    return(cdx_xml_items(nodes, "vulnerability", cdx_xml_vulnerability, ctx))
   }
+  items <- function(names, convert) cdx_xml_items(nodes, names, convert, ctx)
   one_or_many <- function(convert) {
     values <- unname(lapply(nodes, convert, ctx = ctx))
     if (length(values) == 1L) values[[1L]] else values
@@ -377,12 +435,14 @@ cdx_xml_fields <- function(kids, ctx, top = FALSE) {
 #' hashes (`{alg, content}`); licenses (`{license: {...}}` or
 #' `{expression}`); externalReferences; properties (`{name, value}`);
 #' authors; the top-level dependencies (`{ref, dependsOn, provides}`, with
-#' nested dependencies lifted into entries of their own); tools (an array in
-#' 1.4, `{components, services}` from 1.5); and organizational entities,
-#' whose `url` and `contact` are arrays. Attributes become fields, and
-#' text-only elements strings. `bomFormat` and `specVersion`, which XML
-#' carries in the namespace, are added, and the `version` attribute is a
-#' number.
+#' nested dependencies lifted into entries of their own); the top-level
+#' vulnerabilities, whose references, ratings, cwes, advisories and affects
+#' (`[{ref, versions}]`) are arrays; tools (an array in 1.4,
+#' `{components, services}` from 1.5); and organizational entities, whose
+#' `url` and `contact` are arrays. Attributes become fields, and text-only
+#' elements strings. `bomFormat` and `specVersion`, which XML carries in the
+#' namespace, are added, and the `version` attribute, a rating's score and a
+#' CWE are numbers.
 #'
 #' Every other element is converted generically: its attributes and children
 #' become a named list, and repeated children an array. So lifecycles,

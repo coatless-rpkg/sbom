@@ -47,7 +47,7 @@ test_that("empty frames have the object-model types", {
 test_that("minimal_sbom() fills metadata", {
   x <- minimal_sbom()
   expect_named(x$metadata, c("root", "timestamp", "author", "organization",
-    "tool_version", "notes", "inputs", "regid"))
+    "tool_version", "notes", "inputs", "regid", "advisories"))
   expect_equal(sum(x$components$is_root), 1L)
 })
 
@@ -65,7 +65,7 @@ test_that("an explicit timestamp wins over SOURCE_DATE_EPOCH", {
   expect_equal(as.numeric(resolve_timestamp()), 1700000000)
 })
 
-test_that("resolve_timestamp() honours SOURCE_DATE_EPOCH", {
+test_that("resolve_timestamp() honors SOURCE_DATE_EPOCH", {
   withr::local_envvar(SOURCE_DATE_EPOCH = "1700000000")
   expect_equal(format(resolve_timestamp(), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"), "2023-11-14T22:13:20Z")
   withr::local_envvar(SOURCE_DATE_EPOCH = "soon")
@@ -86,12 +86,12 @@ test_that("resolve_timestamp() falls back to the argument, then the clock", {
 test_that("document_notes() appends issue sentences once each", {
   x <- minimal_sbom()
   x$metadata$notes <- "A note."
-  x$issues <- add_issue(x$issues, "pkg:cran/b@2.0", "license", "license-no-spdx", "B has no SPDX licence.")
-  x$issues <- add_issue(x$issues, "pkg:cran/b@2.0", "license", "license-no-spdx", "B has no SPDX licence.")
-  expect_equal(document_notes(x), c("A note.", "B has no SPDX licence."))
+  x$issues <- add_issue(x$issues, "pkg:cran/b@2.0", "license", "license-no-spdx", "B has no SPDX license.")
+  x$issues <- add_issue(x$issues, "pkg:cran/b@2.0", "license", "license-no-spdx", "B has no SPDX license.")
+  expect_equal(document_notes(x), c("A note.", "B has no SPDX license."))
 })
 
-test_that("print.sbom() summarises", {
+test_that("print.sbom() summarizes", {
   expect_snapshot(print(minimal_sbom()))
 })
 

@@ -8,7 +8,8 @@
 #' archive, Nix system packages and TeX Live. Without Nix it reads the file as
 #' text, runs no code from it and makes no network request unless you pass
 #' `snapshot`. With Nix installed it reads the environment from the Nix store
-#' instead; see Nix mode.
+#' instead; see Nix mode. `advisories = TRUE` also downloads OSV's advisory
+#' data.
 #'
 #' ## Nix mode
 #'
@@ -94,8 +95,9 @@
 #'
 #' ## Looking up versions
 #'
-#' `snapshot` is the only way `sbom_nix()` uses the network, and it does so
-#' only when you pass it. It looks the versions up in a CRAN `PACKAGES` file:
+#' Apart from `advisories`, `snapshot` is the only way `sbom_nix()` uses the
+#' network, and it does so only when you pass it. It looks the versions up in
+#' a CRAN `PACKAGES` file:
 #'
 #' * `NULL`, the default, looks nothing up and makes no network request.
 #' * `"ppm"` reads the CRAN snapshot that Posit Package Manager keeps for the
@@ -159,13 +161,16 @@ sbom_nix <- function(path = "default.nix", nix = NA, snapshot = NULL, library = 
                      organization = getOption("sbom.organization"),
                      regid = getOption("sbom.regid"),
                      timestamp = NULL, overrides = NULL,
-                     embedded = TRUE, system = TRUE) {
-  read_nix_sbom(
+                     embedded = TRUE, system = TRUE, advisories = FALSE,
+                     advisories_on_error = c("error", "continue")) {
+  on_error <- check_advisories_args(advisories, advisories_on_error)
+  x <- read_nix_sbom(
     path, nix = nix, snapshot = snapshot, library = library, author = author,
     organization = organization, regid = regid, timestamp = timestamp,
     overrides = overrides, embedded = embedded, system = system,
     call = environment()
   )$sbom
+  apply_advisories(x, advisories, on_error)
 }
 
 # The checks of sbom_nix()'s `nix` and `snapshot`, which sbom() makes too.

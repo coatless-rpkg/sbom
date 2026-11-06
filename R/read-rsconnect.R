@@ -5,7 +5,8 @@
 #' `sbom_rsconnect()` describes a content item that is deployed, or ready to
 #' deploy, to Posit Connect. It reads the `manifest.json` that
 #' `rsconnect::writeManifest()` writes, and it runs no code from the project
-#' and makes no network requests.
+#' and makes no network requests, except that `advisories = TRUE` downloads
+#' OSV's advisory data.
 #'
 #' Every package in the manifest is listed at the version the manifest
 #' records, as declared, with its source (CRAN or another repository,
@@ -38,7 +39,9 @@ sbom_rsconnect <- function(manifest = "manifest.json",
                            organization = getOption("sbom.organization"),
                            regid = getOption("sbom.regid"),
                            timestamp = NULL, overrides = NULL,
-                           embedded = TRUE, system = TRUE) {
+                           embedded = TRUE, system = TRUE, advisories = FALSE,
+                           advisories_on_error = c("error", "continue")) {
+  on_error <- check_advisories_args(advisories, advisories_on_error)
   regid <- check_regid(regid)
   m <- read_manifest(manifest)
   project <- dirname(normalizePath(manifest, mustWork = TRUE))
@@ -88,7 +91,7 @@ sbom_rsconnect <- function(manifest = "manifest.json",
     "sbom did not read the files."
   )
   rownames(x$issues) <- NULL
-  apply_overrides(x, overrides)
+  apply_advisories(apply_overrides(x, overrides), advisories, on_error)
 }
 
 # "Deployed to Posit Connect as a {appmode} application.", or without the
