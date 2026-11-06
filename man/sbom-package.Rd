@@ -3,9 +3,9 @@
 \docType{package}
 \name{sbom-package}
 \alias{sbom-package}
-\title{sbom: Software Bills of Materials for R Code}
+\title{sbom: Create, Read and Validate Software Bills of Materials}
 \description{
-Generates Software Bills of Materials for R packages and R library installations, as 'CycloneDX' 1.4 to 1.7 (JSON or XML), 'SPDX' 2.2 and 2.3 (JSON, YAML, XML or tag-value) and 'SPDX' 3.0.1 documents and 'SWID' tags, plus a CSV inventory of components for spreadsheet review. It also reads and validates bills of materials in these formats from any tool, against the bundled schema of each format (the 'SPDX' JSON schema for 'SPDX' YAML, XML and tag-value), integrity rules and the minimum elements of the US National Telecommunications and Information Administration.
+Create software bills of materials for 'R' packages and projects, from installed libraries, package sources, 'renv' lockfiles, 'Posit Connect' manifests, 'Nix' environments written by 'rix' and 'Shiny' apps, including the system libraries and bundled code that packages carry. Write them as 'CycloneDX' 1.4 to 1.7 documents, Software Package Data Exchange ('SPDX') 2.2, 2.3 and 3.0.1 documents or Software Identification ('SWID') tags, or as a comma-separated values (CSV) inventory, and read bills of materials in these formats from any tool. 'CycloneDX' documents and 'SPDX' 2 documents in JavaScript Object Notation (JSON) or 'YAML' are checked against the bundled schema of their format, and 'SPDX' 2 documents in Extensible Markup Language (XML) or tag-value form are converted to the 'SPDX' JSON model and checked against its schema. 'SPDX' 3 documents are checked against their JSON schema, without its Shapes Constraint Language rules, 'SWID' tags against structural rules or, when the user supplies it, the standard's official schema, and every document against integrity rules and the minimum elements of the National Telecommunications and Information Administration (NTIA). Optionally, and only on request, list the security advisories that Open Source Vulnerabilities ('OSV') publishes for the exact versions of the packages.
 }
 \author{
 \strong{Maintainer}: James Balamuta \email{james.balamuta@gmail.com} [copyright holder]

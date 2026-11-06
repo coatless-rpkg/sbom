@@ -45,7 +45,7 @@ read_evidence <- c("declared", "observed", "inferred", "unknown")
 #' Each component or package the document lists becomes a component (SPDX
 #' files and snippets do not), the one the document describes becomes the
 #' root, and each dependency between two components becomes a relationship.
-#' A component is optional when the document says so, or when every
+#' A component is optional when the document marks it optional, or when every
 #' dependency on it is optional. The document's own notes follow a first note
 #' that names the file and its format. An element without an id takes its
 #' purl as its ref, then `name@version`, then `component-<n>`. The ecosystem
@@ -84,11 +84,11 @@ read_evidence <- c("declared", "observed", "inferred", "unknown")
 #'
 #' | Format    | Not read back |
 #' |:----------|:--------------|
-#' | All       | sbom's own ecosystems (`local`, `git`, `repository`, `r`, `base-r`), DESCRIPTION dependency fields and asserted overrides; CPE identifiers; vulnerability entries that are not OSV advisory listings, such as VEX statements; checksums other than MD5, SHA-1, SHA-256, SHA-384, SHA-512 and SHA3; URLs that are not valid IRI references, local paths, and purl qualifiers whose value is a local path; licences of other SPDX documents (`DocumentRef-`), kept only as written |
-#' | CycloneDX | licence comments and package file names; a root's maintainer may be the organization in `metadata.manufacture`, which SPDX then writes as a person; the versions that fix an advisory, and the upstream record each rating comes from |
-#' | SPDX 2    | refs (SPDX ids replace them, so [sbom_diff()] matches components it identifies by ref only partly), supplier URLs, the licence as written, evidence, minimum versions, system requirements and Bioconductor releases; maintainers that are not persons; the descriptions and publication dates that sbom writes in comments; the texts of extracted licences (`hasExtractedLicensingInfos`), so a document written again says that the text is not included; whether a supplier is a person, so a `Person:` supplier is written again as an `Organization:`; an advisory's summary, publication date, source URL, CVE ids and ratings. SPDX 2.2 has no primary purpose, so every package is a library; SPDX 2.3 gives R the type `application`. SPDX 2.2 cannot carry SHA3 checksums, so they are left out |
-#' | SPDX 3    | refs, as in SPDX 2; supplier URLs, the licence as written, licence comments, evidence, minimum versions, package file names, system requirements and Bioconductor releases; maintainers that are not persons; which component holds another; the descriptions that sbom writes in comments; the versions that fix an advisory, and its ratings |
-#' | SWID      | refs of code compiled into a package, which gets no link; for the root, licence expressions and comments, checksums, descriptions, publication dates, DOIs, evidence and Bioconductor releases; for the other components, everything but the name, version, purl, minimum version and whether it is optional; relationships other than the root's; advisories, which a tag has no place for. A tag creator with a real regid is the organization, any other is an author, except sbom itself |
+#' | All       | sbom's own ecosystems (`local`, `git`, `repository`, `r`, `base-r`), DESCRIPTION dependency fields and asserted overrides; CPE identifiers; vulnerability entries that are not OSV advisory listings, such as VEX statements; checksums other than MD5, SHA-1, SHA-256, SHA-384, SHA-512 and SHA3; URLs that are not valid IRI references, local paths, and purl qualifiers whose value is a local path; licenses of other SPDX documents (`DocumentRef-`), kept only as written |
+#' | CycloneDX | license comments and package file names; a root's maintainer may be the organization in `metadata.manufacture`, which SPDX then writes as a person; the versions that fix an advisory, and the upstream record each rating comes from |
+#' | SPDX 2    | refs (SPDX ids replace them, so [sbom_diff()] matches components it identifies by ref only partly), supplier URLs, the license as written, evidence, minimum versions, system requirements and Bioconductor releases; maintainers that are not persons; the descriptions and publication dates that sbom writes in comments; the texts of extracted licenses (`hasExtractedLicensingInfos`), so a document written again says that the text is not included; whether a supplier is a person, so a `Person:` supplier is written again as an `Organization:`; an advisory's summary, publication date, source URL, CVE ids and ratings. SPDX 2.2 has no primary purpose, so every package is a library; SPDX 2.3 gives R the type `application`. SPDX 2.2 cannot carry SHA3 checksums, so they are left out |
+#' | SPDX 3    | refs, as in SPDX 2; supplier URLs, the license as written, license comments, evidence, minimum versions, package file names, system requirements and Bioconductor releases; maintainers that are not persons; which component holds another; the descriptions that sbom writes in comments; the versions that fix an advisory, and its ratings |
+#' | SWID      | refs of code compiled into a package, which gets no link; for the root, license expressions and comments, checksums, descriptions, publication dates, DOIs, evidence and Bioconductor releases; for the other components, everything but the name, version, purl, minimum version and whether it is optional; relationships other than the root's; advisories, which a tag has no place for. A tag creator with a real regid is the organization, any other is an author, except sbom itself |
 #'
 #' @section Issues:
 #' The `<sbom>` records what could not be read as issues ([sbom_issues()]):
@@ -123,7 +123,7 @@ read_evidence <- c("declared", "observed", "inferred", "unknown")
 #'
 #' When the document has no timestamp, or one that is not ISO 8601, the time
 #' in the `SOURCE_DATE_EPOCH` environment variable is used when it is set, and
-#' otherwise the time it was read, and a note says so.
+#' otherwise the time it was read, and a note records which of the two it is.
 #'
 #' @param path Path of the SBOM file.
 #' @param format `NULL` to detect the format from the content, or one of the
@@ -565,12 +565,12 @@ read_purpose_type <- function(purpose) {
 # Per-format values -----------------------------------------------------------
 
 # Each returns, for the components `el`, the values the tables do not carry:
-# supplier_url, maintainer, license_comment, written (the licence as written,
-# when the format states it apart from the licences), homepage, vcs_url,
+# supplier_url, maintainer, license_comment, written (the license as written,
+# when the format states it apart from the licenses), homepage, vcs_url,
 # download_location, doi, description, published, package_file_name,
 # system_requirements, bioc_release, evidence and version_is (as stated),
-# hashes, type, optional (whether the element itself says so), and dropped
-# (the kind of each value not kept).
+# hashes, type, optional (whether the element itself is marked optional), and
+# dropped (the kind of each value not kept).
 read_values <- function(n, ...) {
   none <- rep(NA_character_, n)
   given <- list(...)
@@ -761,7 +761,8 @@ read_swid_fields <- function(el, doc, ent) {
 read_swid_creators <- function(ent) {
   creator <- ent$has_role("tagCreator")
   name <- ent$name[creator]
-  regid <- ent$regid[creator]
+  # A padded regid, which the schema allows, is the regid without the padding.
+  regid <- trimws(ent$regid[creator])
   real <- !is.na(regid) & regid != swid_placeholder_regid
   organization <- which(real & !is.na(name))[1L]
   list(
@@ -775,7 +776,7 @@ read_swid_creators <- function(ent) {
 # authority of the tag creator's regid before the root's tagId, and swid: and
 # that authority before each link's href.
 read_swid_ref_ids <- function(id, location, regid) {
-  authority <- swid_authority(regid)
+  authority <- swid_authority(trimws(regid))
   link <- location != "/tag" & !is.na(id)
   id[link] <- sub("^swid:", "", id[link])
   if (!is.na(authority)) {
@@ -871,14 +872,14 @@ read_ecosystem <- function(purl) {
   out
 }
 
-# Licences ----------------------------------------------------------------------
+# Licenses ----------------------------------------------------------------------
 
 # license_spdx and license_as_written for the components `el`, from the
-# licence rows of the field each format declares licences in. One valid
-# expression is license_spdx. The licence as written is what the format
+# license rows of the field each format declares licenses in. One valid
+# expression is license_spdx. The license as written is what the format
 # states apart (`written`), or else free text, an expression that does not
-# parse, several licences joined with ", ", or, in CycloneDX, whose writer
-# leaves out the licence as written when it is the expression, that one
+# parse, several licenses joined with ", ", or, in CycloneDX, whose writer
+# leaves out the license as written when it is the expression, that one
 # expression. Each distinct expression is checked once.
 read_licenses <- function(licenses, el, family, written) {
   n <- nrow(el)
@@ -898,7 +899,7 @@ read_licenses <- function(licenses, el, family, written) {
   owner <- owner[!is.na(owner)]
   single <- tabulate(owner, n)[owner] == 1L
   valid <- kind == "expression" & license_expression_check(expression, special = FALSE)$valid
-  # A licence of another SPDX document needs that document's reference, which
+  # A license of another SPDX document needs that document's reference, which
   # is not kept, so it is kept as written only.
   other_document <- grepl("DocumentRef-", expression, fixed = TRUE)
   spdx <- rep(NA_character_, n)
@@ -1024,13 +1025,13 @@ read_relationships <- function(t, doc, family, id, ref) {
   to <- ref_of(to_id)
   known_from <- is.na(from) & read_known_ids(from_id, t$document, family)
   known_to <- is.na(to) & read_known_ids(to_id, t$document, family)
-  modelled <- !is.na(m$field)
-  edge <- modelled & !is.na(from) & !is.na(to)
+  modeled <- !is.na(m$field)
+  edge <- modeled & !is.na(from) & !is.na(to)
   # A relationship that names an element which is not a component but which
   # the document defines (the document itself, a file, an agent) is left out
   # without an issue.
-  dangling <- modelled & ((is.na(from) & !known_from) | (is.na(to) & !known_to))
-  skipped <- !modelled & !known_from & !known_to
+  dangling <- modeled & ((is.na(from) & !known_from) | (is.na(to) & !known_to))
+  skipped <- !modeled & !known_from & !known_to
   out <- data.frame(
     from = from[edge], to = to[edge], field = m$field[edge], spec = m$spec[edge],
     evidence = rep("declared", sum(edge)), stringsAsFactors = FALSE

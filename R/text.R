@@ -22,6 +22,19 @@ text_utf8 <- function(x) {
   x
 }
 
+# `f` of the strings `x`, called once for the strings of each encoding. R
+# matches strings of several encodings in one call otherwise than it matches
+# each alone: in a C locale, a native string that is not ASCII, or a UTF-8
+# string beside a Latin-1 one, is then an error. A writer that matched one
+# string at a time can thus match many at once and still give the same.
+by_encoding <- function(x, f) {
+  enc <- Encoding(x)
+  if (length(unique(enc)) <= 1L) {
+    return(f(x))
+  }
+  unsplit(lapply(split(x, enc), f), enc)
+}
+
 # The pattern of the control characters a value may not keep: every one, or
 # every one but tab and newline (`lines = TRUE`).
 text_controls <- function(lines = FALSE) {

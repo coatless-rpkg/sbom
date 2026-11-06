@@ -133,11 +133,21 @@ local_fixture_copy <- function(fixture, name = basename(fixture), env = parent.f
   dir
 }
 
-# Writes `x` in every format, and checks each against its schema.
+# Writes `x` in every format, and checks each against its schema where the
+# package that checks it is installed: jsonvalidate for every format checked
+# against a JSON schema, and yaml too for SPDX YAML. Without them the schema
+# layer rightly says "skipped", so the format is only written; the caller
+# goes on, as it would not after skip_if_not_installed().
 expect_valid_in_every_format <- function(x, label = "") {
   ext <- stats::setNames(sbom_formats()$extension, sbom_formats()$format)
   expected <- c(`cyclonedx-json` = "pass", `cyclonedx-xml` = "pass", `spdx-json` = "pass", `spdx-yaml` = "pass",
                 `spdx-xml` = "partial", `spdx-tv` = "partial", `spdx3-jsonld` = "partial", swid = "partial")
+  if (!requireNamespace("jsonvalidate", quietly = TRUE)) {
+    expected <- expected[c("cyclonedx-xml", "swid")]
+  }
+  if (!requireNamespace("yaml", quietly = TRUE)) {
+    expected <- expected[names(expected) != "spdx-yaml"]
+  }
   for (f in names(ext)) {
     tf <- withr::local_tempfile(fileext = ext[[f]])
     write_sbom(x, tf, format = f)
@@ -159,4 +169,19 @@ write_fake_lib <- function(lib, pkgs) {
                file.path(lib, name, "DESCRIPTION"))
   }
   lib
+}
+
+# Every format sbom writes as an SBOM, at every version, as list(format,
+# version, extension).
+every_format_version <- function() {
+  reg <- format_registry()
+  keys <- setdiff(names(reg), "csv")
+  unlist(lapply(keys, function(f) {
+    lapply(reg[[f]]$versions, function(v) list(format = f, version = v, extension = reg[[f]]$extension))
+  }), recursive = FALSE)
+}
+
+# The text of `x` written in format `f` at version `v`.
+written <- function(x, f, v) {
+  format_registry()[[f]]$writer(x, v)
 }

@@ -103,23 +103,26 @@ the standard requires, an \code{Entity} must also have the role \code{tagCreator
 To check a tag fully, download the ISO schema from
 \url{https://standards.iso.org/iso/19770/-2/2015-current/schema.xsd} and set
 the option \code{sbom.swid_xsd} to the path of the file. sbom accepts only
-that file as ISO publishes it, by its SHA-256, and checks the tag against
-it with xml2, giving \code{pass} or \code{fail}, and against the rule that it has a
-\code{tagCreator}. sbom bundles the two W3C schemas that the ISO schema
-imports, so the check needs no network. With any other value, the option
-gives the structural rules, and a note.
+that file, by its SHA-256: as ISO publishes it, with CRLF line endings,
+or with LF line endings, as git or an editor may leave it. It checks the
+tag against it with xml2, giving \code{pass} or \code{fail}, and against the rule
+that it has a \code{tagCreator}. sbom bundles the two W3C schemas that the ISO
+schema imports, so the check needs no network. With any other value, the
+option gives the structural rules, and a note that says where to
+download the file; the note is not an error, even when the tag fails the
+structural rules.
 }
 
 A version with no bundled schema, such as CycloneDX 1.3, is not checked,
-and a note says so. Each finding of this layer has the check \code{schema}. It
+and a note names the version that has no bundled schema. Each finding of this layer has the check \code{schema}. It
 is an error when the file fails its schema, and otherwise a note that says
-what could not be checked.
+what could not be checked, or why a SWID tag got the structural rules.
 
 The \strong{content layer} reads the file as \code{\link[=read_sbom]{read_sbom()}} does, and checks the
 values the document itself holds, not the \verb{<sbom>} that \code{read_sbom()} makes.
 So nothing \code{read_sbom()} leaves out can hide a problem. The integrity checks
 always run: unique ids, relationships that name elements of the document,
-licence expressions against the bundled SPDX License List, purls, and the
+license expressions against the bundled SPDX License List, purls, and the
 names and versions of R packages. The profile adds its own checks. The
 layer fails when any of its findings is an error; warnings and notes do not
 fail it.
@@ -201,7 +204,7 @@ Each finding has one of these checks:
 document does not define. An element of another document is not
 checked: one named through an SPDX \verb{DocumentRef-} or an SPDX 3 import,
 or a CycloneDX BOM-Link (\code{urn:cdx:...}), as in a VEX document.
-\item \code{license-invalid} (error): a licence expression is not a valid SPDX
+\item \code{license-invalid} (error): a license expression is not a valid SPDX
 expression.
 \item \code{license-unknown} (error): it uses an id that is not on the SPDX License
 List.

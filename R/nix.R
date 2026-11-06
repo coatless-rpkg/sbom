@@ -155,6 +155,10 @@
 #'   "in rpkgs"
 #' ), nix)
 #' sbom_nix(nix, nix = FALSE, system = FALSE)
+#' \dontrun{
+#' # Needs the network: looks the package versions up in a CRAN snapshot.
+#' sbom_nix(nix, nix = FALSE, system = FALSE, snapshot = "ppm")
+#' }
 #' @export
 sbom_nix <- function(path = "default.nix", nix = NA, snapshot = NULL, library = NULL,
                      author = getOption("sbom.author"),
@@ -393,26 +397,15 @@ read_nix_sbom <- function(path, nix = NA, snapshot = NULL, library = NULL,
     )
   }
   if (!is.null(looked) && length(looked$missing) > 0L) {
-    one <- length(looked$missing) == 1L
     x$issues <- add_issue(
       x$issues, root_ref, "version", "nix-not-in-snapshot",
-      paste0(
-        length(looked$missing), if (one) " package that " else " packages that ", file,
-        if (one) " needs is" else " needs are", " not in the CRAN snapshot sbom read (",
-        and_list(looked$missing), "), so ", if (one) "its version is" else "their versions are", " unknown."
-      )
+      nix_not_in_snapshot_sentence(file, looked$missing)
     )
   }
   if (!is.null(looked) && nrow(p$git) > 0L) {
-    git <- sort(unique(p$git$name), method = "radix")
-    one <- length(git) == 1L
     x$issues <- add_issue(
       x$issues, root_ref, "version", "nix-git-versions-unknown",
-      paste0(
-        "The version", if (one) " of the package that " else "s of the packages that ", file,
-        " fetches from git ", if (one) "is" else "are", " not recorded (", and_list(git), "); ",
-        if (one) "it is" else "each is", " identified by its revision instead."
-      )
+      nix_git_versions_sentence(file, p$git$name)
     )
   }
   if (is.na(snap$location) || isTRUE(snap$undated)) {
@@ -1466,15 +1459,9 @@ nix_store_sbom <- function(path, closure, file, author, organization, regid,
   x$issues <- x$issues[!(x$issues$code %in% "version-missing" & x$issues$ref %in% unname(ref_of)), , drop = FALSE]
   unversioned <- closure$versionless
   if (length(unversioned) > 0L) {
-    one <- length(unversioned) == 1L
     x$issues <- add_issue(
       x$issues, root_ref, "version", "nix-store-versions-unknown",
-      paste0(
-        length(unversioned), if (one) " store path in the environment carries" else
-          " store paths in the environment carry",
-        " no version (", capped_list(unversioned), "), so ",
-        if (one) "its version is" else "their versions are", " unknown."
-      ),
+      nix_store_versions_sentence(unversioned),
       severity = "info"
     )
   }
@@ -1531,4 +1518,49 @@ capped_list <- function(x, cap = 20L) {
     return(and_list(x))
   }
   paste0(paste(x[seq_len(cap)], collapse = ", "), ", and ", length(x) - cap, " more")
+}
+
+# The sentence of the nix-git-versions-unknown issue: the packages `names`
+# that `file` fetches from git. apply_overrides() builds it again after an
+# override asserts some of their versions.
+nix_git_versions_sentence <- function(file, names) {
+  git <- sort(unique(names), method = "radix")
+  one <- length(git) == 1L
+  paste0(
+    "The version", if (one) " of the package that " else "s of the packages that ", file,
+    " fetches from git ", if (one) "is" else "are", " not recorded (", and_list(git), "); ",
+    if (one) "it is" else "each is", " identified by its revision instead."
+  )
+}
+
+# The sentence of the nix-not-in-snapshot issue: the packages `names`, in
+# radix order, that `file` needs and the CRAN snapshot lacks. With
+# `asserted`, an override asserts their versions, which are therefore not
+# unknown. apply_overrides() builds it again after an override asserts some
+# of those versions (override_nix_snapshot()).
+nix_not_in_snapshot_sentence <- function(file, names, asserted = FALSE) {
+  one <- length(names) == 1L
+  paste0(
+    length(names), if (one) " package that " else " packages that ", file,
+    if (one) " needs is" else " needs are", " not in the CRAN snapshot sbom read (", and_list(names), ")",
+    if (asserted) {
+      if (one) "; its version is asserted by an override." else "; their versions are asserted by an override."
+    } else {
+      paste0(", so ", if (one) "its version is" else "their versions are", " unknown.")
+    }
+  )
+}
+
+# The sentence of the nix-store-versions-unknown issue: the store names of
+# the paths without a version, sorted and unique, as the closure gives them.
+# apply_overrides() builds it again after an override asserts some of those
+# versions.
+nix_store_versions_sentence <- function(names) {
+  one <- length(names) == 1L
+  paste0(
+    length(names), if (one) " store path in the environment carries" else
+      " store paths in the environment carry",
+    " no version (", capped_list(names), "), so ",
+    if (one) "its version is" else "their versions are", " unknown."
+  )
 }

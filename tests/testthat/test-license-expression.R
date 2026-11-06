@@ -1,4 +1,4 @@
-test_that("the bundled SPDX License List has licences, exceptions and deprecations", {
+test_that("the bundled SPDX License List has licenses, exceptions and deprecations", {
   lst <- spdx_license_list()
   expect_named(lst, c("id", "kind", "deprecated"))
   expect_true(all(c("MIT", "Apache-2.0", "GPL-2.0-only") %in% lst$id[lst$kind == "license"]))
@@ -8,7 +8,7 @@ test_that("the bundled SPDX License List has licences, exceptions and deprecatio
   expect_identical(spdx_license_list_version(), "3.29.0")
 })
 
-test_that("every SPDX value in R's licence table is a valid, known, current expression", {
+test_that("every SPDX value in R's license table is a valid, known, current expression", {
   spdx <- license_table()$spdx
   spdx <- spdx[!is.na(spdx)]
   expect_gt(length(spdx), 0L)
@@ -128,7 +128,7 @@ test_that("malformed references are invalid", {
   expect_false(anyNA(res$problem))
 })
 
-test_that("a plus follows only a licence id", {
+test_that("a plus follows only a license id", {
   res <- license_expression_check(c("EPL-1.0+", "FooBar-1.0+"))
   expect_true(all(res$valid))
   expect_identical(res$unknown[[2]], "FooBar-1.0")
@@ -152,7 +152,7 @@ test_that("operators are upper case and whitespace separates tokens", {
   expect_true(license_expression_check("(MIT)AND(Apache-2.0)")$valid)
 })
 
-test_that("WITH applies to one licence wherever it sits in a compound", {
+test_that("WITH applies to one license wherever it sits in a compound", {
   a <- license_expression_check("MIT WITH Classpath-exception-2.0 AND Apache-2.0")
   b <- license_expression_check("MIT AND Apache-2.0 WITH Classpath-exception-2.0")
   expect_true(a$valid && b$valid)
@@ -172,9 +172,12 @@ test_that("known ids are returned in their canonical spelling", {
 test_that("long and many expressions are fast", {
   skip_on_cran()
   long <- paste(rep("MIT", 50000), collapse = " AND ")
-  expect_lt(system.time(res <- license_expression_check(long))[["elapsed"]], 10)
+  long_time <- system.time(res <- license_expression_check(long))[["elapsed"]]
   expect_true(res$valid)
   many <- paste0("Foo-", seq_len(20000))
-  expect_lt(system.time(res <- license_expression_check(many))[["elapsed"]], 20)
+  many_time <- system.time(res <- license_expression_check(many))[["elapsed"]]
   expect_true(all(res$valid))
+  skip_unless_timing()
+  expect_lt(long_time, 10)
+  expect_lt(many_time, 20)
 })

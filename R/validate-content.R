@@ -2,7 +2,7 @@
 # checks and a profile's checks on the neutral tables of document_tables(),
 # and returns one row per finding: the check's code, its severity, the JSON
 # pointer of the value at fault ("" for the document as a whole) and a
-# sentence. The checks are vectorised over the tables: licence expressions and
+# sentence. The checks are vectorised over the tables: license expressions and
 # purls are checked once per distinct value and joined back to their rows,
 # duplicate ids are found with duplicated() both ways, and relationship ends
 # are matched against one set of ids, so that a document of tens of thousands
@@ -18,7 +18,7 @@ content_severities <- c("error", "warning", "info")
 # hasExtractedLicensingInfos.
 content_spdx2_formats <- c("spdx-json", "spdx-yaml", "spdx-xml", "spdx-tv")
 
-# The CycloneDX formats, whose licence expressions are SPDX expressions
+# The CycloneDX formats, whose license expressions are SPDX expressions
 # proper, in which NONE and NOASSERTION have no place.
 content_cdx_formats <- c("cyclonedx-json", "cyclonedx-xml")
 
@@ -32,7 +32,7 @@ content_spdx3_individuals <- c(
 
 #' Check the content of an SBOM
 #'
-#' The integrity checks (ids, relationships, licences, purls and R package
+#' The integrity checks (ids, relationships, licenses, purls and R package
 #' names) always run; the profile adds its own.
 #'
 #' @param tables What `document_tables()` returns, or tables of its shape.
@@ -104,9 +104,9 @@ check_hints <- function() {
   c(
     `duplicate-id` = "Give each element its own id, so that a relationship names exactly one element.",
     `dangling-relationship` = "Make each relationship name an element the document defines, or add that element.",
-    `license-invalid` = "Write the licence as an SPDX licence expression, such as MIT or GPL-2.0-only OR GPL-3.0-only.",
-    `license-unknown` = "Use the ids of the SPDX License List, or a LicenseRef- for a licence it does not list.",
-    `license-deprecated` = "Replace each deprecated id with the one the SPDX License List now gives for that licence.",
+    `license-invalid` = "Write the license as an SPDX license expression, such as MIT or GPL-2.0-only OR GPL-3.0-only.",
+    `license-unknown` = "Use the ids of the SPDX License List, or a LicenseRef- for a license it does not list.",
+    `license-deprecated` = "Replace each deprecated id with the one the SPDX License List now gives for that license.",
     `license-ref-undefined` = "Add an entry to hasExtractedLicensingInfos for each LicenseRef- the document uses.",
     `purl-invalid` = "Write the purl as the Package URL specification gives it, as in pkg:cran/cli@3.6.0.",
     `r-package-name` = "Check the component's purl: an R package name has at least two characters, only letters, digits and dots, starts with a letter and does not end with a dot.",
@@ -125,11 +125,12 @@ check_hints <- function() {
 
 # Findings ---------------------------------------------------------------------
 
-# The findings of one check at one severity: one per location.
+# The findings of one check, at one severity or at one per location: one per
+# location.
 content_rows <- function(check, severity, location = character(), message = character()) {
   n <- length(location)
   tables_strings(
-    check = rep(check, n), severity = rep(severity, n), location = location, message = message
+    check = rep(check, n), severity = rep_len(severity, n), location = location, message = message
   )
 }
 
@@ -228,11 +229,11 @@ content_dangling <- function(rel, doc, format) {
   )
 }
 
-# The licence expressions: each distinct one is checked once, and its
-# findings go to every row that holds it. Licence names (free text) are not
-# checked. NONE and NOASSERTION are whole licences in SPDX, not in CycloneDX.
+# The license expressions: each distinct one is checked once, and its
+# findings go to every row that holds it. License names (free text) are not
+# checked. NONE and NOASSERTION are whole licenses in SPDX, not in CycloneDX.
 # An id of the SPDX License List in the wrong place (an exception as a
-# licence, a licence after WITH) makes the expression invalid; only an id on
+# license, a license after WITH) makes the expression invalid; only an id on
 # neither list is unknown.
 content_licenses <- function(lic, doc, format) {
   is_expr <- lic$kind == "expression"
@@ -258,8 +259,8 @@ content_licenses <- function(lic, doc, format) {
   problem <- chk$problem
   problem[owner[first]] <- ifelse(
     kind[first] == "license",
-    paste0("it uses ", id, " after WITH, but ", id, " is a licence, not an exception"),
-    paste0("it uses the exception ", id, " as a licence")
+    paste0("it uses ", id, " after WITH, but ", id, " is a license, not an exception"),
+    paste0("it uses the exception ", id, " as a license")
   )
 
   # A message for each distinct expression, NA where the check passes.
@@ -272,19 +273,19 @@ content_licenses <- function(lic, doc, format) {
   invalid <- ifelse(
     is.na(problem), NA_character_,
     ifelse(
-      content_blank(u), "An empty licence expression is not a valid SPDX expression.",
-      paste0("The licence expression ", quote_value(u), " is not a valid SPDX expression: ", problem, ".")
+      content_blank(u), "An empty license expression is not a valid SPDX expression.",
+      paste0("The license expression ", quote_value(u), " is not a valid SPDX expression: ", problem, ".")
     )
   )
   unknown_msg <- per_value(by_value(is.na(kind)), function(ids, expr) {
     paste0(
-      "The licence expression ", quote_value(expr), " uses ", read_list(quote_value(ids)), ", which ",
+      "The license expression ", quote_value(expr), " uses ", read_list(quote_value(ids)), ", which ",
       if (length(ids) == 1L) "is" else "are", " not on the SPDX License List ", version, "."
     )
   })
   deprecated <- per_value(chk$deprecated, function(ids, expr) {
     paste0(
-      "The licence expression ", quote_value(expr), " uses the deprecated SPDX licence ",
+      "The license expression ", quote_value(expr), " uses the deprecated SPDX license ",
       if (length(ids) == 1L) "id " else "ids ", read_list(quote_value(ids)), "."
     )
   })
@@ -301,7 +302,7 @@ content_licenses <- function(lic, doc, format) {
   if (format %in% content_spdx2_formats) {
     # One finding per reference that the document does not define, all
     # references matched in one pass. A DocumentRef- prefix names another
-    # document's licence.
+    # document's license.
     refs <- as.character(unlist(chk$refs, use.names = FALSE))
     ref_owner <- rep.int(seq_along(u), lengths(chk$refs))
     bad <- startsWith(refs, "LicenseRef-") & !refs %in% doc$defined_refs
@@ -311,7 +312,7 @@ content_licenses <- function(lic, doc, format) {
     parts$refs <- content_rows(
       "license-ref-undefined", "error", location[row],
       tables_paste(
-        "The licence expression ", quote_value(value[row]), " uses ",
+        "The license expression ", quote_value(value[row]), " uses ",
         quote_value(unlist(undefined[k[n > 0L]], use.names = FALSE)),
         ", which the document does not define in hasExtractedLicensingInfos."
       )

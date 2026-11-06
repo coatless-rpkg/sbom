@@ -54,3 +54,27 @@ test_that("non-ASCII text is written as UTF-8, not entities", {
 test_that("unsupported versions are rejected", {
   expect_error(cdx_xml(fixture_sbom(), "1.3"), "must be one of")
 })
+
+test_that("U+FFFE and U+FFFF, which XML does not allow, are written as the reference of U+FFFD", {
+  x <- minimal_sbom()
+  x$components$description[x$components$ref == "pkg:cran/b@2.0"] <- "a￾b￿c"
+  out <- cdx_xml(x, "1.6")
+  expect_false(grepl("￾", out, fixed = TRUE))
+  expect_false(grepl("￿", out, fixed = TRUE))
+  expect_match(out, "<description>a&#xFFFD;b&#xFFFD;c</description>", fixed = TRUE)
+  doc <- xml2::read_xml(out)
+  xml2::xml_ns_strip(doc)
+  expect_identical(
+    xml2::xml_text(xml2::xml_find_first(doc, "//component[@bom-ref='pkg:cran/b@2.0']/description")),
+    "a�b�c"
+  )
+  # So in an attribute.
+  expect_identical(xml_escape("x￾y￿", attr = TRUE), "x&#xFFFD;y&#xFFFD;")
+})
+
+test_that("text that is not UTF-8 stops the writer, as it did when xml2 wrote the document", {
+  skip_if_not(isTRUE(l10n_info()[["UTF-8"]]), "Only a UTF-8 locale keeps bytes that are not UTF-8 as they are.")
+  x <- minimal_sbom()
+  x$components$description[x$components$ref == "pkg:cran/b@2.0"] <- paste0("a", rawToChar(as.raw(0xff)), "b")
+  expect_error(suppressWarnings(cdx_xml(x, "1.6")), "input string 1 is invalid", fixed = TRUE)
+})

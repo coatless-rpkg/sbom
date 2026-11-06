@@ -59,7 +59,8 @@ Without either, an issue is recorded.}
 \item{regid}{The registration id of \code{organization}: the domain name, or URL,
 of the organization, under which it registers SWID tags (ISO/IEC
 19770-2). A SWID tag names the organization as its creator with this
-regid. It must be a single string. \code{NULL}, \code{NA} and an empty or blank
+regid. It must be a single string, from which leading and trailing
+white space is dropped. \code{NULL}, \code{NA} and an empty or blank
 string mean none; then the tag uses the placeholder
 \verb{http://invalid.unavailable}, and when an \code{organization} was given, an
 issue is recorded. The default is the \code{sbom.regid} option, as
@@ -68,29 +69,51 @@ issue is recorded. The default is the \code{sbom.regid} option, as
 \item{timestamp}{The creation time, as a date-time or as seconds since
 1970-01-01 UTC. An explicit \code{timestamp} wins. Without one, the
 \code{SOURCE_DATE_EPOCH} environment variable is used when it is set, so that
-builds are reproducible, and a note says so; otherwise it is now. Nix sets
+builds are reproducible, and a note records that the timestamp came from
+it; otherwise it is the current time. Nix sets
 \code{SOURCE_DATE_EPOCH} to 1980-01-01 in every \code{nix-shell}, and when the
 timestamp is that value a note says it is a placeholder.}
 
 \item{overrides}{Values to assert where \code{sbom} found none, or found
 something different. \code{NULL}, a data frame or the path to a CSV file, with
 the character columns \code{component} (the \code{name} or \code{ref} of one
-component; embedded and system components only by \code{ref}), \code{field},
-\code{value}, \code{asserted_by} and \code{reason}. \code{field} is one
+component, as sbom built it, before any row moves it; embedded and
+system components only by \code{ref}), \code{field}, \code{value}, \code{asserted_by} and
+\code{reason}. \code{field} is one
 of \code{"version"}, \code{"license_spdx"}, \code{"supplier_name"}, \code{"supplier_url"},
 \code{"maintainer"}, \code{"purl"} and \code{"download_location"}. Rows are applied in
 order, and each is recorded with who asserted it and why. An override
 that contradicts a found value wins and adds an \code{override-conflict} issue.
-Asserting \code{"version"} makes it the exact version, and asserting a CRAN
-\code{"purl"} (\code{pkg:cran}) makes the component a CRAN package, or a
-Bioconductor package when its \code{repository_url} names bioconductor.org;
-neither changes the \code{ref}.
-An unknown component or field, or a missing column, is an error.}
+Asserting \code{"version"} makes it the exact version, and moves the
+component's package URL to it unless a row asserts the \code{"purl"}: a
+package URL at the old version takes the new one, and one without a
+version gains it when its type is \code{cran}, \code{github}, \code{gitlab} or
+\code{bitbucket}. A package file named for the old version is renamed for
+the new one, and any other is dropped, as are the checksums of the
+version found. An asserted version of R is also the version of the base
+packages, each with a record of the assertion. Asserting a CRAN \code{"purl"}
+(\code{pkg:cran}) makes the component a CRAN package, or a Bioconductor
+package when its \code{repository_url} names bioconductor.org. When a
+component's \code{ref} is its package URL, the \code{ref} follows the package URL
+that the overrides leave, and every reference to it moves too; a \code{ref}
+that another component already has is an error. Any other \code{ref}, such
+as \verb{unknown/<name>}, stays as it is.
+An asserted field removes the component's issues that it answers, such
+as \code{version-missing} or \code{purl-inferred}. An issue that also states a
+fact that stays true is reworded instead, as info: that a package came
+from a git repository, once its package URL is asserted; that a
+dependency is missing, once its version and package URL are both
+asserted; and that a \code{LinkingTo} package is not installed, once its
+version is. The issues that name the components without a version, such
+as \code{system-version-unknown}, name only those still without one, and go
+when none is left.
+A blank value, an unknown component or field, or a missing column, is an
+error.}
 
 \item{embedded}{Whether to record the code that packages carry inside them.
 A package named in \code{LinkingTo} is recorded as an embedded component of
 the package that compiles it in, nested under that package, as
-inferred, at the version and with the licence that the library,
+inferred, at the version and with the license that the library,
 lockfile or manifest records for it now. A C or C++ library that a package
 copies into its \verb{src/} folder (source packages), or names in its
 \code{COPYRIGHTS} file or \code{cph} entries (source and installed packages), is
@@ -100,7 +123,7 @@ header when there is one, and is otherwise unknown. A JavaScript or CSS
 library declared in htmlwidgets YAML, or found by the header comment of a
 file under \verb{www/}, \verb{htmlwidgets/lib/} or \verb{lib/} (under \verb{inst/} in source
 packages), is recorded as an npm component of that package, from the
-rules in \code{inst/extdata/javascript.csv}. Its licence is not read.}
+rules in \code{inst/extdata/javascript.csv}. Its license is not read.}
 
 \item{system}{Whether to detect system libraries. A package's
 \code{SystemRequirements} text is mapped to system libraries and programs
@@ -120,7 +143,8 @@ come from CRAN, because sbom could not tell where it came from (as for a
 package that is not installed), or because it was installed from a
 local source or from GitHub, GitLab, Bitbucket or git, is named in an
 \code{advisories-not-cran} issue. Bioconductor packages are not compared:
-OSV does not cover them yet, and when the SBOM holds one a note says so.
+OSV does not cover them yet, and when the SBOM holds one a note states
+that the advisory database leaves them out.
 Matching is local, with the versions and package URLs after
 \code{overrides}, so no package name leaves the machine.
 
@@ -177,7 +201,9 @@ reached only through \code{Suggests} have scope \code{"optional"}.
 R is always a component. When \code{lib} is the current library search path and
 \code{r_version} is \code{NULL}, it is listed at the running version. With any other
 library, the lowest version that the dependency tree states, the highest
-\verb{R (>= x)} found, is used as a minimum.
+\verb{R (>= x)} found, is used as a minimum. The base packages used come with
+R: when R's version is exact, they are listed at that version, with R's
+evidence, and otherwise without a version.
 }
 \examples{
 x <- sbom_package(system.file("DESCRIPTION", package = "sbom"), system = FALSE)

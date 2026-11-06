@@ -20,7 +20,7 @@ is_embedded_ref <- function(ref) {
 
 # For each package P with a LinkingTo edge to L, one component "<P
 # ref>#embedded/<L>" and a `contains` relationship from P. The LinkingTo edge
-# stays. Ecosystem, purl and licence are those of L as `lookup` finds it, and
+# stays. Ecosystem, purl and license are those of L as `lookup` finds it, and
 # so is the version, since nothing records the version used at build time.
 # `where` says where `lookup` looks, as in "installed in the library sbom
 # read". Returns list(components, relationships, issues), where the tables
@@ -63,17 +63,12 @@ linkingto_components <- function(components, relationships, lookup,
   }
   issues <- empty_issues()
   if (length(absent) > 0L) {
-    names <- sort(unique(vapply(absent, `[[`, "", 1L)), method = "radix")
-    parents <- sort(unique(vapply(absent, `[[`, "", 2L)), method = "radix")
-    one <- length(names) == 1L
+    names <- vapply(absent, `[[`, "", 1L)
+    parents <- vapply(absent, `[[`, "", 2L)
     root <- components$ref[components$is_root %in% TRUE][1L]
     issues <- add_issue(
       issues, root, "version", "embedded-not-installed",
-      paste0(
-        and_list(names), if (one) " is" else " are", " compiled into ", and_list(parents),
-        " through LinkingTo, but ", if (one) "is" else "are", " not ", where, ", so ",
-        if (one) "its version is" else "their versions are", " unknown."
-      ),
+      embedded_not_installed_sentence(names, parents, where),
       severity = "info"
     )
   }
@@ -225,7 +220,7 @@ vendored_components <- function(pkg_dir, parent, installed = FALSE, desc = NULL)
       purl = if (known) sub("{version}", hit$version, rule$purl, fixed = TRUE),
       license_spdx = if (has_license) rule$license,
       license_comment = if (has_license) paste0(
-        "The licence is the usual one for ", name, "; sbom did not read the ",
+        "The license is the usual one for ", name, "; sbom did not read the ",
         "vendored files' own notices."
       ),
       homepage = if (nzchar(rule$homepage)) rule$homepage,
@@ -341,7 +336,7 @@ read_widget_yaml <- function(path) {
 # one found by the header comment of a .js or .css file is inferred; the
 # declared one wins when both are found. Returns list(components,
 # relationships, issues, libraries), where `libraries` are labels of the
-# components, for the one note about their licences. `dirs`, when given, names
+# components, for the one note about their licenses. `dirs`, when given, names
 # the only folders to scan, relative to `pkg_dir`, and no YAML is read.
 javascript_components <- function(pkg_dir, parent, installed = FALSE, max_files = 5000L,
                                   dirs = NULL) {
@@ -578,14 +573,17 @@ javascript_components <- function(pkg_dir, parent, installed = FALSE, max_files 
 }
 
 # The folder of the installed copy of `name` in `lib` when its version is
-# `version`, else NULL.
+# `version`, else NULL. While a build runs (with_sys_cache()), each library
+# folder is listed once and each DESCRIPTION read once, not once a package.
 installed_dir <- function(name, version, lib) {
   if (is.na(version)) {
     return(NULL)
   }
-  cand <- library_candidates(lib)
+  lib <- as.character(lib)
+  cand <- sys_cached(paste0("candidates:", paste(lib, collapse = "\n")), library_candidates(lib))
   for (path in cand$path[cand$package == name]) {
-    desc <- read_usable_description(file.path(path, name))
+    dir <- file.path(path, name)
+    desc <- sys_cached(paste0("description:", dir), read_usable_description(dir))
     if (!is.null(desc)) {
       return(if (identical(trimws(desc[["Version"]]), version)) file.path(path, name))
     }
@@ -639,7 +637,7 @@ detect_bundled <- function(comps, root_ref, source_dir, root_desc, lookup, lib) 
       issues, root_ref, "embedded", "compiled-code-limited",
       paste0(
         n, if (n == 1L) " package contains" else " packages contain",
-        " compiled code, but sbom recognised no bundled library in ",
+        " compiled code, but sbom recognized no bundled library in ",
         if (n == 1L) "its" else "their", " COPYRIGHTS file or cph entries, so it could not look inside ",
         if (n == 1L) "it" else "them", ": ", paste(limited, collapse = ", "), "."
       ),
@@ -653,10 +651,7 @@ detect_bundled <- function(comps, root_ref, source_dir, root_desc, lookup, lib) 
     pairs <- paste(unversioned$name, "in", pkg_label(comps$name[at], comps$version[at]))
     issues <- add_issue(
       issues, root_ref, "version", "vendored-version-unknown",
-      paste0(
-        "sbom found no version for the bundled ",
-        and_list(sort(unique(pairs), method = "radix")), "."
-      ),
+      vendored_version_unknown_sentence(pairs),
       severity = "info"
     )
   }
@@ -665,7 +660,7 @@ detect_bundled <- function(comps, root_ref, source_dir, root_desc, lookup, lib) 
     issues <- add_issue(
       issues, root_ref, "license", "javascript-license-not-read",
       paste0(
-        "sbom does not read the licences of bundled JavaScript, so these have none recorded: ",
+        "sbom does not read the licenses of bundled JavaScript, so these have none recorded: ",
         paste(libraries, collapse = ", "), "."
       ),
       severity = "info"
@@ -676,4 +671,31 @@ detect_bundled <- function(comps, root_ref, source_dir, root_desc, lookup, lib) 
     relationships = do.call(rbind, lapply(out, `[[`, "relationships")),
     issues = issues
   )
+}
+
+# The sentence of the embedded-not-installed issue: the LinkingTo packages
+# `names`, compiled into the packages labeled `parents`, are not `where`, as
+# in "installed in the library sbom read". With `asserted`, an override
+# asserts their versions, which are therefore not unknown. apply_overrides()
+# builds it again after an override asserts some of those versions.
+embedded_not_installed_sentence <- function(names, parents, where, asserted = FALSE) {
+  names <- sort(unique(names), method = "radix")
+  parents <- sort(unique(parents), method = "radix")
+  one <- length(names) == 1L
+  paste0(
+    and_list(names), if (one) " is" else " are", " compiled into ", and_list(parents),
+    " through LinkingTo, but ", if (one) "is" else "are", " not ", where,
+    if (asserted) {
+      if (one) "; its version is asserted by an override." else "; their versions are asserted by an override."
+    } else {
+      paste0(", so ", if (one) "its version is" else "their versions are", " unknown.")
+    }
+  )
+}
+
+# The sentence of the vendored-version-unknown issue, from "<library> in
+# <package label>" pairs. apply_overrides() builds it again after an override
+# asserts some of those versions.
+vendored_version_unknown_sentence <- function(pairs) {
+  paste0("sbom found no version for the bundled ", and_list(sort(unique(pairs), method = "radix")), ".")
 }

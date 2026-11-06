@@ -402,10 +402,15 @@ written_advisories <- function(x) {
 #'   3 do not carry `fixed` or `no_fix`, and SPDX 2 carries only those two.
 #'   For an SBOM built without advisories, or whose
 #'   advisory data could not be read when it was built, or read from a file
-#'   that lists none, it has no rows, and a message says so.
+#'   that lists none, it has no rows, and a message gives the reason.
 #' @examples
 #' x <- sbom_package(system.file("DESCRIPTION", package = "sbom"), system = FALSE)
 #' sbom_advisories(x)
+#' \dontrun{
+#' # Needs the network: downloads OSV's CRAN export and looks up ratings.
+#' y <- sbom_package(system.file("DESCRIPTION", package = "sbom"), system = FALSE, advisories = TRUE)
+#' sbom_advisories(y)
+#' }
 #' @export
 sbom_advisories <- function(x) {
   check_sbom(x)

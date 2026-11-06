@@ -2,10 +2,53 @@
 # tests can replace it, and each returns an empty result when its tool is
 # missing or fails. Tests never run a real command.
 
+# What one build learns from the operating system and its library folders,
+# kept while that build runs so that nothing is asked twice: where each tool
+# is, what each compiled file links, which package owns each library, and
+# the packages each library folder holds. A build runs in with_sys_cache(),
+# and the cache is dropped when it ends, never kept for the next build: a
+# tool can be installed, or a library updated, in between.
+sys_cache <- new.env(parent = emptyenv())
+
+# `code`, evaluated with a cache open: a new one, dropped when `code` ends,
+# however it ends, or the one already open. The drop is this function's
+# own, so no on.exit() in the code can undo it.
+with_sys_cache <- function(code) {
+  if (!is.null(sys_cache$current)) {
+    return(code)
+  }
+  sys_cache$current <- new.env(parent = emptyenv())
+  on.exit(sys_cache_drop(), add = TRUE)
+  code
+}
+
+sys_cache_drop <- function() {
+  sys_cache$current <- NULL
+}
+
+# `value`, the answer to `key`, from the open cache when it holds it, else
+# evaluated and kept there. With no cache open, `value` is evaluated each time.
+sys_cached <- function(key, value) {
+  cache <- sys_cache$current
+  if (is.null(cache)) {
+    return(value)
+  }
+  if (!exists(key, envir = cache, inherits = FALSE)) {
+    assign(key, value, envir = cache)
+  }
+  get(key, envir = cache, inherits = FALSE)
+}
+
+# Where a tool is, as Sys.which() says, asked once a build: each call of
+# Sys.which() starts a shell.
+sys_which <- function(command) {
+  sys_cached(paste0("which:", command), Sys.which(command))
+}
+
 # The lines a command prints, or NULL when the tool is not on the path, the
 # command fails or it takes longer than `timeout` seconds.
 sys_run <- function(command, args, timeout = 5) {
-  if (!nzchar(Sys.which(command))) {
+  if (!nzchar(sys_cached(paste0("which:", command), Sys.which(command)))) {
     return(NULL)
   }
   out <- tryCatch(
@@ -46,12 +89,12 @@ sys_linked_libraries <- function(so_file) {
   tool <- if (mac) "otool" else "ldd"
   # Older versions of ldd run a file that names its own program interpreter,
   # so ldd is given only ELF files without one.
-  if (!mac && nzchar(Sys.which(tool)) && !identical(elf_has_interp(so_file), FALSE)) {
+  if (!mac && nzchar(sys_which(tool)) && !identical(elf_has_interp(so_file), FALSE)) {
     return(structure(character(), versions = character(), tool_missing = FALSE, failed = TRUE))
   }
   lines <- sys_run(tool, if (mac) c("-L", shQuote(so_file)) else shQuote(so_file))
   if (is.null(lines)) {
-    missing <- !nzchar(Sys.which(tool))
+    missing <- !nzchar(sys_which(tool))
     return(structure(
       character(), versions = character(), tool_missing = missing, failed = !missing
     ))
@@ -154,7 +197,7 @@ parse_ldd <- function(lines) {
 # list(manager, name, version, arch), or NULL when there is none or neither
 # dpkg nor rpm is available.
 sys_os_package <- function(path) {
-  if (nzchar(Sys.which("dpkg"))) {
+  if (nzchar(sys_which("dpkg"))) {
     owner <- sys_run("dpkg", c("-S", shQuote(path)))
     if (is.null(owner) && file.exists(path)) {
       owner <- sys_run("dpkg", c("-S", shQuote(normalizePath(path))))
@@ -167,7 +210,7 @@ sys_os_package <- function(path) {
     got <- parse_os_package(info, "deb", name)
     return(got)
   }
-  if (nzchar(Sys.which("rpm"))) {
+  if (nzchar(sys_which("rpm"))) {
     info <- sys_run("rpm", c("-qf", "--qf", shQuote("%{NAME} %{VERSION}-%{RELEASE} %{ARCH}"), shQuote(path)))
     return(parse_os_package(info, "rpm", NULL))
   }

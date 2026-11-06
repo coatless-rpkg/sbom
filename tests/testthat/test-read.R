@@ -771,7 +771,7 @@ test_that("renaming duplicates takes linear time, and its message names at most 
   d <- read_document(path)
   t <- document_tables(d)
   x <- NULL
-  expect_lt(system.time(x <- read_sbom_build(d, t))[["elapsed"]], 10)
+  time <- system.time(x <- read_sbom_build(d, t))[["elapsed"]]
   # The renamed ones start after the highest suffix taken, a-3001.
   renamed <- paste0("a-", seq(n + 2L, 2L * n))
   expect_setequal(x$components$ref, c("a", ids[-(1:n)], renamed, "document"))
@@ -779,6 +779,8 @@ test_that("renaming duplicates takes linear time, and its message names at most 
     "3000 elements share the id a, so sbom renamed the later ones ", paste(renamed[1:20], collapse = ", "),
     ", and 2979 more."
   ))
+  skip_unless_timing()
+  expect_lt(time, 10)
 })
 
 test_that("two elements that share an id give one renamed ref", {

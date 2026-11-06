@@ -228,7 +228,7 @@ package_component <- function(desc, evidence, source_input, is_root = FALSE,
   name <- desc_field(desc, "Package")
   version <- desc_field(desc, "Version")
   eco <- package_ecosystem(desc)
-  ref <- if (is.na(eco$purl)) paste0(eco$ecosystem, "/", name) else eco$purl
+  ref <- package_ref(eco, name)
 
   vcs_url <- if (eco$ecosystem %in% c("github", "gitlab", "bitbucket", "git")) {
     eco$vcs_url
@@ -319,9 +319,18 @@ package_component <- function(desc, evidence, source_input, is_root = FALSE,
   list(component = component, issues = issues)
 }
 
+# The ref of package `name` from its package_ecosystem() `eco`: its package
+# URL, or "<ecosystem>/<name>" when it has none.
+package_ref <- function(eco, name) {
+  if (is.na(eco$purl)) paste0(eco$ecosystem, "/", name) else eco$purl
+}
+
 # The R row, then one row per base package used. Sorted by ref, R first.
+# When R's version is exact, each base package has that version and R's
+# evidence, since it comes with R; otherwise it has no version.
 r_components <- function(version, version_is, stated_spec, base_used, evidence = NULL) {
   have_version <- !is.na(version)
+  exact <- have_version && identical(version_is, "exact")
   r_license <- "GPL-2 | GPL-3"
   description <- if (!have_version) {
     "R is listed without a version, since no minimum is stated."
@@ -330,6 +339,15 @@ r_components <- function(version, version_is, stated_spec, base_used, evidence =
   } else {
     NA_character_
   }
+  r_evidence <- if (!have_version) {
+    "unknown"
+  } else if (!is.null(evidence) && exact) {
+    evidence
+  } else if (exact) {
+    "observed"
+  } else {
+    "declared"
+  }
   r <- component_row(
     ref = "R", name = "R", version = if (have_version) version else NA_character_,
     version_is = if (have_version) version_is else NA_character_,
@@ -337,25 +355,18 @@ r_components <- function(version, version_is, stated_spec, base_used, evidence =
     license_as_written = r_license, license_spdx = license_spdx(r_license),
     license_comment = license_comment(r_license),
     homepage = "https://www.r-project.org", description = description,
-    evidence = if (!have_version) {
-      "unknown"
-    } else if (!is.null(evidence) && version_is == "exact") {
-      evidence
-    } else if (version_is == "exact") {
-      "observed"
-    } else {
-      "declared"
-    },
-    source_input = "r"
+    evidence = r_evidence, source_input = "r"
   )
   base_used <- sort(unique(base_used[!is.na(base_used)]), method = "radix")
   base <- lapply(base_used, function(pkg) {
     component_row(
-      ref = paste0("R/", pkg), name = pkg, version_is = NA_character_,
+      ref = paste0("R/", pkg), name = pkg,
+      version = if (exact) version else NA_character_,
+      version_is = if (exact) "exact" else NA_character_,
       type = "library", ecosystem = "base-r", scope = "required",
       parent_ref = "R", license_comment = "Part of R, under R's own licence.",
       description = "Part of R. It comes with R and has no file of its own.",
-      evidence = "inferred", source_input = "r"
+      evidence = if (exact) r_evidence else "inferred", source_input = "r"
     )
   })
   out <- do.call(rbind, c(list(r), base))

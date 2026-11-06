@@ -1,145 +1,319 @@
 # CycloneDX XML writer. Walks the list from `cdx_document()` in order, so the
-# element sequence follows the XSD.
+# element sequence follows the XSD. The text is built as libxml2 formats a
+# document (two spaces of indent a level, at most sixty), and each kind of
+# element is written for all its items at once, the components of a large
+# SBOM among them: an xml2 node, or a few function calls, for each element
+# took minutes for a large SBOM. A function that writes items takes a list of
+# them and returns their lines as a list, one character vector an item.
 
-xml_text_child <- function(parent, name, value) {
-  xml2::xml_add_child(parent, name, enc2utf8(as.character(value)))
+# The indent of an element at `level`: libxml2 indents by two spaces a level
+# and stops at sixty.
+xml_pad <- function(level) {
+  strrep("  ", min(level, 30L))
 }
 
-# An element whose scalar entries are children, except for `attrs`, which
-# become XML attributes. Container entries are routed through `special`.
-xml_element <- function(parent, name, item, attrs = character(), special = list()) {
-  node <- xml2::xml_add_child(parent, name)
-  for (a in intersect(attrs, names(item))) {
-    xml2::xml_set_attr(node, a, enc2utf8(item[[a]]))
+# U+FFFE and U+FFFF in UTF-8: the bytes EF BF BE and EF BF BF.
+xml_nonchar_pattern <- "\xef\xbf[\xbe\xbf]"
+
+# Text and attribute values escaped as libxml2 2.14 writes them: &, < and >
+# always; in an attribute also the double quote, tab, line feed and carriage
+# return, which elsewhere only the carriage return needs; and a control
+# character that XML 1.0 does not allow as the reference of U+FFFD. So are
+# U+FFFE and U+FFFF, the other characters XML 1.0 does not allow, which
+# libxml2 writes as they are, making a document no parser reads. The bytes
+# are matched as they are, and each string keeps its encoding.
+xml_escape <- function(x, attr = FALSE) {
+  x <- enc2utf8(as.character(x))
+  special <- if (attr) "[&<>\"\001-\037]" else "[&<>\r\001-\010\013\014\016-\037]"
+  hit <- !is.na(x) & (grepl(special, x, useBytes = TRUE) | grepl(xml_nonchar_pattern, x, useBytes = TRUE))
+  if (!any(hit)) {
+    return(x)
   }
-  for (key in setdiff(names(item), attrs)) {
-    value <- item[[key]]
-    if (key %in% names(special)) {
-      special[[key]](node, value)
-    } else {
-      xml_text_child(node, key, value)
+  y <- x[hit]
+  enc <- Encoding(y)
+  sub_all <- function(y, from, to) gsub(from, to, y, fixed = TRUE, useBytes = TRUE)
+  y <- sub_all(y, "&", "&amp;")
+  y <- sub_all(y, "<", "&lt;")
+  y <- sub_all(y, ">", "&gt;")
+  y <- sub_all(y, "\r", "&#13;")
+  if (attr) {
+    y <- sub_all(y, "\"", "&quot;")
+    y <- sub_all(y, "\t", "&#9;")
+    y <- sub_all(y, "\n", "&#10;")
+  }
+  y <- gsub("[\001-\010\013\014\016-\037]", "&#xFFFD;", y, useBytes = TRUE)
+  y <- gsub(xml_nonchar_pattern, "&#xFFFD;", y, useBytes = TRUE)
+  Encoding(y) <- enc
+  x[hit] <- y
+  x
+}
+
+# A value as xml2 gave it to an element or attribute: a string as it is, and
+# anything else (NA, a number, a vector) as paste() writes it.
+xml_value <- function(value) {
+  value <- enc2utf8(as.character(value))
+  if (length(value) == 1L && !is.na(value)) value else paste(list(value), collapse = "")
+}
+
+# xml_value() of each of a list of values, the strings among them at once.
+xml_values <- function(values) {
+  values <- unname(values)
+  out <- character(length(values))
+  one <- lengths(values) == 1L & vapply(values, is.character, NA)
+  if (any(one)) {
+    out[one] <- enc2utf8(as.character(unlist(values[one])))
+  }
+  rest <- !one | is.na(out)
+  if (any(rest)) {
+    out[rest] <- vapply(values[rest], xml_value, "")
+  }
+  out
+}
+
+# The lines of entries (a list, one vector an entry) gathered by the item
+# each belongs to, `owner`, one of 1 to `n`: a list of `n` vectors, in order.
+xml_group <- function(lines, owner, n) {
+  if (n == 0L) {
+    return(list())
+  }
+  owner <- factor(rep.int(owner, lengths(lines)), levels = seq_len(n))
+  unname(split(as.character(unlist(lines, use.names = FALSE)), owner))
+}
+
+# The attributes of `n` items as text, ` name="value"` each, from `attrs`: a
+# named list holding, for each name, a list of the items' values, NULL for
+# an item that has none.
+xml_attr_text <- function(attrs, n) {
+  out <- character(n)
+  for (a in names(attrs)) {
+    v <- attrs[[a]]
+    has <- !vapply(v, is.null, NA)
+    if (any(has)) {
+      out[has] <- paste0(out[has], " ", a, "=\"", xml_escape(xml_values(v[has]), attr = TRUE), "\"")
     }
   }
-  node
+  out
 }
 
-xml_each <- function(parent, container, items, fn) {
-  node <- xml2::xml_add_child(parent, container)
-  for (item in items) fn(node, item)
-  invisible(node)
-}
-
-xml_org <- function(parent, name, org) {
-  node <- xml2::xml_add_child(parent, name)
-  xml_text_child(node, "name", org$name)
-  for (u in org$url) xml_text_child(node, "url", u)
-  invisible(node)
-}
-
-xml_license <- function(node, item) {
-  if (!is.null(item$expression)) {
-    xml_text_child(node, "expression", item$expression)
-  } else {
-    lic <- xml2::xml_add_child(node, "license")
-    xml_text_child(lic, "name", item$license$name)
+# Elements `name`, one an item, with the attributes `attr_text` and the child
+# lines `children` (a list, one vector an item); with no children, the tag
+# closes at once.
+xml_nodes <- function(level, name, children, attr_text = "") {
+  n <- length(children)
+  if (n == 0L) {
+    return(list())
   }
+  pad <- xml_pad(level)
+  has <- lengths(children) > 0L
+  open <- paste0(pad, "<", name, attr_text, ifelse(has, ">", "/>"))
+  close <- paste0(pad, "</", name, ">")
+  .mapply(function(o, ch, h) if (h) c(o, ch, close) else o, list(open, children, has), NULL)
 }
 
-xml_reference <- function(node, ref) {
-  r <- xml2::xml_add_child(node, "reference")
-  xml2::xml_set_attr(r, "type", ref$type)
-  xml_text_child(r, "url", ref$url)
-  if (!is.null(ref$comment)) xml_text_child(r, "comment", ref$comment)
+# Elements `name` (one name, or one an item) with the text `values` (a
+# list, one an item) and the attributes `attrs` (see xml_attr_text()); empty
+# text closes the tag at once. One line an item.
+xml_leaves <- function(level, name, values, attrs = list()) {
+  n <- length(values)
+  if (n == 0L) {
+    return(character())
+  }
+  text <- xml_values(values)
+  start <- paste0(xml_pad(level), "<", name, xml_attr_text(attrs, n))
+  ifelse(nzchar(text), paste0(start, ">", xml_escape(text), "</", name, ">"), paste0(start, "/>"))
 }
 
-xml_component <- function(parent, comp, tag = "component") {
-  xml_element(parent, tag, comp, attrs = c("type", "bom-ref"), special = list(
-    supplier = function(node, v) xml_org(node, "supplier", v),
-    hashes = function(node, v) {
-      xml_each(node, "hashes", v, function(p, h) {
-        n <- xml_text_child(p, "hash", h$content)
-        xml2::xml_set_attr(n, "alg", h$alg)
-      })
-    },
-    licenses = function(node, v) xml_each(node, "licenses", v, xml_license),
-    externalReferences = function(node, v) {
-      xml_each(node, "externalReferences", v, xml_reference)
-    },
-    properties = function(node, v) xml_properties(node, v),
-    components = function(node, v) {
-      xml_each(node, "components", v, function(p, c) xml_component(p, c))
-    }
-  ))
+# Items as elements `tag` whose scalar entries are children, in order, except
+# for `attrs`, which become XML attributes. Container entries are routed
+# through `special`, a function of a level and a list of the items' values
+# for that entry, which returns their lines as a list.
+xml_items <- function(level, tag, items, attrs = character(), special = list()) {
+  n <- length(items)
+  if (n == 0L) {
+    return(list())
+  }
+  keys_of <- lapply(items, names)
+  named <- !vapply(keys_of, is.null, NA)
+  owner <- rep.int(seq_len(n), lengths(keys_of))
+  keys <- as.character(unlist(keys_of, use.names = FALSE))
+  values <- do.call(c, lapply(items[named], as.list))
+  # An entry repeated within an item is written once, from its first value.
+  first <- !duplicated(paste(owner, keys, sep = "\r"))
+  is_attr <- keys %in% attrs
+  child <- first & !is_attr
+  routed <- child & keys %in% names(special)
+  leaf <- child & !routed
+  lines <- vector("list", length(keys))
+  if (any(leaf)) {
+    lines[leaf] <- as.list(xml_leaves(level + 1L, keys[leaf], values[leaf]))
+  }
+  for (key in unique(keys[routed])) {
+    at <- which(routed & keys == key)
+    lines[at] <- special[[key]](level + 1L, values[at])
+  }
+  attr_values <- lapply(attrs, function(a) {
+    v <- vector("list", n)
+    at <- first & is_attr & keys == a
+    v[owner[at]] <- values[at]
+    v
+  })
+  names(attr_values) <- attrs
+  children <- xml_group(lines[child], owner[child], n)
+  xml_nodes(level, tag, children, xml_attr_text(attr_values, n))
 }
 
-xml_properties <- function(node, props) {
-  xml_each(node, "properties", props, function(p, prop) {
-    n <- xml_text_child(p, "property", prop$value)
-    xml2::xml_set_attr(n, "name", enc2utf8(prop$name))
+# For each list of items in `lists`, a container `container` holding the
+# lines `fn` writes for its items (a function of a level and a list of
+# items, like xml_items()).
+xml_each <- function(level, container, lists, fn) {
+  lists <- lapply(lists, as.list)
+  n <- length(lists)
+  if (n == 0L) {
+    return(list())
+  }
+  items <- do.call(c, lists)
+  item_lines <- if (length(items) > 0L) fn(level + 1L, items) else list()
+  xml_nodes(level, container, xml_group(item_lines, rep.int(seq_len(n), lengths(lists)), n))
+}
+
+xml_orgs <- function(level, name, orgs) {
+  n <- length(orgs)
+  names <- xml_leaves(level + 1L, "name", lapply(orgs, function(org) org$name))
+  urls <- lapply(orgs, function(org) as.list(org$url))
+  url_lines <- xml_leaves(level + 1L, "url", do.call(c, urls))
+  children <- xml_group(
+    c(as.list(names), as.list(url_lines)), c(seq_len(n), rep.int(seq_len(n), lengths(urls))), n
+  )
+  xml_nodes(level, name, children)
+}
+
+xml_licenses <- function(level, items) {
+  expression <- vapply(items, function(item) !is.null(item$expression), NA)
+  out <- vector("list", length(items))
+  if (any(expression)) {
+    out[expression] <- as.list(xml_leaves(
+      level, "expression", lapply(items[expression], function(item) item$expression)
+    ))
+  }
+  if (any(!expression)) {
+    out[!expression] <- xml_nodes(level, "license", as.list(xml_leaves(
+      level + 1L, "name", lapply(items[!expression], function(item) item$license$name)
+    )))
+  }
+  out
+}
+
+xml_references <- function(level, refs) {
+  n <- length(refs)
+  urls <- xml_leaves(level + 1L, "url", lapply(refs, function(ref) ref$url))
+  comments <- lapply(refs, function(ref) ref$comment)
+  has <- !vapply(comments, is.null, NA)
+  children <- xml_group(
+    c(as.list(urls), as.list(xml_leaves(level + 1L, "comment", comments[has]))),
+    c(seq_len(n), which(has)), n
+  )
+  xml_nodes(level, "reference", children, xml_attr_text(list(type = lapply(refs, function(ref) ref$type)), n))
+}
+
+xml_properties <- function(level, lists) {
+  xml_each(level, "properties", lists, function(level, props) {
+    as.list(xml_leaves(
+      level, "property", lapply(props, function(prop) prop$value),
+      list(name = lapply(props, function(prop) prop$name))
+    ))
   })
 }
 
-xml_metadata <- function(bom, meta) {
-  node <- xml2::xml_add_child(bom, "metadata")
-  xml_text_child(node, "timestamp", meta$timestamp)
-  if (!is.null(meta$tools$components)) {
-    tools <- xml2::xml_add_child(node, "tools")
-    xml_each(tools, "components", meta$tools$components, xml_component)
-  } else {
-    xml_each(node, "tools", meta$tools, function(p, t) xml_element(p, "tool", t))
-  }
-  if (!is.null(meta$authors)) {
-    xml_each(node, "authors", meta$authors, function(p, a) {
-      xml_element(p, "author", a)
+xml_component_special <- list(
+  supplier = function(level, v) xml_orgs(level, "supplier", v),
+  hashes = function(level, v) {
+    xml_each(level, "hashes", v, function(level, hs) {
+      as.list(xml_leaves(
+        level, "hash", lapply(hs, function(h) h$content), list(alg = lapply(hs, function(h) h$alg))
+      ))
     })
-  }
-  xml_component(node, meta$component)
-  if (!is.null(meta$manufacturer)) {
-    xml_element(node, "manufacturer", meta$manufacturer)
-  }
-  if (!is.null(meta$properties)) xml_properties(node, meta$properties)
-  invisible(node)
+  },
+  licenses = function(level, v) xml_each(level, "licenses", v, xml_licenses),
+  externalReferences = function(level, v) xml_each(level, "externalReferences", v, xml_references),
+  properties = function(level, v) xml_properties(level, v),
+  components = function(level, v) xml_each(level, "components", v, xml_components)
+)
+
+xml_components <- function(level, comps, tag = "component") {
+  xml_items(level, tag, comps, attrs = c("type", "bom-ref"), special = xml_component_special)
 }
 
-xml_dependency <- function(parent, dep) {
-  node <- xml2::xml_add_child(parent, "dependency")
-  xml2::xml_set_attr(node, "ref", enc2utf8(dep$ref))
-  for (target in dep$dependsOn) {
-    child <- xml2::xml_add_child(node, "dependency")
-    xml2::xml_set_attr(child, "ref", enc2utf8(target))
+xml_metadata <- function(level, meta) {
+  inner <- level + 1L
+  tools <- if (!is.null(meta$tools$components)) {
+    xml_nodes(inner, "tools", xml_each(inner + 1L, "components", list(meta$tools$components), xml_components))
+  } else {
+    xml_each(inner, "tools", list(meta$tools), function(level, tools) xml_items(level, "tool", tools))
   }
-  invisible(node)
+  children <- c(
+    xml_leaves(inner, "timestamp", list(meta$timestamp)),
+    unlist(tools),
+    if (!is.null(meta$authors)) {
+      unlist(xml_each(inner, "authors", list(meta$authors), function(level, a) xml_items(level, "author", a)))
+    },
+    unlist(xml_components(inner, list(meta$component))),
+    if (!is.null(meta$manufacturer)) unlist(xml_items(inner, "manufacturer", list(meta$manufacturer))),
+    if (!is.null(meta$properties)) unlist(xml_properties(inner, list(meta$properties)))
+  )
+  unlist(xml_nodes(level, "metadata", list(children)))
 }
 
-xml_vulnerability <- function(parent, v) {
-  xml_source <- function(node, s) xml_element(node, "source", s)
-  xml_element(parent, "vulnerability", v, attrs = "bom-ref", special = list(
-    source = xml_source,
-    references = function(node, refs) {
-      xml_each(node, "references", refs, function(p, r) {
-        xml_element(p, "reference", r, special = list(source = xml_source))
+xml_dependencies <- function(level, deps) {
+  n <- length(deps)
+  targets <- lapply(deps, function(dep) as.list(dep$dependsOn))
+  m <- sum(lengths(targets))
+  inner <- xml_nodes(
+    level + 1L, "dependency", rep(list(character()), m), xml_attr_text(list(ref = do.call(c, targets)), m)
+  )
+  children <- xml_group(inner, rep.int(seq_len(n), lengths(targets)), n)
+  xml_nodes(level, "dependency", children, xml_attr_text(list(ref = lapply(deps, function(dep) dep$ref)), n))
+}
+
+xml_vulnerability_items <- function(level, vulns) {
+  sources <- function(level, s) xml_items(level, "source", s)
+  xml_items(level, "vulnerability", vulns, attrs = "bom-ref", special = list(
+    source = sources,
+    references = function(level, v) {
+      xml_each(level, "references", v, function(level, refs) {
+        xml_items(level, "reference", refs, special = list(source = sources))
       })
     },
-    ratings = function(node, rs) xml_each(node, "ratings", rs, function(p, r) xml_element(p, "rating", r)),
-    advisories = function(node, as) {
-      xml_each(node, "advisories", as, function(p, a) xml_element(p, "advisory", a))
+    ratings = function(level, v) {
+      xml_each(level, "ratings", v, function(level, r) xml_items(level, "rating", r))
     },
-    affects = function(node, as) xml_each(node, "affects", as, function(p, a) xml_element(p, "target", a))
+    advisories = function(level, v) {
+      xml_each(level, "advisories", v, function(level, a) xml_items(level, "advisory", a))
+    },
+    affects = function(level, v) {
+      xml_each(level, "affects", v, function(level, a) xml_items(level, "target", a))
+    }
   ))
 }
 
 cdx_xml <- function(x, version = "1.6") {
   doc <- cdx_document(x, version)
-  root <- xml2::xml_new_root("bom")
-  xml2::xml_set_attr(root, "xmlns", sprintf("http://cyclonedx.org/schema/bom/%s", version))
-  xml2::xml_set_attr(root, "serialNumber", doc$serialNumber)
-  xml2::xml_set_attr(root, "version", as.character(doc$version))
-  xml_metadata(root, doc$metadata)
-  xml_each(root, "components", doc$components, function(p, c) xml_component(p, c))
-  xml_each(root, "dependencies", doc$dependencies, xml_dependency)
-  if (!is.null(doc$vulnerabilities)) {
-    xml_each(root, "vulnerabilities", doc$vulnerabilities, xml_vulnerability)
-  }
-  out <- as.character(root, options = "format")
+  children <- c(
+    xml_metadata(1L, doc$metadata),
+    unlist(xml_each(1L, "components", list(doc$components), xml_components)),
+    unlist(xml_each(1L, "dependencies", list(doc$dependencies), xml_dependencies)),
+    if (!is.null(doc$vulnerabilities)) {
+      unlist(xml_each(1L, "vulnerabilities", list(doc$vulnerabilities), xml_vulnerability_items))
+    }
+  )
+  attrs <- list(
+    xmlns = list(sprintf("http://cyclonedx.org/schema/bom/%s", version)),
+    serialNumber = list(doc$serialNumber), version = list(as.character(doc$version))
+  )
+  root <- unlist(xml_nodes(0L, "bom", list(children), xml_attr_text(attrs, 1L)))
+  out <- paste(c('<?xml version="1.0" encoding="UTF-8"?>', root), collapse = "\n")
+  # The text is UTF-8, as xml2 marked it. As when xml2 wrote it, bytes that
+  # are not UTF-8 stop the writer here, with R's error, rather than make a
+  # document no XML parser reads.
+  Encoding(out) <- "UTF-8"
   enc2utf8(paste0(sub("\n+$", "", out), "\n"))
 }

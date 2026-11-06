@@ -562,8 +562,10 @@ test_that("an XML document that uses entities declared in its DTD skips the XSD 
 # SWID ---------------------------------------------------------------------------
 
 swid_iso_note <- paste(
-  "sbom.swid_xsd is not the ISO/IEC 19770-2:2015 schema as ISO publishes it",
-  "(SHA-256 6af9d0554932102ace5c696f723c1dc4a4b1a9846908cddec67ccc0518c0e5d4),",
+  "sbom.swid_xsd is not the ISO/IEC 19770-2:2015 schema as ISO publishes it at",
+  "https://standards.iso.org/iso/19770/-2/2015-current/schema.xsd, with CRLF line endings",
+  "(SHA-256 6af9d0554932102ace5c696f723c1dc4a4b1a9846908cddec67ccc0518c0e5d4) or LF ones",
+  "(SHA-256 faec3b2d670c3051455a6c7c5e561fd840cf47e772b32c0771b72f42e9df8c74),",
   "so the tag was checked against sbom's structural rules."
 )
 
@@ -637,14 +639,31 @@ test_that("the ISO SWID schema is not bundled, and the two W3C schemas it import
   expect_identical(swid$modified, c("FALSE", "FALSE"))
 })
 
-test_that("COPYRIGHTS names every bundled schema and data file, with the W3C notices in full", {
+# The files under inst/, as paths relative to it: from inst/ itself in the
+# source tree, and in an installed package from its top folder, less what R
+# installs from elsewhere.
+inst_files <- function() {
+  root <- system.file(package = "sbom")
+  if (dir.exists(file.path(root, "inst"))) {
+    return(list.files(file.path(root, "inst"), recursive = TRUE, all.files = TRUE))
+  }
+  r_own <- c(
+    "CITATION", "DESCRIPTION", "INDEX", "LICENSE", "MD5", "Meta", "NAMESPACE", "NEWS.md",
+    "R", "README.md", "data", "demo", "doc", "help", "html", "libs", "tests"
+  )
+  files <- list.files(root, recursive = TRUE, all.files = TRUE)
+  files[!sub("/.*$", "", files) %in% r_own]
+}
+
+test_that("COPYRIGHTS names every file under inst/, with the W3C notices in full", {
   text <- paste(readLines(system.file("COPYRIGHTS", package = "sbom"), warn = FALSE, encoding = "UTF-8"), collapse = "\n")
-  for (dir in c("schemas", "extdata")) {
-    for (f in list.files(system.file(dir, package = "sbom"), recursive = TRUE)) {
-      path <- file.path("inst", dir, f)
-      named <- grepl(path, text, fixed = TRUE) || grepl(paste0(dirname(path), "/*"), text, fixed = TRUE)
-      expect_true(named, label = path)
-    }
+  files <- inst_files()
+  expect_true(all(c("WORDLIST", "schemas/MANIFEST.csv", "extdata/licenses.csv") %in% files))
+  # Every file but COPYRIGHTS itself, the list.
+  for (f in setdiff(files, "COPYRIGHTS")) {
+    path <- file.path("inst", f)
+    named <- grepl(path, text, fixed = TRUE) || grepl(paste0(dirname(path), "/*"), text, fixed = TRUE)
+    expect_true(named, label = path)
   }
   expect_false(grepl("inst/schemas/swid/swid-2015.xsd", text, fixed = TRUE))
   # W3C-19980720 asks for the full text of its notice; W3C-20150513 too.
@@ -683,19 +702,45 @@ test_that("the option names the ISO schema only by its SHA-256 as ISO publishes 
     label <- paste(format(value), collapse = "")
     # Any other value gets the structural rules, with a note saying so.
     expect_identical(schema_validate(good, "swid"), list(status = "partial", findings = notes_of(swid_iso_note)), label = label)
-    # So a broken tag still fails.
+    # So a broken tag still fails, with the note apart from the findings.
     expect_identical(schema_validate(broken, "swid"), list(
       status = "fail",
-      findings = data.frame(
-        location = c("/SoftwareIdentity", ""),
-        message = c("The tagVersion x is not an integer.", swid_iso_note)
-      )
+      findings = data.frame(location = "/SoftwareIdentity", message = "The tagVersion x is not an integer."),
+      notes = notes_of(swid_iso_note)
     ), label = label)
   }
   expect_identical(hits$urls, character())
   # Unset, the note is the one that says what to set.
   withr::local_options(sbom.swid_xsd = NULL)
   expect_identical(schema_validate(good, "swid"), list(status = "partial", findings = notes_of(swid_bundle_note)))
+})
+
+test_that("validate_sbom() reports the option's note on a failing tag as a note, not an error", {
+  broken <- swid_text_path(sub('tagVersion="[0-9]+"', 'tagVersion="x"', swid_tag(fixture_sbom())))
+  other <- withr::local_tempfile(fileext = ".xsd")
+  write_text('<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"/>\n', other)
+  errors <- function(v) v$findings[v$findings$severity == "error", , drop = FALSE]
+  withr::local_options(sbom.swid_xsd = NULL)
+  unset <- validate_sbom(broken, profile = "none")
+  withr::local_options(sbom.swid_xsd = other)
+  set <- validate_sbom(broken, profile = "none")
+  expect_identical(set$status, "fail")
+  expect_identical(errors(set), errors(unset))
+  expect_identical(errors(set)$message, "The tagVersion x is not an integer.")
+  note <- set$findings[set$findings$check == "schema" & set$findings$severity == "info", , drop = FALSE]
+  expect_identical(note$message, swid_iso_note)
+  expect_identical(note$location, "")
+  # So the error that error_on raises counts the one error.
+  for (value in list(NULL, other)) {
+    withr::local_options(sbom.swid_xsd = value)
+    err <- expect_error(validate_sbom(broken, profile = "none", error_on = "error"), class = "sbom_validation_error")
+    expect_match(conditionMessage(err), "with 1 error and 0 warnings", fixed = TRUE)
+  }
+  # print() lists the note under Notes.
+  withr::local_options(sbom.swid_xsd = other)
+  out <- paste(capture.output(print(set)), collapse = "\n")
+  expect_match(out, "Notes", fixed = TRUE)
+  expect_match(out, "2015-current/schema.xsd", fixed = TRUE)
 })
 
 test_that("schemas that would reach the network are never compiled", {
@@ -791,6 +836,68 @@ test_that("the option's file is read once, and the copy holds the bytes that wer
   expect_identical(copy$text, sub('"http://www.w3.org/2001/xml.xsd"', '"xml.xsd"', expected, fixed = TRUE))
 })
 
+test_that("the ISO schema is accepted with its line endings as published, or normalised to LF", {
+  expect_identical(swid_iso_sha256_lf, "faec3b2d670c3051455a6c7c5e561fd840cf47e772b32c0771b72f42e9df8c74")
+  hits <- local_no_network()
+  # A stand-in for ISO's file, with its CRLF line endings and no newline at
+  # the end, that imports the two W3C schemas as ISO's does and accepts any
+  # SoftwareIdentity; the test gives sbom the SHA-256 of each form as ISO's.
+  lines <- c(
+    '<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://standards.iso.org/iso/19770/-2/2015/schema.xsd">',
+    '<xs:import namespace="http://www.w3.org/2000/09/xmldsig#" schemaLocation="http://www.w3.org/TR/xmldsig-core/xmldsig-core-schema.xsd"/>',
+    '<xs:import namespace="http://www.w3.org/XML/1998/namespace" schemaLocation="http://www.w3.org/2001/xml.xsd"/>',
+    '<xs:element name="SoftwareIdentity"><xs:complexType><xs:sequence>',
+    '<xs:any processContents="skip" minOccurs="0" maxOccurs="unbounded"/>',
+    '</xs:sequence><xs:anyAttribute processContents="skip"/></xs:complexType></xs:element>',
+    '</xs:schema>'
+  )
+  crlf <- withr::local_tempfile(fileext = ".xsd")
+  write_text(paste(lines, collapse = "\r\n"), crlf)
+  lf <- withr::local_tempfile(fileext = ".xsd")
+  write_text(paste(lines, collapse = "\n"), lf)
+  local_mocked_bindings(swid_iso_sha256 = cli::hash_file_sha256(crlf), swid_iso_sha256_lf = cli::hash_file_sha256(lf))
+  tag <- swid_tag_path()
+  for (path in c(crlf, lf)) {
+    withr::local_options(sbom.swid_xsd = path)
+    given <- readBin(path, "raw", file.size(path))
+    # The copy is written from the bytes given, line endings and all.
+    expect_identical(swid_xsd_option(), given, label = path)
+    copy <- swid_with_local_schema(given, function(schema) readBin(schema, "raw", file.size(schema)))
+    expected <- sub('"http://www.w3.org/TR/xmldsig-core/xmldsig-core-schema.xsd"', '"xmldsig-core-schema.xsd"', rawToChar(given), fixed = TRUE)
+    expected <- sub('"http://www.w3.org/2001/xml.xsd"', '"xml.xsd"', expected, fixed = TRUE)
+    expect_identical(rawToChar(copy), expected, label = path)
+    expect_identical(schema_validate(tag, "swid"), list(status = "pass", findings = empty_findings()), label = path)
+  }
+  # Any other line endings are not ISO's file: CR alone, CRLF and LF mixed,
+  # or a newline added at the end.
+  other <- withr::local_tempfile(fileext = ".xsd")
+  withr::local_options(sbom.swid_xsd = other)
+  for (text in c(
+    paste(lines, collapse = "\r"),
+    paste0(paste(lines[1:3], collapse = "\n"), "\r\n", paste(lines[-(1:3)], collapse = "\r\n")),
+    paste0(paste(lines, collapse = "\n"), "\n")
+  )) {
+    write_text(text, other)
+    expect_identical(swid_xsd_option(), NA_character_)
+    expect_identical(schema_validate(tag, "swid"), list(status = "partial", findings = notes_of(swid_iso_note)))
+  }
+  expect_identical(hits$urls, character())
+})
+
+test_that("a file over 1 MB is not the ISO schema, and is never read", {
+  big <- withr::local_tempfile(fileext = ".xsd")
+  write_text(strrep(" ", 1e6 + 1), big)
+  # Even with its SHA-256 standing in for the ISO schema's.
+  local_mocked_bindings(swid_iso_sha256 = cli::hash_file_sha256(big))
+  withr::local_options(sbom.swid_xsd = big)
+  expect_identical(swid_xsd_option(), NA_character_)
+  expect_identical(schema_validate(swid_tag_path(), "swid"), list(status = "partial", findings = notes_of(swid_iso_note)))
+  # A file of 1 MB is read.
+  write_text(strrep(" ", 1e6), big)
+  local_mocked_bindings(swid_iso_sha256 = cli::hash_file_sha256(big))
+  expect_identical(length(swid_xsd_option()), 1000000L)
+})
+
 test_that("a missing bundled W3C schema gives the structural rules, and nothing is compiled", {
   hits <- local_no_network()
   local_stand_in_xsd()
@@ -811,10 +918,8 @@ test_that("a missing bundled W3C schema gives the structural rules, and nothing 
     res <- expect_no_warning(schema_validate(broken, "swid"))
     expect_identical(res, list(
       status = "fail",
-      findings = data.frame(
-        location = c("/SoftwareIdentity", ""),
-        message = c("The tagVersion x is not an integer.", swid_imports_note)
-      )
+      findings = data.frame(location = "/SoftwareIdentity", message = "The tagVersion x is not an integer."),
+      notes = notes_of(swid_imports_note)
     ))
   }
   expect_identical(compiled$n, 0L)
@@ -865,6 +970,15 @@ test_that("with the option naming the ISO schema, a tag is checked fully and off
   # validate_sbom() gets no schema note.
   v <- validate_sbom(swid_tag_path(), profile = "none")
   expect_false("schema" %in% v$findings$check)
+  # ISO's file with its line endings normalised to LF, as git or an editor
+  # may leave it, is ISO's file too.
+  bytes <- readBin(xsd, "raw", file.size(xsd))
+  normalised <- withr::local_tempfile(fileext = ".xsd")
+  writeBin(bytes[!(bytes == as.raw(13L) & c(bytes[-1L], as.raw(0L)) == as.raw(10L))], normalised)
+  expect_identical(cli::hash_file_sha256(normalised), swid_iso_sha256_lf)
+  withr::local_options(sbom.swid_xsd = normalised)
+  expect_identical(schema_validate(swid_tag_path(), "swid"), list(status = "pass", findings = empty_findings()))
+  expect_identical(schema_validate(swid_text_path(orphan), "swid")$status, "fail")
   # The ISO schema with one import changed is not the ISO schema.
   changed <- withr::local_tempfile(fileext = ".xsd")
   text <- rawToChar(readBin(xsd, "raw", file.size(xsd)))

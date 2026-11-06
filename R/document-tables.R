@@ -1,6 +1,6 @@
 # Neutral tables of any SBOM's raw model. document_tables() turns what
 # read_document() returns, in any of the four families, into elements,
-# licences, purls, relationships and document facts, each row carrying the
+# licenses, purls, relationships and document facts, each row carrying the
 # JSON pointer (RFC 6901, 0-based) of the value it came from. read_sbom() maps
 # them to an <sbom>, and the content checks run on them.
 #
@@ -168,7 +168,7 @@ tables_elements <- function(location, id, kind, name, version, supplier, origina
   )
 }
 
-# `field` is where the licence came from: the SPDX 2 key, the SPDX 3
+# `field` is where the license came from: the SPDX 2 key, the SPDX 3
 # relationship type, "licenses" for CycloneDX and "license" for SWID.
 tables_licenses <- function(location = character(), id = character(), expression = character(),
                             kind = rep("expression", length(location)), field = character()) {
@@ -238,8 +238,8 @@ tables_document <- function(name = NA_character_, timestamp = NA_character_,
 #'     that it is NA in the `"affects"` rows of a vulnerability without a
 #'     bom-ref. `to` is NA only in the row
 #'     a CycloneDX `dependencies` entry that lists no dependency gives, which
-#'     records that its component's dependencies were stated. SPDX 3 licence
-#'     relationships are licence rows instead.
+#'     records that its component's dependencies were stated. SPDX 3 license
+#'     relationships are license rows instead.
 #'   * For SPDX 3, the attribute `index` holds the graph's index
 #'     (`tables_spdx3_index()`), and for SWID the attribute `entities` holds
 #'     the entities' roles (`tables_swid_entities()`), so that `read_sbom()`
@@ -252,7 +252,7 @@ tables_document <- function(name = NA_character_, timestamp = NA_character_,
 #'     tag creator); `tools` is `data.frame(name, version)`. `root` holds the root ids the document
 #'     states, NA for a root without one, and `root_location` where each is
 #'     stated. `ids` is every id the document defines: every CycloneDX
-#'     bom-ref (services', licences' and vulnerabilities' too), SPDX 2's
+#'     bom-ref (services', licenses' and vulnerabilities' too), SPDX 2's
 #'     document id and its elements' SPDXIDs, every SPDX 3 node's spdxId, or
 #'     the SWID tagId.
 #' @noRd
@@ -354,7 +354,7 @@ tables_cdx <- function(doc, xml) {
     is_root = is_root, parent = parent, raw = raw
   )
 
-  # Licences: an expression or a licence id is an expression, a licence name
+  # Licenses: an expression or a license id is an expression, a license name
   # free text.
   lic <- json_flatten(raw, "licenses")
   expr <- json_strings(lic$items, "expression")
@@ -476,7 +476,7 @@ tables_cdx_document <- function(doc, meta, root, has_root) {
 
 # SPDX 2 ----------------------------------------------------------------------
 
-# The SPDX 2 arrays of elements, with their kinds, name fields and licence
+# The SPDX 2 arrays of elements, with their kinds, name fields and license
 # fields: single values, then the array of values.
 tables_spdx2_groups <- list(
   packages = list(
@@ -591,8 +591,8 @@ tables_spdx2 <- function(doc) {
   )
 }
 
-# The licence rows of every element, element by element: its single licence
-# fields, then the items of its array of licences, all SPDX expressions.
+# The license rows of every element, element by element: its single license
+# fields, then the items of its array of licenses, all SPDX expressions.
 tables_spdx2_licenses <- function(raw, location, id, group) {
   part <- function(element, rank, index, at, value, field) {
     list(
@@ -783,7 +783,7 @@ tables_spdx3_relationships <- function(graph, ix, rels, rel_type, from) {
   )
 }
 
-# The licence each licence relationship at `rels` points to: the text of a
+# The license each license relationship at `rels` points to: the text of a
 # LicenseExpression in the graph, NOASSERTION or NONE for those individuals,
 # or the id in an SPDX License List IRI (described in the graph or not). The
 # field is the relationship type. Rows go element by element (the elements
@@ -997,9 +997,9 @@ tables_swid <- function(doc) {
   # A tag creator with a real regid is an organization. Without one (the
   # placeholder http://invalid.unavailable is the default) it is a person,
   # unless it is sbom itself, the tool, as read_sbom() reads it.
-  real <- !is.na(ent$regid) & ent$regid != swid_placeholder_regid
+  real <- !is.na(ent$regid) & trimws(ent$regid) != swid_placeholder_regid
   creator_kind <- ifelse(real, "organization", ifelse(entity_names %in% "sbom", "tool", "person"))
-  # sbom's own licence attribute holds the licence as written: free text.
+  # sbom's own license attribute holds the license as written: free text.
   license <- tables_swid_values(meta, "sbom:license")
   has_license <- which(!is.na(license))
   out <- list(

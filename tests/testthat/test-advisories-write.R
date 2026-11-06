@@ -1,18 +1,3 @@
-# Every format sbom writes as an SBOM, at every version, as list(format,
-# version, extension).
-every_format_version <- function() {
-  reg <- format_registry()
-  keys <- setdiff(names(reg), "csv")
-  unlist(lapply(keys, function(f) {
-    lapply(reg[[f]]$versions, function(v) list(format = f, version = v, extension = reg[[f]]$extension))
-  }), recursive = FALSE)
-}
-
-# The text of `x` written in format `f` at version `v`.
-written <- function(x, f, v) {
-  format_registry()[[f]]$writer(x, v)
-}
-
 # The vulnerabilities of a CycloneDX XML document, as the JSON writer's lists.
 xml_vulnerabilities <- function(txt) {
   doc <- xml2::read_xml(txt)

@@ -122,7 +122,61 @@ test_that("CRLF line endings read the same", {
 })
 
 test_that("a newline in a plain tag becomes one space", {
-  expect_equal(tv_line("PackageName", "a \n  b"), "PackageName: a b")
+  expect_equal(tv_lines("PackageName", "a \n  b", FALSE), "PackageName: a b")
+})
+
+test_that("a plain value that opens a <text> block is written as text", {
+  expect_identical(tv_lines("PackageVersion", "<text>1.0", FALSE), "PackageVersion: <text><text>1.0</text>")
+  # After white space too, which another reader may trim; a closer inside is
+  # removed, as from any text.
+  expect_identical(tv_lines("PackageVersion", " <text>1.0", FALSE), "PackageVersion: <text> <text>1.0</text>")
+  expect_identical(tv_lines("PackageVersion", "\n<text>1</text>.0", FALSE), "PackageVersion: <text>\n<text>1.0</text>")
+  # Anywhere else it opens nothing, so the value stays plain.
+  expect_identical(tv_lines("PackageVersion", "1.0 <text>", FALSE), "PackageVersion: 1.0 <text>")
+  expect_identical(tv_lines("PackageVersion", "<TEXT>1.0", FALSE), "PackageVersion: <TEXT>1.0")
+  expect_identical(tv_lines(NA, "<text>", FALSE), "<text>")
+})
+
+test_that("a version and a homepage that start with <text> swallow no line, and read back", {
+  x <- fixture_sbom()
+  at <- x$components$name == "localpkg"
+  x$components$homepage[at] <- "<text>https://example.org/localpkg"
+  x$components$version[at] <- "<text>1.0"
+  tf <- withr::local_tempfile(fileext = ".spdx")
+  write_sbom(x, tf, format = "spdx-tv")
+  lines <- readLines(tf, warn = FALSE, encoding = "UTF-8")
+  expect_true("PackageVersion: <text><text>1.0</text>" %in% lines)
+  expect_true("PackageHomePage: <text><text>https://example.org/localpkg</text>" %in% lines)
+  # The document reads back as written, every field of every package.
+  doc <- spdx_tv_read(tf)
+  expect_equal(sort_keys(doc), sort_keys(jsonlite::fromJSON(spdx_json(x), simplifyVector = FALSE)))
+  pkg <- Filter(function(p) identical(p$name, "localpkg"), doc$packages)[[1L]]
+  expect_identical(pkg$versionInfo, "<text>1.0")
+  expect_identical(pkg$homepage, "<text>https://example.org/localpkg")
+  expect_identical(pkg$downloadLocation, "NOASSERTION")
+  expect_identical(pkg$licenseDeclared, "NOASSERTION")
+  expect_match(pkg$licenseComments, "^Declared in DESCRIPTION as file LICENSE")
+  # read_sbom() reads the version, and the fields after it, as written. It
+  # drops the homepage, which is not a URL.
+  plain <- withr::local_tempfile(fileext = ".spdx")
+  write_sbom(fixture_sbom(), plain, format = "spdx-tv")
+  localpkg <- function(path) {
+    comps <- read_sbom(path)$components
+    comps[comps$name == "localpkg", , drop = FALSE]
+  }
+  got <- localpkg(tf)
+  want <- localpkg(plain)
+  expect_identical(got$version, "<text>1.0")
+  expect_identical(got$homepage, NA_character_)
+  for (col in c("license_spdx", "license_as_written", "license_comment", "supplier_name", "maintainer", "download_location")) {
+    expect_identical(got[[col]], want[[col]], label = col)
+  }
+  expect_false(is.na(got$license_comment))
+  expect_identical(got$maintainer, "Alan Turing")
+  # And the document passes the schema and integrity checks.
+  v <- validate_sbom(tf, profile = "none")
+  expect_identical(v$findings$message[v$findings$severity == "error"], character())
+  expect_identical(v$status, "partial")
 })
 
 tv_with_file <- function() {
@@ -173,7 +227,7 @@ test_that("the partial note names the tags that were not checked", {
   ))
 })
 
-test_that("snippet, licence, annotation and review sections close the package too", {
+test_that("snippet, license, annotation and review sections close the package too", {
   starts <- c(
     "SnippetSPDXID: SPDXRef-Snippet1", "LicenseID: LicenseRef-1",
     "Annotator: Person: A", "Reviewer: Person: B"
@@ -240,10 +294,10 @@ test_that("LicenseRef definitions follow the packages, and read back as the JSON
   expect_match(txt, paste0(
     "\n\n## License Information\n",
     "LicenseID: LicenseRef-Alpha\n",
-    "ExtractedText: <text>The text of this licence is not included in this SBOM.</text>\n",
+    "ExtractedText: <text>The text of this license is not included in this SBOM.</text>\n",
     "LicenseName: Alpha\n\n",
     "LicenseID: LicenseRef-Zeta\n",
-    "ExtractedText: <text>The text of this licence is not included in this SBOM.</text>\n",
+    "ExtractedText: <text>The text of this license is not included in this SBOM.</text>\n",
     "LicenseName: Zeta\n\n## Relationships\n"
   ), fixed = TRUE)
   expect_equal(

@@ -16,6 +16,33 @@ test_that("YAML keeps quotes, backslashes, colons, hashes and newlines", {
   expect_equal(spdx_yaml_read(tf)$comment, spdx_document(x)$comment)
 })
 
+test_that("YAML writes DEL and the C1 controls as escapes, and reads them back", {
+  value <- "a\u007fb\u0080c\u0085d\u009fe\u00a0f"
+  expect_identical(json_quote(value), "\"a\\u007fb\\u0080c\\u0085d\\u009fe\u00a0f\"")
+  expect_identical(Encoding(json_quote(value)), "UTF-8")
+  x <- fixture_sbom()
+  at <- x$components$ref == "pkg:cran/cranpkg@1.2.0"
+  x$components$license_comment[at] <- value
+  txt <- spdx_yaml(x)
+  expect_true(grepl("a\\u007fb\\u0080c\\u0085d\\u009fe\u00a0f", txt, fixed = TRUE))
+  # No DEL or C1 control is left raw.
+  expect_false(grepl("[\u007f-\u009f]", txt))
+  skip_if_not_installed("yaml")
+  tf <- withr::local_tempfile(fileext = ".spdx.yaml")
+  write_text(txt, tf)
+  comments <- vapply(yaml::yaml.load_file(tf)$packages, function(p) {
+    if (is.null(p$licenseComments)) NA_character_ else p$licenseComments
+  }, "")
+  expect_true(value %in% comments)
+  # read_sbom() reads the file, and keeps the value as it keeps it from SPDX
+  # JSON, with its control characters as spaces.
+  json <- withr::local_tempfile(fileext = ".spdx.json")
+  write_sbom(x, json, format = "spdx-json")
+  comments <- function(path) sort(read_sbom(path)$components$license_comment, method = "radix")
+  expect_true("a b c d e\u00a0f" %in% comments(tf))
+  expect_identical(comments(tf), comments(json))
+})
+
 test_that("SPDX YAML passes the SPDX schema for 2.2 and 2.3", {
   skip_if_not_installed("yaml"); skip_if_not_installed("jsonvalidate")
   for (v in c("2.2", "2.3")) {

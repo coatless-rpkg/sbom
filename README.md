@@ -8,10 +8,11 @@ and `sbom_installed()` describes the packages in a library. They read the
 copies of `LinkingTo` packages that it compiles in, vendored C and C++ code,
 bundled JavaScript and CSS, the system requirements it declares and, for
 installed packages with compiled code, the shared libraries it links. They run
-no package code and make no network requests unless you ask for security
-advisories (see below); the system steps run `otool` or `ldd`, `dpkg` or
-`rpm`, and read pak's rules on disk. Given the same inputs and `timestamp`
-they produce the same document.
+no package code. sbom itself uses the network only when you ask it to: with
+`advisories = TRUE`, to list security advisories (see below), or with
+`snapshot` in `sbom_nix()`, to look package versions up in a CRAN snapshot.
+The system steps run `otool` or `ldd`, `dpkg` or `rpm`, and read pak's rules
+on disk. Given the same inputs and `timestamp` they produce the same document.
 
 Each component records its package URL (purl), its distributor as supplier, its
 maintainer, its licence and the dependencies it declares. Licences are mapped to
@@ -21,6 +22,20 @@ equivalent, SPDX output declares `NOASSERTION` with a comment quoting the
 could not determine, such as a dependency that is not installed or a version
 that fails its constraint, is listed by `sbom_issues()` and written into the
 document as a plain sentence, so the file states its own gaps.
+
+## Installation
+
+Install the released version from CRAN:
+
+``` r
+install.packages("sbom")
+```
+
+Or install the development version from its repository, with remotes:
+
+``` r
+remotes::install_git("https://github.com/coatless-rpkg/sbom")
+```
 
 ## Inputs
 
@@ -270,16 +285,6 @@ otherwise), and a dynamic link is a link relationship (`DYNAMIC_LINK` in SPDX
 2, `hasDynamicLink` in SPDX 3, a dependency in CycloneDX). A SWID tag lists
 system components among the root's `requires` links, like any other
 component, without saying which relationship it is.
-
-## Installation
-
-sbom is not yet on CRAN. Install the development version from a local checkout
-of its source, running this from the package directory:
-
-``` r
-# install.packages("remotes")
-remotes::install_local()
-```
 
 ## Example
 

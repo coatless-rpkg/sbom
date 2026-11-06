@@ -16,7 +16,9 @@
 #' R is always a component. When `lib` is the current library search path and
 #' `r_version` is `NULL`, it is listed at the running version. With any other
 #' library, the lowest version that the dependency tree states, the highest
-#' `R (>= x)` found, is used as a minimum.
+#' `R (>= x)` found, is used as a minimum. The base packages used come with
+#' R: when R's version is exact, they are listed at that version, with R's
+#' evidence, and otherwise without a version.
 #'
 #' @param path A package directory, a `DESCRIPTION` file or a source tarball
 #'   (`.tar.gz`). A tarball is also hashed, and its file name recorded.
@@ -34,7 +36,8 @@
 #' @param regid The registration id of `organization`: the domain name, or URL,
 #'   of the organization, under which it registers SWID tags (ISO/IEC
 #'   19770-2). A SWID tag names the organization as its creator with this
-#'   regid. It must be a single string. `NULL`, `NA` and an empty or blank
+#'   regid. It must be a single string, from which leading and trailing
+#'   white space is dropped. `NULL`, `NA` and an empty or blank
 #'   string mean none; then the tag uses the placeholder
 #'   `http://invalid.unavailable`, and when an `organization` was given, an
 #'   issue is recorded. The default is the `sbom.regid` option, as
@@ -42,27 +45,49 @@
 #' @param timestamp The creation time, as a date-time or as seconds since
 #'   1970-01-01 UTC. An explicit `timestamp` wins. Without one, the
 #'   `SOURCE_DATE_EPOCH` environment variable is used when it is set, so that
-#'   builds are reproducible, and a note says so; otherwise it is now. Nix sets
+#'   builds are reproducible, and a note records that the timestamp came from
+#'   it; otherwise it is the current time. Nix sets
 #'   `SOURCE_DATE_EPOCH` to 1980-01-01 in every `nix-shell`, and when the
 #'   timestamp is that value a note says it is a placeholder.
 #' @param overrides Values to assert where `sbom` found none, or found
 #'   something different. `NULL`, a data frame or the path to a CSV file, with
 #'   the character columns `component` (the `name` or `ref` of one
-#'   component; embedded and system components only by `ref`), `field`,
-#'   `value`, `asserted_by` and `reason`. `field` is one
+#'   component, as sbom built it, before any row moves it; embedded and
+#'   system components only by `ref`), `field`, `value`, `asserted_by` and
+#'   `reason`. `field` is one
 #'   of `"version"`, `"license_spdx"`, `"supplier_name"`, `"supplier_url"`,
 #'   `"maintainer"`, `"purl"` and `"download_location"`. Rows are applied in
 #'   order, and each is recorded with who asserted it and why. An override
 #'   that contradicts a found value wins and adds an `override-conflict` issue.
-#'   Asserting `"version"` makes it the exact version, and asserting a CRAN
-#'   `"purl"` (`pkg:cran`) makes the component a CRAN package, or a
-#'   Bioconductor package when its `repository_url` names bioconductor.org;
-#'   neither changes the `ref`.
-#'   An unknown component or field, or a missing column, is an error.
+#'   Asserting `"version"` makes it the exact version, and moves the
+#'   component's package URL to it unless a row asserts the `"purl"`: a
+#'   package URL at the old version takes the new one, and one without a
+#'   version gains it when its type is `cran`, `github`, `gitlab` or
+#'   `bitbucket`. A package file named for the old version is renamed for
+#'   the new one, and any other is dropped, as are the checksums of the
+#'   version found. An asserted version of R is also the version of the base
+#'   packages, each with a record of the assertion. Asserting a CRAN `"purl"`
+#'   (`pkg:cran`) makes the component a CRAN package, or a Bioconductor
+#'   package when its `repository_url` names bioconductor.org. When a
+#'   component's `ref` is its package URL, the `ref` follows the package URL
+#'   that the overrides leave, and every reference to it moves too; a `ref`
+#'   that another component already has is an error. Any other `ref`, such
+#'   as `unknown/<name>`, stays as it is.
+#'   An asserted field removes the component's issues that it answers, such
+#'   as `version-missing` or `purl-inferred`. An issue that also states a
+#'   fact that stays true is reworded instead, as info: that a package came
+#'   from a git repository, once its package URL is asserted; that a
+#'   dependency is missing, once its version and package URL are both
+#'   asserted; and that a `LinkingTo` package is not installed, once its
+#'   version is. The issues that name the components without a version, such
+#'   as `system-version-unknown`, name only those still without one, and go
+#'   when none is left.
+#'   A blank value, an unknown component or field, or a missing column, is an
+#'   error.
 #' @param embedded Whether to record the code that packages carry inside them.
 #'   A package named in `LinkingTo` is recorded as an embedded component of
 #'   the package that compiles it in, nested under that package, as
-#'   inferred, at the version and with the licence that the library,
+#'   inferred, at the version and with the license that the library,
 #'   lockfile or manifest records for it now. A C or C++ library that a package
 #'   copies into its `src/` folder (source packages), or names in its
 #'   `COPYRIGHTS` file or `cph` entries (source and installed packages), is
@@ -72,7 +97,7 @@
 #'   library declared in htmlwidgets YAML, or found by the header comment of a
 #'   file under `www/`, `htmlwidgets/lib/` or `lib/` (under `inst/` in source
 #'   packages), is recorded as an npm component of that package, from the
-#'   rules in `inst/extdata/javascript.csv`. Its licence is not read.
+#'   rules in `inst/extdata/javascript.csv`. Its license is not read.
 #' @param system Whether to detect system libraries. A package's
 #'   `SystemRequirements` text is mapped to system libraries and programs
 #'   with the rules of the pak package, when it is installed. sbom turns off
@@ -90,7 +115,8 @@
 #'   package that is not installed), or because it was installed from a
 #'   local source or from GitHub, GitLab, Bitbucket or git, is named in an
 #'   `advisories-not-cran` issue. Bioconductor packages are not compared:
-#'   OSV does not cover them yet, and when the SBOM holds one a note says so.
+#'   OSV does not cover them yet, and when the SBOM holds one a note states
+#'   that the advisory database leaves them out.
 #'   Matching is local, with the versions and package URLs after
 #'   `overrides`, so no package name leaves the machine.
 #'
@@ -135,10 +161,7 @@ sbom_package <- function(path = ".",
   on_error <- check_advisories_args(advisories, advisories_on_error)
   check_lib(lib)
   regid <- check_regid(regid)
-  root_desc <- read_description(path)
-  if (!"Package" %in% names(root_desc) || !nzchar(trimws(root_desc[["Package"]]))) {
-    cli::cli_abort("The {.file DESCRIPTION} at {.file {path}} has no {.field Package} field.")
-  }
+  root_desc <- read_package_description(path)
   root <- package_component(root_desc, "declared", "package", is_root = TRUE)
   is_tarball <- file.exists(path) && !dir.exists(path) &&
     grepl("\\.(tar\\.gz|tgz|tar)$", path)
@@ -149,11 +172,7 @@ sbom_package <- function(path = ".",
     ))
     root$component$package_file_name <- basename(path)
   }
-  inputs <- data.frame(
-    kind = c("DESCRIPTION", rep("library", length(lib))),
-    path = c(as.character(path), as.character(lib)),
-    stringsAsFactors = FALSE
-  )
+  inputs <- library_inputs("DESCRIPTION", path, lib)
   x <- build_sbom(
     root = root, lookup = library_lookup(lib), root_desc = root_desc,
     fields = intersect(c("Depends", "Imports", "LinkingTo"), dependencies),
@@ -173,6 +192,31 @@ sbom_package <- function(path = ".",
     )
   }
   apply_advisories(apply_overrides(x, overrides), advisories, on_error)
+}
+
+# The DESCRIPTION at `path` (a folder, a DESCRIPTION file or a tarball),
+# which must name its package: as sbom_package() reads it, and as a
+# cross-check of DESCRIPTION reads it.
+read_package_description <- function(path, call = parent.frame()) {
+  desc <- read_description(path)
+  if (!"Package" %in% names(desc) || !nzchar(trimws(desc[["Package"]]))) {
+    cli::cli_abort(
+      "The {.file DESCRIPTION} at {.file {path}} has no {.field Package} field.",
+      call = call
+    )
+  }
+  desc
+}
+
+# The inputs of a reader that read `path`, of kind `kind`, and the library
+# paths `lib`: as sbom_package() and the code scan record them, and as their
+# cross-checks do.
+library_inputs <- function(kind, path, lib) {
+  data.frame(
+    kind = c(kind, rep("library", length(lib))),
+    path = c(as.character(path), as.character(lib)),
+    stringsAsFactors = FALSE
+  )
 }
 
 # The folder that holds a package's files, from a folder or a DESCRIPTION
@@ -268,7 +312,8 @@ check_lib <- function(lib, call = parent.frame()) {
   }
 }
 
-# One string, or NA for none: NULL, NA and blank strings mean no regid.
+# One string, without leading or trailing white space, or NA for none: NULL,
+# NA and blank strings mean no regid.
 check_regid <- function(regid, call = parent.frame()) {
   if (is.null(regid)) {
     return(NA_character_)
@@ -279,8 +324,8 @@ check_regid <- function(regid, call = parent.frame()) {
       call = call
     )
   }
-  regid <- enc2utf8_bytes(as.character(regid))
-  if (is.na(regid) || !nzchar(trimws(regid))) NA_character_ else regid
+  regid <- trimws(enc2utf8_bytes(as.character(regid)))
+  if (is.na(regid) || !nzchar(regid)) NA_character_ else regid
 }
 
 # Shared by every builder. `root` is list(component, issues). For a library
@@ -290,13 +335,20 @@ check_regid <- function(regid, call = parent.frame()) {
 # sbom_renv() already knows its packages, so it passes `resolved`, a list like
 # resolve_dependencies() returns whose edges may also have an `evidence`
 # column (default "declared"). Its records come from a lock file rather than
-# a library: `package_evidence` and `package_source` say so, `where` says
+# a library: `package_evidence` and `package_source` give their evidence and
+# source, `where` says
 # where a missing dependency is not and `missing_code` is its issue code, `r_evidence` overrides the
 # evidence for an exact R version, and `all_required` makes every package
 # required, since a lock file lists what the project needs. `not_installed`
 # names the records that lacked a field and that no installed copy of the
 # same version could fill.
-build_sbom <- function(root, lookup, root_desc, fields, root_suggests, lib,
+build_sbom <- function(...) {
+  # What the operating system and the library folders say is asked once in
+  # this build, and forgotten after it.
+  with_sys_cache(build_sbom_cached(...))
+}
+
+build_sbom_cached <- function(root, lookup, root_desc, fields, root_suggests, lib,
                        r_version, author, organization, regid, timestamp,
                        inputs, extra_base = character(), resolved = NULL,
                        package_evidence = "observed", package_source = "library",

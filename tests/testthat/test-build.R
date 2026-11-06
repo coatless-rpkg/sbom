@@ -300,3 +300,46 @@ test_that("a maintainer taken from Authors@R survives a C locale", {
   x <- sbom_package(dir, lib = local_fake_lib(list()))
   expect_equal(sbom_components(x)$maintainer[sbom_components(x)$is_root], "Gábor Csárdi")
 })
+
+test_that("base packages carry R's version when R's version is exact", {
+  x <- sbom_installed(lib = fixture_lib(), r_version = "4.4.0", timestamp = 0, system = FALSE)
+  comps <- x$components
+  r <- comps[comps$ref == "R", , drop = FALSE]
+  expect_identical(r$version_is, "exact")
+  base <- comps[comps$parent_ref %in% "R", , drop = FALSE]
+  expect_identical(base$ref, "R/methods")
+  expect_identical(base$version, "4.4.0")
+  expect_identical(base$version_is, "exact")
+  expect_identical(base$evidence, r$evidence)
+  expect_identical(base$evidence, "observed")
+  # From a lockfile, R's version is declared, and so are the base packages'.
+  dir <- withr::local_tempdir()
+  lock <- list(R = list(Version = "4.5.0"), Packages = list(cli = list(
+    Package = "cli", Version = "3.6.6", Source = "Repository", Repository = "CRAN",
+    License = "MIT + file LICENSE", Maintainer = "A B <a@example.org>", Requirements = list("utils")
+  )))
+  write_text(jsonlite::toJSON(lock, auto_unbox = TRUE), file.path(dir, "renv.lock"))
+  y <- sbom_renv(file.path(dir, "renv.lock"), timestamp = 0, system = FALSE, embedded = FALSE)
+  base <- y$components[y$components$parent_ref %in% "R", , drop = FALSE]
+  expect_identical(base$ref, "R/utils")
+  expect_identical(base$version, "4.5.0")
+  expect_identical(base$version_is, "exact")
+  expect_identical(base$evidence, "declared")
+  expect_identical(base$evidence, y$components$evidence[y$components$ref == "R"])
+  expect_valid_in_every_format(x, "base versions")
+})
+
+test_that("base packages stay versionless when R's version is a minimum", {
+  tmp <- withr::local_tempdir()
+  write_text("Package: bare\nVersion: 1.0\nDepends: R (>= 4.1.0)\nImports: utils, stats\n",
+             file.path(tmp, "DESCRIPTION"))
+  lib <- withr::local_tempdir()
+  x <- sbom_package(tmp, lib = lib, timestamp = 0, system = FALSE)
+  comps <- x$components
+  expect_identical(comps$version_is[comps$ref == "R"], "minimum")
+  base <- comps[comps$parent_ref %in% "R", , drop = FALSE]
+  expect_identical(base$ref, c("R/stats", "R/utils"))
+  expect_true(all(is.na(base$version)))
+  expect_true(all(is.na(base$version_is)))
+  expect_identical(base$evidence, c("inferred", "inferred"))
+})

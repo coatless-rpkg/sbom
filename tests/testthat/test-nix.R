@@ -216,6 +216,7 @@ test_that("a rix file with no R packages is valid", {
   expect_false(any(c("nix-versions-unknown", "nix-parse-incomplete") %in% sbom_issues(x)$code))
   out <- withr::local_tempfile(fileext = ".cdx.json")
   write_sbom(x, out, format = "cyclonedx-json")
+  skip_if_not_installed("jsonvalidate")
   expect_identical(schema_validate(out, "cyclonedx-json")$status, "pass")
 })
 
@@ -519,6 +520,84 @@ test_that("nix-not-in-snapshot is singular for one package", {
   issues <- sbom_issues(x)
   expect_equal(
     issues$message[issues$code == "nix-not-in-snapshot"],
+    "1 package that rix-date.nix needs is not in the CRAN snapshot sbom read (janitor), so its version is unknown."
+  )
+})
+
+test_that("nix-not-in-snapshot says which versions an override asserts, and goes once none is unknown", {
+  local_mocked_bindings(read_packages_file = function(location, ...) {
+    out <- snapshot_frame()
+    out[out$Package != "janitor" & out$Package != "data.table", ]
+  })
+  ov <- function(names) {
+    data.frame(
+      component = names, field = "version", value = "9.9", asserted_by = "QA", reason = "Checked.",
+      stringsAsFactors = FALSE
+    )
+  }
+  built <- function(names) {
+    x <- sbom_nix(
+      test_path("fixtures", "nix", "rix-date.nix"), nix = FALSE, snapshot = "ppm", system = FALSE,
+      embedded = FALSE, overrides = if (length(names) > 0L) ov(names)
+    )
+    issues <- sbom_issues(x)
+    issues[issues$code == "nix-not-in-snapshot", c("severity", "message")]
+  }
+  as_built <- built(character())
+  expect_identical(as_built$severity, "warning")
+  missing <- regmatches(as_built$message, regexec("\\((.*)\\)", as_built$message))[[1L]][[2L]]
+  missing <- strsplit(sub(" and ", ", ", missing, fixed = TRUE), ", ", fixed = TRUE)[[1L]]
+  expect_length(missing, 13L)
+  expect_true(all(c("data.table", "janitor") %in% missing))
+
+  # Two of the thirteen: the warning names the eleven left, and a note the two.
+  partly <- built(c("janitor", "data.table"))
+  left <- setdiff(missing, c("data.table", "janitor"))
+  expect_identical(partly$severity, c("warning", "info"))
+  expect_identical(partly$message, c(
+    paste0(
+      "11 packages that rix-date.nix needs are not in the CRAN snapshot sbom read (", and_list(left),
+      "), so their versions are unknown."
+    ),
+    paste0(
+      "2 packages that rix-date.nix needs are not in the CRAN snapshot sbom read (data.table and janitor); ",
+      "their versions are asserted by an override."
+    )
+  ))
+
+  # All thirteen: only the note is left.
+  all <- built(missing)
+  expect_identical(all$severity, "info")
+  expect_identical(all$message, paste0(
+    "13 packages that rix-date.nix needs are not in the CRAN snapshot sbom read (", and_list(missing),
+    "); their versions are asserted by an override."
+  ))
+
+  # One of one, in the singular.
+  local_mocked_bindings(read_packages_file = function(location, ...) {
+    out <- snapshot_frame()
+    out <- rbind(out, data.frame(
+      Package = c("purrr", "readxl", "rvest", "stringr", "tidyr", "car", "lmtest", "sandwich", "zoo", "Formula", "survival"),
+      Version = "1.0", Depends = NA, Imports = NA, LinkingTo = NA
+    ))
+    out[out$Package != "janitor", ]
+  })
+  one <- built("janitor")
+  expect_identical(one$severity, "info")
+  expect_identical(
+    one$message,
+    "1 package that rix-date.nix needs is not in the CRAN snapshot sbom read (janitor); its version is asserted by an override."
+  )
+  # An override of another field changes nothing.
+  x <- sbom_nix(
+    test_path("fixtures", "nix", "rix-date.nix"), nix = FALSE, snapshot = "ppm", system = FALSE, embedded = FALSE,
+    overrides = data.frame(
+      component = "janitor", field = "license_spdx", value = "MIT", asserted_by = "QA", reason = "Checked.",
+      stringsAsFactors = FALSE
+    )
+  )
+  expect_identical(
+    sbom_issues(x)$message[sbom_issues(x)$code == "nix-not-in-snapshot"],
     "1 package that rix-date.nix needs is not in the CRAN snapshot sbom read (janitor), so its version is unknown."
   )
 })

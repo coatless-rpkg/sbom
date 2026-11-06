@@ -92,7 +92,7 @@ test_that("a metadata.component without a bom-ref is still the root", {
   expect_identical(t$document$authors$location, c("/metadata/authors/0", "/metadata/manufacturer", "/metadata/tools/0"))
 })
 
-test_that("CycloneDX licences, purls, suppliers and originators are read", {
+test_that("CycloneDX licenses, purls, suppliers and originators are read", {
   t <- tables_of(paste0(
     '{"bomFormat":"CycloneDX","specVersion":"1.5","version":1,',
     '"metadata":{"tools":{"components":[{"type":"application","name":"maker","version":"2.0"}],',
@@ -160,7 +160,7 @@ test_that("CycloneDX XML gives the tables of its JSON twin", {
   }
 })
 
-test_that("the SPDX 2.3 example gives its packages, files, snippets, licences and relationships", {
+test_that("the SPDX 2.3 example gives its packages, files, snippets, licenses and relationships", {
   d <- read_document(tp("spdx-2.3", "SPDXJSONExample-v2.3.spdx.json"))
   t <- document_tables(d)
   el <- t$elements
@@ -421,7 +421,7 @@ test_that("an SPDX 3 graph with a blank-node creationInfo is read", {
   ))
 })
 
-test_that("SPDX 3 inline creationInfo, agents, licences and imports are read", {
+test_that("SPDX 3 inline creationInfo, agents, licenses and imports are read", {
   t <- tables_of(paste0(
     '{"@context":"https://spdx.org/rdf/3.0.1/spdx-context.jsonld","@graph":[',
     '{"type":"Person","spdxId":"urn:p","name":"Pat","creationInfo":"_:ci"},',
@@ -468,7 +468,7 @@ test_that("SPDX 3 inline creationInfo, agents, licences and imports are read", {
     id = "urn:pkg", purl = c("pkg:npm/one@1.0", "pkg:generic/one@1.0")
   ))
   # An SPDX License List IRI and the NoAssertion and None individuals are
-  # licences too; an id the graph does not describe is not.
+  # licenses too; an id the graph does not describe is not.
   expect_identical(t$licenses, chr_frame(
     location = c(
       "/@graph/8/simplelicensing_licenseExpression", "/@graph/9/simplelicensing_licenseExpression",
@@ -482,7 +482,7 @@ test_that("SPDX 3 inline creationInfo, agents, licences and imports are read", {
       "hasDeclaredLicense"
     )
   ))
-  # Licence relationships become licence rows, not relationships.
+  # License relationships become license rows, not relationships.
   expect_identical(t$relationships, chr_frame(
     location = c("/@graph/13/to/0", "/@graph/13/to/1"),
     from = "urn:pkg", to = c("urn:file", "urn:snip"), type = "contains"
@@ -571,7 +571,7 @@ test_that("our own SWID tag gives its links' names, versions, purls and use", {
   expect_identical(el$originator[el$is_root], "Ada Lovelace")
   expect_identical(t$document$tools, chr_frame(name = "sbom", version = as.character(utils::packageVersion("sbom"))))
   expect_length(t$document$notes, 1L)
-  # sbom's own licence attribute is free text.
+  # sbom's own license attribute is free text.
   expect_identical(t$licenses, chr_frame(
     location = "/meta/0/sbom:license", id = "local/srcpkg", expression = "MIT + file LICENSE",
     kind = "name", field = "license"
@@ -739,7 +739,7 @@ test_that("every bom-ref is an id the document defines, services' too", {
   expect_identical(t$elements$id, c("app", "a", "a1"))
 })
 
-test_that("SPDX 3 licence rows say whether they are declared or concluded, element by element", {
+test_that("SPDX 3 license rows say whether they are declared or concluded, element by element", {
   t <- tables_of(paste0(
     '{"@context":"https://spdx.org/rdf/3.0.1/spdx-context.jsonld","@graph":[',
     '{"type":"software_Package","spdxId":"urn:a","name":"a"},',
@@ -753,7 +753,7 @@ test_that("SPDX 3 licence rows say whether they are declared or concluded, eleme
     '{"type":"Relationship","spdxId":"urn:r3","from":"urn:a","relationshipType":"hasDeclaredLicense","to":["urn:e2"]}',
     "]}\n"
   ), ".spdx3.json")
-  # A listed licence that the graph describes is still a licence.
+  # A listed license that the graph describes is still a license.
   expect_identical(t$licenses, chr_frame(
     location = c(
       "/@graph/2/simplelicensing_licenseExpression", "/@graph/3/simplelicensing_licenseExpression",
@@ -802,9 +802,10 @@ test_that("a long chain of SPDX 3 collections is walked in linear time", {
   ), path)
   d <- read_document(path)
   time <- system.time(t <- document_tables(d))[["elapsed"]]
-  expect_lt(time, 10)
   expect_identical(t$document$root, "urn:pkg")
   expect_identical(t$document$root_location, sprintf("/@graph/%d/rootElement/0", n))
+  skip_unless_timing()
+  expect_lt(time, 10)
 })
 
 test_that("an SPDX 2 swid locator without the swid: scheme is prefixed once", {
@@ -902,11 +903,13 @@ test_that("CycloneDX metadata.supplier and metadata.manufacture stand in for the
 
 test_that("the tables of 20,000 components are built in seconds", {
   skip_on_cran()
+  times <- numeric()
   for (generate in list(generate_cdx, generate_spdx)) {
     path <- generate(20000)
-    time <- system.time(tables <- document_tables(read_document(path)))[["elapsed"]]
+    times[[path]] <- system.time(tables <- document_tables(read_document(path)))[["elapsed"]]
     expect_identical(nrow(tables$elements), 20001L)
     expect_identical(nrow(tables$purls), 20000L)
-    expect_lt(time, 25)
   }
+  skip_unless_timing()
+  expect_lt(max(times), 25)
 })

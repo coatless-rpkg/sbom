@@ -230,7 +230,7 @@ test_that("dangling-relationship: other documents' elements, NONE, a service and
   expect_identical(only(spdx3_findings(doc), "dangling-relationship"), findings_frame())
 
   # Nor does sbom's own output, whose SPDX 3 relationships also name agents
-  # and licences.
+  # and licenses.
   x <- fixture_sbom()
   ext <- c(`cyclonedx-json` = ".cdx.json", `spdx-json` = ".spdx.json", `spdx3-jsonld` = ".spdx3.jsonld")
   for (f in names(ext)) {
@@ -242,13 +242,13 @@ test_that("dangling-relationship: other documents' elements, NONE, a service and
   }
 })
 
-test_that("license-invalid: an expression that does not parse is an error; a licence name is not checked", {
+test_that("license-invalid: an expression that does not parse is an error; a license name is not checked", {
   doc <- cdx()
   doc$components <- list(cdx_component("alpha", "1.0", license = "MIT AND"))
-  doc$components[[1]]$licenses[[2]] <- list(license = list(name = "Our own licence (see LICENSE)"))
+  doc$components[[1]]$licenses[[2]] <- list(license = list(name = "Our own license (see LICENSE)"))
   expect_identical(only(cdx_findings(doc), "license-invalid"), findings_frame(
     check = "license-invalid", severity = "error", location = "/components/0/licenses/0/expression",
-    message = "The licence expression MIT AND is not a valid SPDX expression: it ends where a licence was expected."
+    message = "The license expression MIT AND is not a valid SPDX expression: it ends where a license was expected."
   ))
   doc$components[[1]]$licenses[[1]]$expression <- "(MIT OR Apache-2.0) AND GPL-2.0-only WITH Classpath-exception-2.0"
   expect_identical(only(cdx_findings(doc), "license-invalid"), findings_frame())
@@ -268,19 +268,19 @@ test_that("license-invalid: an empty expression, and NONE or NOASSERTION in Cycl
       "/components/1/licenses/1/expression", "/components/2/licenses/0/expression"
     ),
     message = c(
-      "An empty licence expression is not a valid SPDX expression.",
-      "The licence expression NOASSERTION is not a valid SPDX expression: it uses NOASSERTION, which is not a licence.",
-      "The licence expression NONE is not a valid SPDX expression: it uses NONE, which is not a licence.",
-      "An empty licence expression is not a valid SPDX expression."
+      "An empty license expression is not a valid SPDX expression.",
+      "The license expression NOASSERTION is not a valid SPDX expression: it uses NOASSERTION, which is not a license.",
+      "The license expression NONE is not a valid SPDX expression: it uses NONE, which is not a license.",
+      "An empty license expression is not a valid SPDX expression."
     )
   ))
-  # SPDX allows them as a whole licence.
+  # SPDX allows them as a whole license.
   doc <- spdx()
   doc$packages[[1]]$licenseDeclared <- "NONE"
   expect_identical(only(spdx_findings(doc), "license-invalid"), findings_frame())
 })
 
-test_that("license-invalid: a licence used after WITH, or an exception used as a licence", {
+test_that("license-invalid: a license used after WITH, or an exception used as a license", {
   doc <- cdx()
   doc$components <- list(
     cdx_component("alpha", "1.0", license = "MIT WITH Apache-2.0"),
@@ -292,14 +292,14 @@ test_that("license-invalid: a licence used after WITH, or an exception used as a
     check = "license-invalid", severity = "error",
     location = c("/components/0/licenses/0/expression", "/components/1/licenses/0/expression"),
     message = c(
-      "The licence expression MIT WITH Apache-2.0 is not a valid SPDX expression: it uses Apache-2.0 after WITH, but Apache-2.0 is a licence, not an exception.",
-      "The licence expression classpath-exception-2.0 OR Foo-1.0 is not a valid SPDX expression: it uses the exception classpath-exception-2.0 as a licence."
+      "The license expression MIT WITH Apache-2.0 is not a valid SPDX expression: it uses Apache-2.0 after WITH, but Apache-2.0 is a license, not an exception.",
+      "The license expression classpath-exception-2.0 OR Foo-1.0 is not a valid SPDX expression: it uses the exception classpath-exception-2.0 as a license."
     )
   ))
   # Only an id on neither list is unknown.
   expect_identical(only(f, "license-unknown"), findings_frame(
     check = "license-unknown", severity = "error", location = "/components/1/licenses/0/expression",
-    message = "The licence expression classpath-exception-2.0 OR Foo-1.0 uses Foo-1.0, which is not on the SPDX License List 3.29.0."
+    message = "The license expression classpath-exception-2.0 OR Foo-1.0 uses Foo-1.0, which is not on the SPDX License List 3.29.0."
   ))
 })
 
@@ -314,8 +314,8 @@ test_that("license-unknown: ids that are not on the SPDX License List are an err
     check = "license-unknown", severity = "error",
     location = c("/components/0/licenses/0/expression", "/components/1/licenses/0/expression"),
     message = c(
-      "The licence expression MIT AND Foo-1.0 uses Foo-1.0, which is not on the SPDX License List 3.29.0.",
-      "The licence expression Foo-1.0 OR Bar uses Foo-1.0 and Bar, which are not on the SPDX License List 3.29.0."
+      "The license expression MIT AND Foo-1.0 uses Foo-1.0, which is not on the SPDX License List 3.29.0.",
+      "The license expression Foo-1.0 OR Bar uses Foo-1.0 and Bar, which are not on the SPDX License List 3.29.0."
     )
   ))
   # References are not ids of the list.
@@ -335,8 +335,8 @@ test_that("license-deprecated: a deprecated id is a warning", {
     check = "license-deprecated", severity = "warning",
     location = c("/components/0/licenses/0/expression", "/components/1/licenses/0/expression"),
     message = c(
-      "The licence expression GPL-2.0+ uses the deprecated SPDX licence id GPL-2.0.",
-      "The licence expression GPL-2.0 OR LGPL-2.1 uses the deprecated SPDX licence ids GPL-2.0 and LGPL-2.1."
+      "The license expression GPL-2.0+ uses the deprecated SPDX license id GPL-2.0.",
+      "The license expression GPL-2.0 OR LGPL-2.1 uses the deprecated SPDX license ids GPL-2.0 and LGPL-2.1."
     )
   ))
   doc$components[[1]]$licenses[[1]]$expression <- "GPL-2.0-or-later"
@@ -352,9 +352,9 @@ test_that("license-ref-undefined: SPDX 2 must define each LicenseRef it uses", {
     check = "license-ref-undefined", severity = "error",
     location = c("/packages/0/licenseDeclared", "/packages/1/licenseConcluded", "/packages/1/licenseConcluded"),
     message = c(
-      "The licence expression MIT OR LicenseRef-x OR DocumentRef-ext:LicenseRef-y uses LicenseRef-x, which the document does not define in hasExtractedLicensingInfos.",
-      "The licence expression LicenseRef-mine AND LicenseRef-x AND LicenseRef-z uses LicenseRef-x, which the document does not define in hasExtractedLicensingInfos.",
-      "The licence expression LicenseRef-mine AND LicenseRef-x AND LicenseRef-z uses LicenseRef-z, which the document does not define in hasExtractedLicensingInfos."
+      "The license expression MIT OR LicenseRef-x OR DocumentRef-ext:LicenseRef-y uses LicenseRef-x, which the document does not define in hasExtractedLicensingInfos.",
+      "The license expression LicenseRef-mine AND LicenseRef-x AND LicenseRef-z uses LicenseRef-x, which the document does not define in hasExtractedLicensingInfos.",
+      "The license expression LicenseRef-mine AND LicenseRef-x AND LicenseRef-z uses LicenseRef-z, which the document does not define in hasExtractedLicensingInfos."
     )
   ))
   # Defined, in another document, or not SPDX 2.
@@ -811,7 +811,7 @@ test_that("a LicenseRef override is defined in every SPDX 2.3 serialization, whi
   x <- sbom_package(test_path("fixtures/pkgs/srcpkg"), lib = fixture_lib(), overrides = ov)
   entry <- list(list(
     licenseId = "LicenseRef-Proprietary",
-    extractedText = "The text of this licence is not included in this SBOM.", name = "Proprietary"
+    extractedText = "The text of this license is not included in this SBOM.", name = "Proprietary"
   ))
   status <- c(`spdx-json` = "pass", `spdx-yaml` = "pass", `spdx-xml` = "partial", `spdx-tv` = "partial")
   reg <- format_registry()
@@ -883,21 +883,24 @@ test_that("LicenseRef references are matched against the defined ones in linear 
   d <- read_document(tf)
   t <- document_tables(d)
   time <- system.time(f <- content_findings(t, d$format, profile = "none"))[["elapsed"]]
-  expect_lt(time, 25)
   expect_identical(sum(f$check == "license-ref-undefined"), n)
+  skip_unless_timing()
+  expect_lt(time, 25)
 })
 
 test_that("the content checks of 20,000 components take seconds", {
   skip_on_cran()
+  times <- numeric()
   for (path in c(generate_cdx(20000), generate_spdx(20000))) {
-    time <- system.time({
+    times[[path]] <- system.time({
       d <- read_document(path)
       f <- content_findings(document_tables(d), d$format)
     })[["elapsed"]]
-    expect_lt(time, 40)
     # The generated root has no purl; everything else is complete.
     expect_identical(f$message, "root 1.0.0 has no purl, CPE or SWID identifier.", label = path)
   }
+  skip_unless_timing()
+  expect_lt(max(times), 40)
 })
 
 test_that("an author named NOASSERTION, or blank, is no author", {

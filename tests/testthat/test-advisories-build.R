@@ -804,7 +804,9 @@ test_that("the advisory metadata leaves a document's id unchanged", {
 
 test_that("the advisories are part of a document's id, and an empty table leaves it as it was", {
   x <- minimal_sbom()
-  # The id minimal_sbom() has had since before advisories existed.
+  # The id minimal_sbom() has had since before advisories existed, as the
+  # version of sbom then wrote it: the tool's version is part of the content.
+  x$metadata$tool_version <- "0.0.0.9000"
   expect_identical(sbom_uuid(x), "78317bc3-587c-5476-89a9-75cd7899944b")
   y <- x
   y$advisories <- empty_advisories()

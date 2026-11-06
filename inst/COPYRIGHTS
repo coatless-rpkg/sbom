@@ -220,6 +220,10 @@ inst/schemas/MANIFEST.csv
   The source, tag, SHA-256 checksum and modification flag of each bundled
   schema, written by data-raw/schemas.R.
 
+inst/WORDLIST
+  The words that the spelling package accepts in sbom's documentation;
+  written for this package.
+
 Test fixtures
 -------------
 

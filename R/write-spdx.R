@@ -283,8 +283,9 @@ spdx_document <- function(x, version = "2.3") {
   ids <- spdx_ids(comps)
   ord <- order(ids, method = "radix")
   advisories <- spdx_advisory_refs(x, comps, version)
+  rows <- df_rows(comps)
   packages <- lapply(ord, function(i) {
-    spdx_package(comps[i, , drop = FALSE], ids[i], version, advisories[[i]])
+    spdx_package(rows[[i]], ids[i], version, advisories[[i]])
   })
 
   tool <- if (spdx_is_set(x$metadata$tool_version)) {
@@ -325,24 +326,25 @@ spdx_document <- function(x, version = "2.3") {
   doc
 }
 
-# The LicenseRef- ids that the licence expressions `x` use, each once, in radix
+# The LicenseRef- ids that the license expressions `x` use, each once, in radix
 # order. A reference with a DocumentRef- prefix names another document's
-# licence, which this document does not define.
+# license, which this document does not define.
 spdx_license_refs <- function(x) {
   tokens <- unlist(strsplit(x[!is.na(x)], "[() \t\r\n]+"), use.names = FALSE)
   refs <- tokens[grepl("^LicenseRef-[A-Za-z0-9.-]+$", tokens)]
   sort(unique(refs), method = "radix")
 }
 
-# An entry for each LicenseRef- the packages' declared or concluded licences
-# use, which SPDX 2 requires the document to define. sbom has the reference,
-# not the licence's text, and says so.
+# An entry for each LicenseRef- the packages' declared or concluded licenses
+# use, which SPDX 2 requires the document to define. sbom has the reference
+# but not the license's text, so each entry's text says the text is not
+# included.
 spdx_extracted_licenses <- function(packages) {
   values <- unlist(lapply(packages, function(p) c(p$licenseConcluded, p$licenseDeclared)), use.names = FALSE)
   lapply(spdx_license_refs(values), function(id) {
     list(
       licenseId = id,
-      extractedText = "The text of this licence is not included in this SBOM.",
+      extractedText = "The text of this license is not included in this SBOM.",
       name = sub("^LicenseRef-", "", id)
     )
   })

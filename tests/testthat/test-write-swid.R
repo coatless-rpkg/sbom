@@ -118,7 +118,7 @@ test_that("SWID escapes &, < and quotes in names", {
   expect_equal(xml2::xml_attr(ent, "name"), 'A & B <c> "d"')
 })
 
-test_that("Meta carries the generator, product, notes, purl and licence", {
+test_that("Meta carries the generator, product, notes, purl and license", {
   x <- fixture_sbom()
   doc <- xml2::read_xml(swid_tag(x))
   meta <- xml2::xml_find_first(doc, "//s:Meta", swid_ns)
@@ -215,4 +215,50 @@ test_that("SWID matches R Observatory's dplyr 1.2.1 sample", {
 test_that("R Observatory's own sample breaks no SWID structural rule", {
   res <- schema_validate(test_path("fixtures/r-observatory/dplyr-1.2.1.swidtag"), "swid", "2015")
   expect_equal(res$status, "partial")
+})
+
+test_that("a padded regid is trimmed before use", {
+  build <- function(regid) {
+    sbom_package(test_path("fixtures/pkgs/srcpkg"), lib = fixture_lib(), organization = "Org",
+                 regid = regid, timestamp = 0)
+  }
+  plain <- build("https://example.org")
+  padded <- build("  https://example.org \t")
+  expect_identical(padded$metadata$regid, "https://example.org")
+  expect_identical(swid_tag(padded), swid_tag(plain))
+  tag_id <- function(x) xml2::xml_attr(xml2::xml_root(xml2::read_xml(swid_tag(x))), "tagId")
+  expect_identical(tag_id(padded), "example.org/local/srcpkg")
+  # So is one an SBOM carries from elsewhere.
+  carried <- plain
+  carried$metadata$regid <- " https://example.org/ "
+  expect_identical(tag_id(carried), "example.org/local/srcpkg")
+  ent <- xml2::xml_find_first(xml2::read_xml(swid_tag(carried)), "//s:Entity[@role='tagCreator']", swid_ns)
+  expect_identical(xml2::xml_attr(ent, "regid"), "https://example.org/")
+})
+
+test_that("the SWID reader and the validator trim a padded regid", {
+  tag <- function(regid) {
+    x <- sbom_package(test_path("fixtures/pkgs/srcpkg"), lib = fixture_lib(), organization = "Org",
+                      regid = regid, timestamp = 0)
+    swid_tag(x)
+  }
+  read_padded <- function(text, from, to) {
+    tf <- withr::local_tempfile(fileext = ".swidtag", .local_envir = parent.frame())
+    write_text(sub(paste0('regid="', from, '"'), paste0('regid="', to, '"'), text, fixed = TRUE), tf)
+    tf
+  }
+  # A real regid: the reader strips its authority and keeps it trimmed.
+  real <- read_padded(tag("https://example.org"), "https://example.org", "  https://example.org ")
+  back <- read_sbom(real)
+  expect_identical(back$metadata$regid, "https://example.org")
+  expect_identical(back$metadata$organization, "Org")
+  expect_identical(back$metadata$root, "local/srcpkg")
+  # The placeholder, padded, is still the placeholder: Org is an author.
+  none <- read_padded(tag(NULL), "http://invalid.unavailable", " http://invalid.unavailable  ")
+  back <- read_sbom(none)
+  expect_true(is.na(back$metadata$regid))
+  expect_true(is.na(back$metadata$organization))
+  expect_true("Org" %in% back$metadata$author)
+  authors <- document_tables(read_document(none))$document$authors
+  expect_identical(authors$kind[authors$name == "Org"], "person")
 })

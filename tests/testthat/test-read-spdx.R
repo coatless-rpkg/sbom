@@ -139,7 +139,7 @@ test_that("SPDX YAML integers and booleans are typed by their key", {
   expect_identical(ref, list(isLive = TRUE, order = 2L, url = "true"))
 })
 
-test_that("tag-value files, snippets, licences and annotations are read", {
+test_that("tag-value files, snippets, licenses and annotations are read", {
   doc <- spdx_example("2.3", "tv")
   pkgs <- stats::setNames(doc$packages, vapply(doc$packages, `[[`, "", "SPDXID"))
   # ./package/foo.c comes before every package, so no package has it.
@@ -442,13 +442,17 @@ test_that("the 40 KB anchor-glued alias file is refused", {
 
 # Refused before expansion, both take about 0.01 s here.
 test_that("YAML alias files are refused at once, without being expanded", {
-  skip_on_cran()
   skip_if_not_installed("yaml")
   tf <- withr::local_tempfile(fileext = ".spdx.yaml")
+  times <- numeric()
   for (text in c(yaml_alias_bomb(), anchor_glued_yaml())) {
     write_text(text, tf)
-    expect_lt(system.time(schema_validate(tf, "spdx-yaml"))[["elapsed"]], 10)
+    res <- NULL
+    times <- c(times, system.time(res <- schema_validate(tf, "spdx-yaml"))[["elapsed"]])
+    expect_identical(res$status, "fail")
   }
+  skip_unless_timing()
+  expect_lt(max(times), 10)
 })
 
 # Nesting depth of YAML, before it is parsed -------------------------------------
@@ -560,17 +564,21 @@ test_that("the official SPDX YAML examples and sbom's own YAML are not too deep"
 # The review's files: 100,000 levels of `{a: ` took 117 s, and 100,000 of `[`
 # 68 s, before the depth was checked. Refused, each takes about 0.1 s here.
 test_that("the review's deeply nested YAML files are refused at once", {
-  skip_on_cran()
   skip_if_not_installed("yaml")
   path <- withr::local_tempfile(fileext = ".spdx.yaml")
+  times <- numeric()
   for (text in c(
     paste0("spdxVersion: SPDX-2.3\nx: ", strrep("{a: ", 1e5), "1", strrep("}", 1e5), "\n"),
     paste0("spdxVersion: SPDX-2.3\nx: ", strrep("[", 1e5), strrep("]", 1e5), "\n")
   )) {
     write_text(text, path)
-    expect_lt(system.time(expect_error(read_sbom(path), class = "sbom_read_error"))[["elapsed"]], 10)
-    expect_lt(system.time(validate_sbom(path))[["elapsed"]], 10)
+    v <- NULL
+    times <- c(times, system.time(expect_error(read_sbom(path), class = "sbom_read_error"))[["elapsed"]])
+    times <- c(times, system.time(v <- validate_sbom(path))[["elapsed"]])
+    expect_identical(v$status, "fail")
   }
+  skip_unless_timing()
+  expect_lt(max(times), 10)
 })
 
 # A tag-value document of one package with `n` repeats of the tag `tag`.
@@ -612,12 +620,15 @@ test_that("a tag-value file of 100,000 repeated lines reads in linear time", {
   skip_on_cran()
   path <- withr::local_tempfile(fileext = ".spdx")
   write_text(tv_repeated(1e5), path)
-  expect_lt(system.time(x <- read_sbom(path))[["elapsed"]], 10)
+  package_time <- system.time(x <- read_sbom(path))[["elapsed"]]
   # The package, and the placeholder root of a document that describes none.
   expect_identical(nrow(x$components), 2L)
   write_text(sub("Creator: Organization: X", strrep("Creator: Tool: t-1\n", 5e4), tv_repeated(1), fixed = TRUE), path)
-  expect_lt(system.time(x <- read_sbom(path))[["elapsed"]], 10)
+  creator_time <- system.time(x <- read_sbom(path))[["elapsed"]]
   expect_identical(x$metadata$organization, NA_character_)
+  skip_unless_timing()
+  expect_lt(package_time, 10)
+  expect_lt(creator_time, 10)
 })
 
 test_that("SPDX YAML that holds more than one document is refused before it is parsed", {
@@ -659,10 +670,10 @@ test_that("SPDX YAML that holds more than one document is refused before it is p
 # second document of them took 19 s and was never refused. Each is now
 # refused in about 0.05 s here.
 test_that("the re-review's hidden and second-document nesting is refused at once", {
-  skip_on_cran()
   skip_if_not_installed("yaml")
   nest <- paste0(strrep("[", 40000), strrep("]", 40000))
   path <- withr::local_tempfile(fileext = ".spdx.yaml")
+  times <- numeric()
   for (text in c(
     paste0('spdxVersion: SPDX-2.3\nx: [a? "b, ', nest, ', c"]\n'),
     paste0('spdxVersion: SPDX-2.3\nx: [a &b "x, ', nest, ', y"]\n'),
@@ -670,9 +681,13 @@ test_that("the re-review's hidden and second-document nesting is refused at once
     paste0("spdxVersion: SPDX-2.3\n--- ", nest, "\n")
   )) {
     write_text(text, path)
-    expect_lt(system.time(expect_error(read_sbom(path), class = "sbom_read_error"))[["elapsed"]], 10)
-    expect_lt(system.time(validate_sbom(path))[["elapsed"]], 10)
+    v <- NULL
+    times <- c(times, system.time(expect_error(read_sbom(path), class = "sbom_read_error"))[["elapsed"]])
+    times <- c(times, system.time(v <- validate_sbom(path))[["elapsed"]])
+    expect_identical(v$status, "fail")
   }
+  skip_unless_timing()
+  expect_lt(max(times), 10)
 })
 
 # The re-review's 80 KB file: one plain scalar of 80,000 brackets. The scan
@@ -683,9 +698,9 @@ test_that("the YAML pre-scan takes linear time on long lines", {
   skip_if_not_installed("yaml")
   path <- withr::local_tempfile(fileext = ".spdx.yaml")
   write_text(paste0("spdxVersion: SPDX-2.3\nSPDXID: SPDXRef-DOCUMENT\nname: d\ncomment: see ", strrep("[", 80000), "\n"), path)
-  expect_lt(system.time(x <- read_sbom(path))[["elapsed"]], 10)
+  read_time <- system.time(x <- read_sbom(path))[["elapsed"]]
   expect_s3_class(x, "sbom")
-  # sbom's own SPDX YAML of about 2 MB, with long licence comments full of
+  # sbom's own SPDX YAML of about 2 MB, with long license comments full of
   # brackets, quotes, # and |.
   sbom <- fixture_sbom()
   sbom$components$license_comment <- paste(rep('see [1] | "a" # {b} [c', 12000), collapse = " ")
@@ -694,8 +709,12 @@ test_that("the YAML pre-scan takes linear time on long lines", {
   expect_gt(file.size(yaml), 2e6)
   txt <- read_utf8_text(yaml)
   bytes <- charToRaw(txt)
-  expect_lt(system.time(problem <- yaml_problem(txt))[["elapsed"]], 10)
+  problem_time <- system.time(problem <- yaml_problem(txt))[["elapsed"]]
   expect_identical(problem, NA_character_)
-  expect_lt(system.time(scan <- yaml_scan(bytes, yaml_text_lines(bytes), 2L))[["elapsed"]], 10)
+  scan_time <- system.time(scan <- yaml_scan(bytes, yaml_text_lines(bytes), 2L))[["elapsed"]]
   expect_false(scan$deep)
+  skip_unless_timing()
+  expect_lt(read_time, 10)
+  expect_lt(problem_time, 10)
+  expect_lt(scan_time, 10)
 })

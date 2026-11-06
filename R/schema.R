@@ -64,8 +64,15 @@ empty_findings <- function() {
   data.frame(location = character(), message = character(), stringsAsFactors = FALSE)
 }
 
-validation_result <- function(status, findings = empty_findings()) {
-  list(status = status, findings = findings)
+# `notes`, when given, are notes that are not part of the status, in the
+# form of `findings`: the reason a SWID tag that fails got sbom's structural
+# rules.
+validation_result <- function(status, findings = empty_findings(), notes = NULL) {
+  out <- list(status = status, findings = findings)
+  if (!is.null(notes)) {
+    out$notes <- notes
+  }
+  out
 }
 
 # Compiled schemas are cached in `the`, keyed by format and version.
@@ -575,10 +582,15 @@ swid_partial_message <- paste(
   "set the option sbom.swid_xsd to a copy of the ISO schema to check it fully."
 )
 
-# The SHA-256 of the ISO/IEC 19770-2:2015 schema as ISO publishes it, at
-# https://standards.iso.org/iso/19770/-2/2015-current/schema.xsd. The option
-# sbom.swid_xsd must name a file with exactly these bytes.
+# Where ISO publishes the ISO/IEC 19770-2:2015 schema.
+swid_iso_url <- "https://standards.iso.org/iso/19770/-2/2015-current/schema.xsd"
+
+# The SHA-256 of the ISO/IEC 19770-2:2015 schema as ISO publishes it at
+# swid_iso_url, with CRLF line endings, and of the same file with LF ones,
+# as git or an editor may leave it: the same content, so equally safe. The
+# option sbom.swid_xsd must name a file with exactly one of these.
 swid_iso_sha256 <- "6af9d0554932102ace5c696f723c1dc4a4b1a9846908cddec67ccc0518c0e5d4"
+swid_iso_sha256_lf <- "faec3b2d670c3051455a6c7c5e561fd840cf47e772b32c0771b72f42e9df8c74"
 
 # The two schemas that the ISO schema imports by URL, as its schemaLocation
 # values name them; sbom bundles both, unmodified, under the same base names.
@@ -590,8 +602,9 @@ swid_iso_imports <- c(
 # The note of a SWID tag checked against sbom's structural rules because the
 # option sbom.swid_xsd names something other than the ISO schema.
 swid_iso_note <- paste0(
-  "sbom.swid_xsd is not the ISO/IEC 19770-2:2015 schema as ISO publishes it (SHA-256 ",
-  swid_iso_sha256, "), so the tag was checked against sbom's structural rules."
+  "sbom.swid_xsd is not the ISO/IEC 19770-2:2015 schema as ISO publishes it at ", swid_iso_url,
+  ", with CRLF line endings (SHA-256 ", swid_iso_sha256, ") or LF ones (SHA-256 ", swid_iso_sha256_lf,
+  "), so the tag was checked against sbom's structural rules."
 )
 
 # The note of a SWID tag checked against sbom's structural rules because the
@@ -601,13 +614,19 @@ swid_imports_note <- paste(
   "so the tag was checked against sbom's structural rules."
 )
 
+# The largest file the option sbom.swid_xsd may name. The ISO schema is about
+# 48 KB, so a larger file is not it, and is never read into memory.
+swid_xsd_max_bytes <- 1e6
+
 # The option sbom.swid_xsd: NULL when it is not set; the bytes of the file it
-# names when those bytes are the ISO schema; and NA for any other value. The
-# file is read once, and the bytes hashed are the bytes used, so only that
-# exact schema is ever compiled, even if the file changes meanwhile, and no
-# schema a user or a document supplies can make libxml2 load anything: xml2's
-# entity loader fetches what a schema imports by URL with download.file(),
-# whatever the parser options say.
+# names when those bytes are the ISO schema, with either line endings; and
+# NA for any other value,
+# a file over swid_xsd_max_bytes among them. The file is read once, and the
+# bytes hashed are the bytes used, so only that exact schema is ever
+# compiled, even if the file changes meanwhile, and no schema a user or a
+# document supplies can make libxml2 load anything: xml2's entity loader
+# fetches what a schema imports by URL with download.file(), whatever the
+# parser options say.
 swid_xsd_option <- function() {
   path <- getOption("sbom.swid_xsd")
   if (is.null(path)) {
@@ -620,8 +639,12 @@ swid_xsd_option <- function() {
   if (!file.exists(path) || dir.exists(path)) {
     return(NA_character_)
   }
-  bytes <- readBin(path, "raw", file.size(path))
-  if (!identical(cli::hash_raw_sha256(bytes), swid_iso_sha256)) {
+  size <- file.size(path)
+  if (is.na(size) || size > swid_xsd_max_bytes) {
+    return(NA_character_)
+  }
+  bytes <- readBin(path, "raw", size)
+  if (!cli::hash_raw_sha256(bytes) %in% c(swid_iso_sha256, swid_iso_sha256_lf)) {
     return(NA_character_)
   }
   bytes
@@ -636,8 +659,9 @@ swid_w3c_files <- function() {
 # Calls `f` with the path of a copy of the ISO schema, written from `bytes`,
 # whose two imports name the W3C schemas that sbom bundles, copied beside it,
 # so that compiling it needs no network. The copy is made in a new temporary
-# folder, deleted afterwards. `bytes` are the ISO schema, byte for byte, so
-# each import is replaced exactly once. Returns NULL, calling nothing, when
+# folder, deleted afterwards. `bytes` are the ISO schema, byte for byte but
+# for its line endings, so each import is replaced exactly once, and the
+# copy keeps the line endings given. Returns NULL, calling nothing, when
 # the W3C schemas cannot be copied: the ISO schema would not compile without
 # them, and libxml2 would then follow the tag's own schema location.
 swid_with_local_schema <- function(bytes, f) {
@@ -664,7 +688,10 @@ swid_with_local_schema <- function(bytes, f) {
 # tag gets sbom's structural rules, and at best "partial", unless the option
 # sbom.swid_xsd names the ISO schema as ISO publishes it. Then the tag is
 # checked against that schema, and against the standard's rule that it has a
-# tagCreator, which the schema only documents.
+# tagCreator, which the schema only documents. Under the structural rules, a
+# note says why they apply: the one finding of a tag that passes them, and,
+# when the option is set, one of the `notes` of a tag that fails them, since
+# it is not why the tag fails.
 validate_swid <- function(path) {
   parsed <- xml_parse_file(path)
   if (inherits(parsed$doc, "error")) {
@@ -684,13 +711,11 @@ validate_swid <- function(path) {
     note <- swid_imports_note
   }
   findings <- swid_structure_findings(parsed$doc)
+  note <- data.frame(location = "", message = note, stringsAsFactors = FALSE)
   if (nrow(findings) > 0L) {
-    if (!is.null(xsd)) {
-      findings <- rbind(findings, data.frame(location = "", message = note, stringsAsFactors = FALSE))
-    }
-    return(validation_result("fail", findings))
+    return(validation_result("fail", findings, notes = if (!is.null(xsd)) note))
   }
-  validation_result("partial", data.frame(location = "", message = note, stringsAsFactors = FALSE))
+  validation_result("partial", note)
 }
 
 # libxml2's messages quote names and values from the document between single
@@ -712,7 +737,10 @@ xsd_message <- function(errs) {
 #' Validate a written document against the schema of its format
 #'
 #' Returns `list(status, findings)`, where `findings` is a data frame with
-#' columns `location` and `message`. `status` is one of:
+#' columns `location` and `message`, and sometimes `notes`, a data frame like
+#' `findings` of notes that are not part of the status: why a SWID tag that
+#' fails got sbom's structural rules although the option `sbom.swid_xsd` is
+#' set. `status` is one of:
 #'
 #' * `"pass"`: the document satisfies the schema.
 #' * `"fail"`: it does not, or it could not be parsed; `findings` says why.

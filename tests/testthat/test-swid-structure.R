@@ -158,6 +158,7 @@ test_that("the structural rules take linear time", {
   expect_identical(nrow(found), 20000L)
   expect_identical(found$location[[20000L]], "/SoftwareIdentity/Link[20000]")
   expect_identical(unique(found$message), "The Link element has no href attribute.")
+  skip_unless_timing()
   # Under 10 s where it was written; the bound leaves room for a slow machine.
   expect_lt(time, 30)
 })

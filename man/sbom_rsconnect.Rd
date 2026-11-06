@@ -27,7 +27,8 @@ Without either, an issue is recorded.}
 \item{regid}{The registration id of \code{organization}: the domain name, or URL,
 of the organization, under which it registers SWID tags (ISO/IEC
 19770-2). A SWID tag names the organization as its creator with this
-regid. It must be a single string. \code{NULL}, \code{NA} and an empty or blank
+regid. It must be a single string, from which leading and trailing
+white space is dropped. \code{NULL}, \code{NA} and an empty or blank
 string mean none; then the tag uses the placeholder
 \verb{http://invalid.unavailable}, and when an \code{organization} was given, an
 issue is recorded. The default is the \code{sbom.regid} option, as
@@ -43,17 +44,38 @@ timestamp is that value a note says it is a placeholder.}
 \item{overrides}{Values to assert where \code{sbom} found none, or found
 something different. \code{NULL}, a data frame or the path to a CSV file, with
 the character columns \code{component} (the \code{name} or \code{ref} of one
-component; embedded and system components only by \code{ref}), \code{field},
-\code{value}, \code{asserted_by} and \code{reason}. \code{field} is one
+component, as sbom built it, before any row moves it; embedded and
+system components only by \code{ref}), \code{field}, \code{value}, \code{asserted_by} and
+\code{reason}. \code{field} is one
 of \code{"version"}, \code{"license_spdx"}, \code{"supplier_name"}, \code{"supplier_url"},
 \code{"maintainer"}, \code{"purl"} and \code{"download_location"}. Rows are applied in
 order, and each is recorded with who asserted it and why. An override
 that contradicts a found value wins and adds an \code{override-conflict} issue.
-Asserting \code{"version"} makes it the exact version, and asserting a CRAN
-\code{"purl"} (\code{pkg:cran}) makes the component a CRAN package, or a
-Bioconductor package when its \code{repository_url} names bioconductor.org;
-neither changes the \code{ref}.
-An unknown component or field, or a missing column, is an error.}
+Asserting \code{"version"} makes it the exact version, and moves the
+component's package URL to it unless a row asserts the \code{"purl"}: a
+package URL at the old version takes the new one, and one without a
+version gains it when its type is \code{cran}, \code{github}, \code{gitlab} or
+\code{bitbucket}. A package file named for the old version is renamed for
+the new one, and any other is dropped, as are the checksums of the
+version found. An asserted version of R is also the version of the base
+packages, each with a record of the assertion. Asserting a CRAN \code{"purl"}
+(\code{pkg:cran}) makes the component a CRAN package, or a Bioconductor
+package when its \code{repository_url} names bioconductor.org. When a
+component's \code{ref} is its package URL, the \code{ref} follows the package URL
+that the overrides leave, and every reference to it moves too; a \code{ref}
+that another component already has is an error. Any other \code{ref}, such
+as \verb{unknown/<name>}, stays as it is.
+An asserted field removes the component's issues that it answers, such
+as \code{version-missing} or \code{purl-inferred}. An issue that also states a
+fact that stays true is reworded instead, as info: that a package came
+from a git repository, once its package URL is asserted; that a
+dependency is missing, once its version and package URL are both
+asserted; and that a \code{LinkingTo} package is not installed, once its
+version is. The issues that name the components without a version, such
+as \code{system-version-unknown}, name only those still without one, and go
+when none is left.
+A blank value, an unknown component or field, or a missing column, is an
+error.}
 
 \item{embedded}{Whether to record the code that packages carry inside them.
 A package named in \code{LinkingTo} is recorded as an embedded component of

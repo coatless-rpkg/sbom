@@ -137,10 +137,11 @@ read_usable_description <- function(dir) {
 # Breadth-first walk from a root DESCRIPTION through the lookup. Required fields are
 # followed to exhaustion first. Suggests are then read from the root only:
 # their edges are recorded, and packages not already reached are listed but
-# not followed.
+# not followed. With `recurse = FALSE`, only the root's own dependencies are
+# looked up, as a cross-check needs them, and none is followed.
 resolve_dependencies <- function(root_desc, lookup,
                                  fields = c("Depends", "Imports", "LinkingTo"),
-                                 root_suggests = FALSE) {
+                                 root_suggests = FALSE, recurse = TRUE) {
   root_name <- if ("Package" %in% names(root_desc)) root_desc[["Package"]] else NA_character_
   skip <- c(base_packages(), "R")
   edge_list <- list()
@@ -185,7 +186,7 @@ resolve_dependencies <- function(root_desc, lookup,
         next
       }
       desc <- visit(dep)
-      if (!is.null(desc)) {
+      if (!is.null(desc) && recurse) {
         queue[[length(queue) + 1L]] <- list(name = dep, desc = desc)
       }
     }

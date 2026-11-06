@@ -190,16 +190,7 @@ sbom_project <- function(path, args, layout = NA, evaluate_ui = FALSE, call = pa
       x$issues <- cross_check_issue(x$issues, "cross-check-failed", src$skipped)
       next
     }
-    # A cross-check compares packages only, so it looks neither inside them
-    # nor at the operating system.
-    quick <- list(embedded = FALSE, system = FALSE)
-    got <- tryCatch(
-      read_source(src, c(
-        args[intersect(names(args), intersect(src$args, c("lib", "nix")))],
-        quick[intersect(names(quick), src$args)]
-      )),
-      error = function(e) e
-    )
+    got <- tryCatch(cross_check_read(src, args), error = function(e) e)
     if (inherits(got, "error")) {
       # Asked for Nix, a default.nix that Nix cannot read is an error here too.
       if (src$name == "default.nix" && isTRUE(args$nix)) {
@@ -294,7 +285,9 @@ check_sbom_dots <- function(args, call = parent.frame()) {
 # - `failed`, a function of the error that gives the issue sentence when it
 #   cannot be read for a cross-check;
 # - `skipped`, the issue sentence when it is not read at all, and `partial`,
-#   the one when only part of it is used, or NULL.
+#   the one when only part of it is used, or NULL;
+# - `check`, for DESCRIPTION and the code, a function of `lib` that reads it
+#   for a cross-check (see cross_check_read()).
 #
 # A manifest.json that is not a Posit Connect manifest, and a DESCRIPTION
 # without a Package field, are never the SBOM's source. Such a DESCRIPTION
@@ -348,7 +341,8 @@ project_sources <- function(path, skip = character()) {
       list(
         name = "DESCRIPTION", label = "DESCRIPTION", file = desc, records = "direct",
         args = takes$package, failed = failed("DESCRIPTION"),
-        build = function(args) do.call(sbom_package, c(list(path = path), args))
+        build = function(args) do.call(sbom_package, c(list(path = path), args)),
+        check = function(args) do.call(description_records, c(list(path = path), args))
       )
     },
     list(
@@ -360,7 +354,8 @@ project_sources <- function(path, skip = character()) {
           ", so it was not cross-checked."
         )
       },
-      build = function(args) do.call(code_scan, c(list(dir = path), args))
+      build = function(args) do.call(code_scan, c(list(dir = path), args)),
+      check = function(args) do.call(code_records, c(list(dir = path), args))
     )
   )
   present <- c(
@@ -379,6 +374,91 @@ project_sources <- function(path, skip = character()) {
 read_source <- function(src, args) {
   out <- src$build(args)
   if (inherits(out, "sbom")) list(sbom = out, records = src$records) else out
+}
+
+# A source read for a cross-check, as read_source() gives it. A cross-check
+# compares packages only, so it looks neither inside them nor at the
+# operating system: DESCRIPTION and the code, which name only the root's
+# direct dependencies, are read by their `check`, which builds no SBOM, and
+# any other source by its reader, given only `lib` and `nix` and told not to
+# look.
+cross_check_read <- function(src, args) {
+  if (is.function(src$check)) {
+    out <- src$check(args[intersect(names(args), "lib")])
+    return(list(sbom = out, records = src$records))
+  }
+  quick <- list(embedded = FALSE, system = FALSE)
+  read_source(src, c(
+    args[intersect(names(args), intersect(src$args, c("lib", "nix")))],
+    quick[intersect(names(quick), src$args)]
+  ))
+}
+
+# What a cross-check of a "direct" source compares, which is all that
+# drift_view() keeps of it: the root and the packages it names in `fields`
+# of `root_desc`, each looked up through `lookup` as the full reader looks it
+# up (resolve_dependencies()), but not followed. A package found is the
+# component the full reader would list, with its ref, name, version and
+# ecosystem and no more (no licence, maintainer or anything inside it), and
+# one not found the same unknown component. R and the base packages, which
+# are never drift, are left out. `root` is the root's component row and
+# `inputs` the full reader's.
+direct_records <- function(root, root_desc, fields, lookup, inputs) {
+  res <- resolve_dependencies(root_desc, lookup, fields, recurse = FALSE)
+  rows <- c(
+    lapply(res$packages, function(name) record_component(lookup$get(name))),
+    lapply(res$missing, unknown_component)
+  )
+  ref_of <- stats::setNames(vapply(rows, function(row) row$ref, ""), c(res$packages, res$missing))
+  own <- res$edges$from == root_desc[["Package"]] & res$edges$to %in% names(ref_of)
+  edges <- res$edges[own, , drop = FALSE]
+  new_sbom(
+    list(
+      root = root$ref, timestamp = NA, author = NA_character_,
+      organization = NA_character_, tool_version = NA_character_, notes = character(),
+      inputs = inputs, regid = NA_character_
+    ),
+    do.call(rbind, c(list(root), rows)),
+    data.frame(
+      from = rep(root$ref, nrow(edges)), to = unname(ref_of[edges$to]), field = edges$field,
+      spec = edges$spec, evidence = rep("declared", nrow(edges)), stringsAsFactors = FALSE
+    ),
+    empty_issues()
+  )
+}
+
+# The component of an installed package as a cross-check needs it: what
+# package_component() gives for its ref, name, version and ecosystem.
+record_component <- function(desc, evidence = "observed", is_root = FALSE) {
+  name <- desc_field(desc, "Package")
+  eco <- package_ecosystem(desc)
+  component_row(
+    ref = package_ref(eco, name), name = name, version = desc_field(desc, "Version"),
+    version_is = "exact", type = "library", ecosystem = eco$ecosystem, is_root = is_root,
+    purl = eco$purl, evidence = evidence
+  )
+}
+
+# DESCRIPTION for a cross-check: the packages its Depends, Imports and
+# LinkingTo name, read as sbom_package() reads them, with its errors.
+description_records <- function(path, lib = .libPaths()) {
+  check_lib(lib)
+  root_desc <- read_package_description(path)
+  direct_records(
+    record_component(root_desc, "declared", is_root = TRUE), root_desc,
+    c("Depends", "Imports", "LinkingTo"), library_lookup(lib),
+    library_inputs("DESCRIPTION", path, lib)
+  )
+}
+
+# The code for a cross-check: the packages it uses, found as code_scan()
+# finds them, with its errors.
+code_records <- function(dir, lib = .libPaths()) {
+  check_lib(lib)
+  direct_records(
+    project_root_component(dir)$component, code_root(dir)$desc,
+    c("Depends", "Imports", "LinkingTo"), library_lookup(lib), library_inputs("code", dir, lib)
+  )
 }
 
 # "connect" for a Posit Connect manifest, "other" for JSON that is not one,
@@ -505,6 +585,27 @@ drift_view <- function(x, records, suggests = TRUE) {
   x
 }
 
+# The name the folder of the code goes by as the stand-in root of a scan.
+code_stand_in <- ".sbom-project-root"
+
+# What the code in `dir` uses, as the code scan and its cross-check read it:
+# `scan`, renv's scan (project_root_edges()); `edges`, the root's edges, one
+# to each package found other than the package `dir` holds, which its tests
+# name; and `desc`, a stand-in root DESCRIPTION whose Imports are those
+# packages.
+code_root <- function(dir) {
+  scan <- project_root_edges(dir, NULL, NULL)
+  # A package's tests name the package itself, which is not a dependency.
+  own <- tryCatch(desc_field(read_description(dir), "Package"), error = function(e) NA_character_)
+  edges <- scan$edges[!scan$edges$to %in% own, , drop = FALSE]
+  edges$from <- rep(code_stand_in, nrow(edges))
+  desc <- c(Package = code_stand_in)
+  if (nrow(edges) > 0L) {
+    desc[["Imports"]] <- paste(edges$to, collapse = ", ")
+  }
+  list(scan = scan, edges = edges, desc = desc)
+}
+
 # The packages the R code in `dir` uses, found by renv::dependencies() and
 # looked up in `lib` at the versions installed there, all as inferred, with
 # their dependencies. The root is the folder.
@@ -516,31 +617,19 @@ code_scan <- function(dir, lookup = library_lookup(lib), lib = .libPaths(),
                       embedded = TRUE, system = TRUE) {
   check_lib(lib)
   regid <- check_regid(regid)
-  scan <- project_root_edges(dir, NULL, NULL)
-  # A package's tests name the package itself, which is not a dependency.
-  own <- tryCatch(desc_field(read_description(dir), "Package"), error = function(e) NA_character_)
-  root_edges <- scan$edges[!scan$edges$to %in% own, , drop = FALSE]
-  stand_in <- ".sbom-project-root"
-  root_edges$from <- rep(stand_in, nrow(root_edges))
-
-  # The packages found stand in for the root's Imports, which are then
-  # replaced by the scan's own edges.
+  code <- code_root(dir)
+  scan <- code$scan
+  root_edges <- code$edges
+  root_desc <- code$desc
   follow <- c("Depends", "Imports", "LinkingTo")
-  root_desc <- c(Package = stand_in)
-  if (nrow(root_edges) > 0L) {
-    root_desc[["Imports"]] <- paste(root_edges$to, collapse = ", ")
-  }
   res <- resolve_dependencies(root_desc, lookup, follow)
-  inner <- res$edges[res$edges$from != stand_in, , drop = FALSE]
+  # The root's edges are the scan's own.
+  inner <- res$edges[res$edges$from != code_stand_in, , drop = FALSE]
   inner$evidence <- rep("declared", nrow(inner))
   res$edges <- rbind(root_edges, inner)
 
   root <- project_root_component(dir)
-  inputs <- data.frame(
-    kind = c("code", rep("library", length(lib))),
-    path = c(as.character(dir), as.character(lib)),
-    stringsAsFactors = FALSE
-  )
+  inputs <- library_inputs("code", dir, lib)
   x <- build_sbom(
     root = root, lookup = lookup, root_desc = root_desc, fields = follow,
     root_suggests = FALSE, lib = lib, r_version = NULL, author = author,

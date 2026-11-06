@@ -24,7 +24,7 @@ document, a value its format does not carry is \code{NA}: CycloneDX and SPDX
 3 do not carry \code{fixed} or \code{no_fix}, and SPDX 2 carries only those two.
 For an SBOM built without advisories, or whose
 advisory data could not be read when it was built, or read from a file
-that lists none, it has no rows, and a message says so.
+that lists none, it has no rows, and a message gives the reason.
 }
 \description{
 \code{sbom_advisories()} lists the OSV advisories in an SBOM built with
@@ -47,4 +47,9 @@ and VEX statements are not read. A SWID tag has no place for advisories.
 \examples{
 x <- sbom_package(system.file("DESCRIPTION", package = "sbom"), system = FALSE)
 sbom_advisories(x)
+\dontrun{
+# Needs the network: downloads OSV's CRAN export and looks up ratings.
+y <- sbom_package(system.file("DESCRIPTION", package = "sbom"), system = FALSE, advisories = TRUE)
+sbom_advisories(y)
+}
 }

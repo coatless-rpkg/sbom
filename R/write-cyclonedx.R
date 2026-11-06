@@ -130,9 +130,20 @@ cdx_dependencies <- function(x) {
     (comps$ref != "R" & is.na(comps$parent_ref) & comps$evidence != "unknown" & comps$type != "file")
   listed <- !comps$deps_known %in% FALSE & (comps$is_root | (own & !suggests_only))
   refs <- sort(comps$ref[listed], method = "radix")
-  unname(lapply(refs, function(ref) {
-    targets <- sort(unique(rel$to[rel$from == ref]), method = "radix")
-    list(ref = ref, dependsOn = as.list(targets))
+  # Each component's targets, sorted and each once, from one sort of all the
+  # edges rather than one sort a component.
+  edges <- rel[!is.na(rel$from) & !is.na(rel$to), c("from", "to"), drop = FALSE]
+  edges <- edges[order(edges$from, edges$to, method = "radix"), , drop = FALSE]
+  n <- nrow(edges)
+  again <- rep(FALSE, n)
+  if (n > 1L) again[-1L] <- edges$from[-1L] == edges$from[-n] & edges$to[-1L] == edges$to[-n]
+  to_of <- split(edges$to[!again], factor(edges$from[!again], levels = unique(edges$from[!again])))
+  # By position: looking a ref up by name takes time that grows with the
+  # number of refs.
+  at <- match(refs, names(to_of))
+  unname(lapply(seq_along(refs), function(i) {
+    targets <- if (is.na(at[[i]])) character() else as.character(to_of[[at[[i]]]])
+    list(ref = refs[[i]], dependsOn = as.list(targets))
   }))
 }
 
@@ -205,16 +216,22 @@ cdx_document <- function(x, version = "1.6") {
   comps <- x$components
   comps <- comps[order(comps$ref, method = "radix"), , drop = FALSE]
   rownames(comps) <- NULL
+  rows <- df_rows(comps)
   build <- function(i, children = NULL) {
-    cdx_component(comps[i, , drop = FALSE], version, children)
+    cdx_component(rows[[i]], version, children)
   }
 
   # Every component with a parent nests under it, wherever the parent is.
   # A component whose parent is not in the document goes to the top level.
   nested <- !is.na(comps$parent_ref) & comps$parent_ref %in% comps$ref
   is_root <- comps$ref == x$metadata$root
+  # Each component's children, found by position rather than by a search
+  # of every component.
+  parents <- comps$parent_ref[nested]
+  kids_of <- split(which(nested), factor(parents, levels = unique(parents)))
+  kids_at <- match(comps$ref, names(kids_of))
   nest <- function(i) {
-    kids <- which(nested & comps$parent_ref == comps$ref[i])
+    kids <- if (is.na(kids_at[[i]])) integer() else kids_of[[kids_at[[i]]]]
     build(i, if (length(kids) > 0L) lapply(kids, nest))
   }
   components <- lapply(which(!is_root & !nested), nest)

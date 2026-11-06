@@ -548,6 +548,10 @@ os_package_purl <- function(os, os_release) {
 # those with no link. Returns list(components, relationships, issues): all the
 # components, sorted by ref, and only the new relationships and issues.
 linked_system_libraries <- function(components, lib_dirs, relationships = empty_relationships()) {
+  with_sys_cache(linked_libraries_cached(components, lib_dirs, relationships))
+}
+
+linked_libraries_cached <- function(components, lib_dirs, relationships) {
   out <- list(
     components = components, relationships = empty_relationships(),
     issues = empty_issues()
@@ -571,13 +575,7 @@ linked_system_libraries <- function(components, lib_dirs, relationships = empty_
   # On macOS otool works only with the Command Line Tools; asked once.
   tools <- if (identical(os_name, "Darwin")) NA else TRUE
   os_release <- sys_os_release()
-  os_cache <- list()
-  os_of <- function(path) {
-    if (!path %in% names(os_cache)) {
-      os_cache[path] <<- list(sys_os_package(path))
-    }
-    os_cache[[path]]
-  }
+  os_of <- function(path) sys_cached(paste0("os-package:", path), sys_os_package(path))
   found <- list()
   rels <- list()
   issues <- empty_issues()
@@ -614,7 +612,10 @@ linked_system_libraries <- function(components, lib_dirs, relationships = empty_
     unfound <- character()
     failed <- FALSE
     for (so in files) {
-      got <- sys_linked_libraries(so)
+      # A file is read once a build, by its real path, however many packages
+      # hold it; where its links point is resolved from each package's copy.
+      real <- normalizePath(so, mustWork = FALSE)
+      got <- sys_cached(paste0("links:", real), sys_linked_libraries(so))
       if (isTRUE(attr(got, "tool_missing"))) {
         tool_missing <- TRUE
         break
@@ -627,13 +628,7 @@ linked_system_libraries <- function(components, lib_dirs, relationships = empty_
       unfound <- c(unfound, as.character(attr(got, "not_found")))
       v <- attr(got, "versions")
       v <- if (length(v) == length(got)) as.character(v) else rep(NA_character_, length(got))
-      rpaths <- local({
-        cache <- NULL
-        function() {
-          if (is.null(cache)) cache <<- sys_otool_rpaths(so)
-          cache
-        }
-      })
+      rpaths <- function() sys_cached(paste0("rpaths:", real), sys_otool_rpaths(so))
       resolved <- vapply(
         as.character(got), resolve_link, "", so = so, rpaths = rpaths,
         r_bin = sys_r_bin(), USE.NAMES = FALSE
@@ -793,19 +788,26 @@ linked_system_libraries <- function(components, lib_dirs, relationships = empty_
   # A linked library with no operating system package has no version.
   unknown <- all$ref %in% names(found) & all$ecosystem == "system" & !all$version_is %in% "exact"
   if (any(unknown)) {
-    n <- sum(unknown)
     out$issues <- add_issue(
       out$issues, root, "version", "system-version-unknown",
-      paste0(
-        if (n == 1L) "The version of the linked system library " else "The versions of the linked system libraries ",
-        and_list(all$name[unknown]), if (n == 1L) " is" else " are",
-        " unknown, because sbom found no package manager that owns ",
-        if (n == 1L) "it." else "them."
-      ),
+      system_version_unknown_sentence(all$name[unknown]),
       severity = "info"
     )
   }
   out$components <- all
   out$relationships <- do.call(rbind, rels)
   out
+}
+
+# The sentence of the system-version-unknown issue, naming the linked system
+# libraries without a version, in the order given. apply_overrides() builds
+# it again after an override asserts some of their versions.
+system_version_unknown_sentence <- function(names) {
+  n <- length(names)
+  paste0(
+    if (n == 1L) "The version of the linked system library " else "The versions of the linked system libraries ",
+    and_list(names), if (n == 1L) " is" else " are",
+    " unknown, because sbom found no package manager that owns ",
+    if (n == 1L) "it." else "them."
+  )
 }

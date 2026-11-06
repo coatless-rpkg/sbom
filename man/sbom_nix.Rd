@@ -41,7 +41,8 @@ Without either, an issue is recorded.}
 \item{regid}{The registration id of \code{organization}: the domain name, or URL,
 of the organization, under which it registers SWID tags (ISO/IEC
 19770-2). A SWID tag names the organization as its creator with this
-regid. It must be a single string. \code{NULL}, \code{NA} and an empty or blank
+regid. It must be a single string, from which leading and trailing
+white space is dropped. \code{NULL}, \code{NA} and an empty or blank
 string mean none; then the tag uses the placeholder
 \verb{http://invalid.unavailable}, and when an \code{organization} was given, an
 issue is recorded. The default is the \code{sbom.regid} option, as
@@ -50,29 +51,51 @@ issue is recorded. The default is the \code{sbom.regid} option, as
 \item{timestamp}{The creation time, as a date-time or as seconds since
 1970-01-01 UTC. An explicit \code{timestamp} wins. Without one, the
 \code{SOURCE_DATE_EPOCH} environment variable is used when it is set, so that
-builds are reproducible, and a note says so; otherwise it is now. Nix sets
+builds are reproducible, and a note records that the timestamp came from
+it; otherwise it is the current time. Nix sets
 \code{SOURCE_DATE_EPOCH} to 1980-01-01 in every \code{nix-shell}, and when the
 timestamp is that value a note says it is a placeholder.}
 
 \item{overrides}{Values to assert where \code{sbom} found none, or found
 something different. \code{NULL}, a data frame or the path to a CSV file, with
 the character columns \code{component} (the \code{name} or \code{ref} of one
-component; embedded and system components only by \code{ref}), \code{field},
-\code{value}, \code{asserted_by} and \code{reason}. \code{field} is one
+component, as sbom built it, before any row moves it; embedded and
+system components only by \code{ref}), \code{field}, \code{value}, \code{asserted_by} and
+\code{reason}. \code{field} is one
 of \code{"version"}, \code{"license_spdx"}, \code{"supplier_name"}, \code{"supplier_url"},
 \code{"maintainer"}, \code{"purl"} and \code{"download_location"}. Rows are applied in
 order, and each is recorded with who asserted it and why. An override
 that contradicts a found value wins and adds an \code{override-conflict} issue.
-Asserting \code{"version"} makes it the exact version, and asserting a CRAN
-\code{"purl"} (\code{pkg:cran}) makes the component a CRAN package, or a
-Bioconductor package when its \code{repository_url} names bioconductor.org;
-neither changes the \code{ref}.
-An unknown component or field, or a missing column, is an error.}
+Asserting \code{"version"} makes it the exact version, and moves the
+component's package URL to it unless a row asserts the \code{"purl"}: a
+package URL at the old version takes the new one, and one without a
+version gains it when its type is \code{cran}, \code{github}, \code{gitlab} or
+\code{bitbucket}. A package file named for the old version is renamed for
+the new one, and any other is dropped, as are the checksums of the
+version found. An asserted version of R is also the version of the base
+packages, each with a record of the assertion. Asserting a CRAN \code{"purl"}
+(\code{pkg:cran}) makes the component a CRAN package, or a Bioconductor
+package when its \code{repository_url} names bioconductor.org. When a
+component's \code{ref} is its package URL, the \code{ref} follows the package URL
+that the overrides leave, and every reference to it moves too; a \code{ref}
+that another component already has is an error. Any other \code{ref}, such
+as \verb{unknown/<name>}, stays as it is.
+An asserted field removes the component's issues that it answers, such
+as \code{version-missing} or \code{purl-inferred}. An issue that also states a
+fact that stays true is reworded instead, as info: that a package came
+from a git repository, once its package URL is asserted; that a
+dependency is missing, once its version and package URL are both
+asserted; and that a \code{LinkingTo} package is not installed, once its
+version is. The issues that name the components without a version, such
+as \code{system-version-unknown}, name only those still without one, and go
+when none is left.
+A blank value, an unknown component or field, or a missing column, is an
+error.}
 
 \item{embedded}{Whether to record the code that packages carry inside them.
 A package named in \code{LinkingTo} is recorded as an embedded component of
 the package that compiles it in, nested under that package, as
-inferred, at the version and with the licence that the library,
+inferred, at the version and with the license that the library,
 lockfile or manifest records for it now. A C or C++ library that a package
 copies into its \verb{src/} folder (source packages), or names in its
 \code{COPYRIGHTS} file or \code{cph} entries (source and installed packages), is
@@ -82,7 +105,7 @@ header when there is one, and is otherwise unknown. A JavaScript or CSS
 library declared in htmlwidgets YAML, or found by the header comment of a
 file under \verb{www/}, \verb{htmlwidgets/lib/} or \verb{lib/} (under \verb{inst/} in source
 packages), is recorded as an npm component of that package, from the
-rules in \code{inst/extdata/javascript.csv}. Its licence is not read.}
+rules in \code{inst/extdata/javascript.csv}. Its license is not read.}
 
 \item{system}{Whether to detect system libraries. A package's
 \code{SystemRequirements} text is mapped to system libraries and programs
@@ -102,7 +125,8 @@ come from CRAN, because sbom could not tell where it came from (as for a
 package that is not installed), or because it was installed from a
 local source or from GitHub, GitLab, Bitbucket or git, is named in an
 \code{advisories-not-cran} issue. Bioconductor packages are not compared:
-OSV does not cover them yet, and when the SBOM holds one a note says so.
+OSV does not cover them yet, and when the SBOM holds one a note states
+that the advisory database leaves them out.
 Matching is local, with the versions and package URLs after
 \code{overrides}, so no package name leaves the machine.
 
@@ -153,9 +177,9 @@ way to read a hand-written Nix file. It runs \code{nix-instantiate}, which
 evaluates the file and may download nixpkgs, so unlike the static read it
 can use the network, through Nix. \code{snapshot} is not used. It records:
 \itemize{
-\item R, and each R package (every store path named \verb{r-<name>}), labelled
+\item R, and each R package (every store path named \verb{r-<name>}), labeled
 observed, at the version in its store path or, when the path has none,
-in its \code{DESCRIPTION} in the store. A package's licence and maintainer
+in its \code{DESCRIPTION} in the store. A package's license and maintainer
 come from that \code{DESCRIPTION} when it is readable.
 \item A package that a file written by rix fetches from git or from the CRAN
 archive is described as in the static read below (its package URL,
@@ -201,11 +225,11 @@ What the static mode records:
 \itemize{
 \item The project folder, the folder of the file, is the root.
 \item R, at the version of rix's \code{r_ver} when it is a version, as declared.
-Otherwise R has no version, and an issue says so.
+Otherwise R has no version, and an issue records it as missing.
 \item Each R package that the file names, by name only. These come from a
 nixpkgs snapshot that the file pins, but the file does not say which
 version that snapshot holds, so their versions are unknown and one issue
-says so. nixpkgs' \code{rPackages} holds Bioconductor packages as well as
+suggests passing \code{snapshot} to look them up. nixpkgs' \code{rPackages} holds Bioconductor packages as well as
 CRAN ones, so each is taken to be the CRAN package of that name, with no
 supplier, and one issue says that their package URLs are inferred.
 \item Packages that rix fetches from git, and from the CRAN archive. An archive
@@ -227,7 +251,7 @@ date, or a nixpkgs commit.
 The \code{sha256} values in the file are Nix's hashes of the unpacked source,
 not hashes of a file, so they are written in a package's description and
 never as a file hash. Python and Julia packages that the file installs are
-not listed, and an issue says so.
+not listed, and an issue names the kinds of software left out.
 }
 
 \subsection{Looking up versions}{
@@ -248,22 +272,23 @@ so and nothing is looked up.
 Each CRAN package that the file names without a version takes the version
 the snapshot lists, and sbom follows \code{Depends}, \code{Imports} and \code{LinkingTo}
 in the snapshot to add the packages that Nix would install with it. The
-versions and the added packages and dependencies are labelled inferred,
+versions and the added packages and dependencies are labeled inferred,
 since the snapshot is a stand-in for what Nix installed. R, base and
 recommended packages are left to R's own handling. Archive packages keep
 the version in their URL, and git packages stay without a version. A
 package that the snapshot lists is a CRAN package. One that it lacks,
 named by the file or by a snapshot package's dependencies, may not be one,
 so it is listed without a version or package URL, with an issue. If the
-snapshot cannot be read, an issue says so. A snapshot given as a URL is
+snapshot cannot be read, the versions stay unknown and an issue gives the
+reason. A snapshot given as a URL is
 named in the notes by that URL, without its credentials, query string or
 fragment, and a local file by its name.
 
 \code{library}, \code{embedded} and \code{system} apply as for \code{\link[=sbom_renv]{sbom_renv()}}, to the
 packages whose version the file declares and that are installed in
 \code{library} at that version. The installed copy fills in what the file
-lacks: the licence and maintainer. Without \code{library}, nothing is read from
-an installed copy. One issue lists the packages left without a licence or
+lacks: the license and maintainer. Without \code{library}, nothing is read from
+an installed copy. One issue lists the packages left without a license or
 maintainer.
 }
 }
@@ -283,4 +308,8 @@ writeLines(c(
   "in rpkgs"
 ), nix)
 sbom_nix(nix, nix = FALSE, system = FALSE)
+\dontrun{
+# Needs the network: looks the package versions up in a CRAN snapshot.
+sbom_nix(nix, nix = FALSE, system = FALSE, snapshot = "ppm")
+}
 }

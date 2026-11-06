@@ -42,6 +42,9 @@ sbom_uuid <- function(x) {
   comps <- x$components
   comps <- comps[order(comps$ref, method = "radix"), , drop = FALSE]
   rownames(comps) <- NULL
+  for (col in names(comps)[vapply(comps, is.list, NA)]) {
+    comps[[col]] <- uuid_json_column(comps[[col]])
+  }
   meta <- x$metadata[setdiff(names(x$metadata), c("timestamp", "inputs", "advisories"))]
   content <- list(
     components = comps,
@@ -53,11 +56,35 @@ sbom_uuid <- function(x) {
   if (nrow(advisories) > 0L) {
     content$advisories <- advisories
   }
-  json <- jsonlite::toJSON(
-    content, auto_unbox = FALSE, null = "null", na = "null",
-    digits = NA, POSIXt = "ISO8601", dataframe = "rows"
-  )
+  json <- uuid_json(content, json_verbatim = TRUE)
   uuid5(enc2utf8(as.character(json)))
+}
+
+# `x` as JSON, as sbom_uuid() hashes it.
+uuid_json <- function(x, ...) {
+  jsonlite::toJSON(
+    x, auto_unbox = FALSE, null = "null", na = "null",
+    digits = NA, POSIXt = "ISO8601", dataframe = "rows", ...
+  )
+}
+
+# A list column of the components, such as `hashes`, as the JSON jsonlite
+# writes for each value, kept as JSON for jsonlite to write as it is.
+# jsonlite writes the values of a list column one call at a time, which took
+# most of the time of writing a large SBOM. Most values are an empty table,
+# which jsonlite writes as an empty array whatever its columns; it is
+# written once for each set of columns.
+uuid_json_column <- function(col) {
+  empty <- vapply(col, function(v) is.data.frame(v) && nrow(v) == 0L, NA)
+  shape <- rep(NA_character_, length(col))
+  shape[empty] <- vapply(col[empty], function(v) paste(names(v), collapse = "\r"), "")
+  out <- character(length(col))
+  for (s in unique(shape[empty])) {
+    at <- empty & shape %in% s
+    out[at] <- as.character(uuid_json(col[[which(at)[1L]]]))
+  }
+  out[!empty] <- vapply(col[!empty], function(v) as.character(uuid_json(v)), "")
+  structure(out, class = "json")
 }
 
 spdx_namespace <- function(x) {

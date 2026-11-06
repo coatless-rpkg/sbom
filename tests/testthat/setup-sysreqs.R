@@ -16,7 +16,10 @@ local_mocked_bindings(
 # Nor does any test run otool, ldd, xcode-select, dpkg or rpm, or read
 # /etc/os-release, and every test sees Linux, whatever runs it. A test that
 # wants linked libraries, an operating system package, a release or another
-# system mocks them itself.
+# system mocks them itself. The real wrappers are kept for the tests that
+# mock the commands below them.
+sys_linked_libraries_real <- sys_linked_libraries
+sys_os_package_real <- sys_os_package
 local_mocked_bindings(
   sys_linked_libraries = function(so_file) structure(character(), versions = character(), tool_missing = FALSE),
   sys_otool_rpaths = function(so_file) character(),

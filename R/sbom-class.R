@@ -36,6 +36,19 @@ empty_df <- function(cols, logical = character(), list = character()) {
   out
 }
 
+# The rows of a data frame as named lists, one value per column, for code
+# that reads a row at a time: `row$col` is what `df[i, , drop = FALSE]$col`
+# gives, so a list column gives a list of length one and `row$col[[1]]` its
+# value, and a column with names or a class keeps them. Taking each row as a
+# data frame took most of the time of writing a large SBOM.
+df_rows <- function(df) {
+  cols <- unclass(df)
+  attr(cols, "row.names") <- NULL
+  boxed <- vapply(cols, function(col) is.list(col) || !is.null(attributes(col)), NA)
+  cols[boxed] <- lapply(cols[boxed], function(col) lapply(seq_along(col), function(i) col[i]))
+  .mapply(list, cols, NULL)
+}
+
 empty_components <- function() {
   empty_df(
     component_columns(),

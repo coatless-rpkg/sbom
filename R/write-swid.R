@@ -12,6 +12,14 @@ swid_set <- function(x) {
   length(x) == 1L && !is.na(x) && nzchar(x)
 }
 
+# The regid without leading or trailing white space, or NA when there is
+# none. The builders store it trimmed (check_regid()), but an SBOM read or
+# made otherwise may carry it padded.
+swid_regid <- function(regid) {
+  regid <- if (length(regid) == 1L) trimws(as.character(regid)) else NA_character_
+  if (swid_set(regid)) regid else NA_character_
+}
+
 # The regid without its scheme or trailing "/": "https://example.org" gives
 # "example.org". NA when there is no regid.
 swid_authority <- function(regid) {
@@ -74,7 +82,8 @@ swid_tag <- function(x, version = "2015") {
     xml2::xml_set_attr(doc, "versionScheme", scheme)
   }
   meta <- x$metadata
-  authority <- swid_authority(meta$regid)
+  regid <- swid_regid(meta$regid)
+  authority <- swid_authority(regid)
   xml2::xml_set_attr(doc, "tagId", enc2utf8(swid_tag_id(root$ref, authority)))
   # The UTC date as YYYYMMDD, so the version grows with each new tag.
   xml2::xml_set_attr(
@@ -91,7 +100,7 @@ swid_tag <- function(x, version = "2015") {
   }
   swid_node(doc, "Entity", c(
     name = creator,
-    regid = if (swid_set(meta$regid)) meta$regid else swid_placeholder_regid,
+    regid = if (!is.na(regid)) regid else swid_placeholder_regid,
     role = "tagCreator"
   ))
   if (swid_set(root$supplier_name)) {
