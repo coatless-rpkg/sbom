@@ -137,7 +137,7 @@ local_fixture_copy <- function(fixture, name = basename(fixture), env = parent.f
 expect_valid_in_every_format <- function(x, label = "") {
   ext <- stats::setNames(sbom_formats()$extension, sbom_formats()$format)
   expected <- c(`cyclonedx-json` = "pass", `cyclonedx-xml` = "pass", `spdx-json` = "pass", `spdx-yaml` = "pass",
-                `spdx-xml` = "partial", `spdx-tv` = "partial", `spdx3-jsonld` = "partial", swid = "pass")
+                `spdx-xml` = "partial", `spdx-tv` = "partial", `spdx3-jsonld` = "partial", swid = "partial")
   for (f in names(ext)) {
     tf <- withr::local_tempfile(fileext = ext[[f]])
     write_sbom(x, tf, format = f)

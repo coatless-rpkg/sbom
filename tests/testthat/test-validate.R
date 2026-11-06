@@ -57,7 +57,7 @@ findings_frame <- function(check = character(), severity = character(), location
 }
 
 # A CycloneDX 1.6 document with every NTIA element, whose one dependency has
-# the licence expression `license`.
+# the license expression `license`.
 cdx_text <- function(license = "MIT", name = "alpha") {
   doc <- list(
     bomFormat = "CycloneDX", specVersion = "1.6", version = 1L,
@@ -112,11 +112,16 @@ test_that("sbom's own files, fully described, pass as their formats allow, and S
     expect_identical(v$checks, c("schema", "content"))
     if (f == "swid") {
       # A SWID tag has no field for its timestamp, and describes only itself.
+      # sbom does not bundle its schema, so the schema layer is partial.
       expect_identical(v$findings, findings_frame(
-        check = c("ntia-timestamp", "swid-links"), severity = c("error", "info"),
-        location = c("", "/links"),
+        check = c("ntia-timestamp", "schema", "swid-links"), severity = c("error", "info", "info"),
+        location = c("", "", "/links"),
         message = c(
           "A SWID tag has no field for the time it was made, so it has no timestamp.",
+          paste(
+            "sbom does not bundle the ISO/IEC 19770-2:2015 schema, so the tag was checked against sbom's structural rules;",
+            "set the option sbom.swid_xsd to a copy of the ISO schema to check it fully."
+          ),
           "A SWID tag describes only itself, so the 6 tags it links to were not checked."
         )
       ))
@@ -403,7 +408,7 @@ test_that("error_on = \"warning\" also turns a warning into an R error", {
     cli::ansi_strip(conditionMessage(cnd)),
     paste0(
       "The SBOM failed validation with 0 errors and 1 warning.\n",
-      "i The licence expression GPL-2.0 uses the deprecated SPDX licence id GPL-2.0."
+      "i The license expression GPL-2.0 uses the deprecated SPDX license id GPL-2.0."
     )
   )
   expect_no_error(validate_sbom(local_cdx_file(cdx_text()), error_on = "warning"))
@@ -498,11 +503,11 @@ test_that("braces from the file print as they are, in print() and in the error_o
   )
 })
 
-test_that("a 1 MB name, id, purl or licence expression gives short messages, and print() stays small", {
+test_that("a 1 MB name, id, purl or license expression gives short messages, and print() stays small", {
   local_plain_cli()
   big <- strrep("x", 1e6)
   doc <- jsonlite::fromJSON(cdx_text(name = big), simplifyVector = FALSE)
-  # Another component, with a 1 MB licence expression that does not parse
+  # Another component, with a 1 MB license expression that does not parse
   # and uses an unknown id, a 1 MB purl, and a 1 MB id it shares with a third.
   doc$components[[2]] <- list(
     type = "library", `bom-ref` = big, name = "beta", version = "1.0", supplier = list(name = "CRAN"),
@@ -525,14 +530,14 @@ test_that("a 1 MB name, id, purl or licence expression gives short messages, and
     paste0("The purl pkg:cran/alpha@1.0 names alpha, not ", strrep("x", 79), "\u2026.")
   )
   expect_lt(sum(nchar(utils::capture.output(print(v)))), 5000L)
-  # The licence expression that parses uses an unknown id, quoted short.
+  # The license expression that parses uses an unknown id, quoted short.
   doc$components[[3]]$licenses[[1]]$expression <- paste(big, "OR MIT")
   v <- validate_sbom(local_cdx_file(jsonlite::toJSON(doc, auto_unbox = TRUE)), checks = "content")
   unknown <- only(v, "license-unknown")$message
   expect_identical(
     unknown,
     paste0(
-      "The licence expression ", strrep("x", 79), "\u2026 uses ", strrep("x", 79), "\u2026, which is not on the SPDX License List ",
+      "The license expression ", strrep("x", 79), "\u2026 uses ", strrep("x", 79), "\u2026, which is not on the SPDX License List ",
       spdx_license_list_version(), "."
     )
   )
@@ -541,7 +546,7 @@ test_that("a 1 MB name, id, purl or licence expression gives short messages, and
   expect_lt(max(nchar(x$issues$message)), 300L)
 })
 
-test_that("a licence expression with thousands of unknown ids names at most 20 of them", {
+test_that("a license expression with thousands of unknown ids names at most 20 of them", {
   ids <- sprintf("Unknown%d", 1:5000)
   path <- local_cdx_file(cdx_text(license = paste(ids, collapse = " AND ")))
   msg <- only(validate_sbom(path, checks = "content"), "license-unknown")$message

@@ -1,4 +1,7 @@
-# Every format sbom reads has a bundled schema: the formats are read_formats.
+# The versions of each format sbom reads (read_formats) that the schema layer
+# checks. Each has a bundled schema, except SWID: sbom does not bundle the
+# ISO/IEC 19770-2:2015 schema, and checks a tag against its own structural
+# rules unless the option sbom.swid_xsd names a copy of the schema.
 schema_versions <- list(
   `cyclonedx-json` = c("1.4", "1.5", "1.6", "1.7"),
   `cyclonedx-xml` = c("1.4", "1.5", "1.6", "1.7"),
@@ -37,13 +40,13 @@ resolve_schema_version <- function(format, version) {
   version
 }
 
-# Path of the bundled schema for a format and version.
+# Path of the bundled schema for a format and version. SWID has none.
 schema_file <- function(format, version) {
   version <- resolve_schema_version(format, version)
   file <- switch(format,
     `cyclonedx-json` = file.path("cyclonedx", sprintf("bom-%s.schema.json", version)),
     `cyclonedx-xml` = file.path("cyclonedx", sprintf("bom-%s.xsd", version)),
-    swid = file.path("swid", sprintf("swid-%s.xsd", version)),
+    swid = cli::cli_abort("sbom does not bundle the SWID schema."),
     `spdx-json` = ,
     `spdx-yaml` = ,
     `spdx-xml` = ,
@@ -515,21 +518,28 @@ validate_spdx3 <- function(path, version) {
   )
 }
 
-# Checks an XML file against its XSD. The file is parsed from its bytes:
-# xml2 takes a string holding < or > for XML itself, not a path. Entities are
-# never expanded (no NOENT), and libxml2 cannot validate a document whose
-# entities, declared in its DTD, are left as references, so that check is
-# skipped.
-validate_xml <- function(path, format, version) {
-  schema_path <- schema_file(format, version)
+# Reads an XML file and parses it from its bytes: xml2 takes a string holding
+# < or > for XML itself, not a path. Entities are never expanded (no NOENT),
+# and nothing is fetched (NONET). Returns list(bytes, doc), where `doc` is the
+# error when the file is not well-formed.
+xml_parse_file <- function(path) {
   bytes <- readBin(path, "raw", n = file.size(path))
   doc <- tryCatch(xml2::read_xml(bytes, options = c("NOBLANKS", "NONET")), error = identity)
+  list(bytes = bytes, doc = doc)
+}
+
+# Checks an XML file against the XSD at `schema_path`; `parsed` is the file
+# as xml_parse_file() reads it. libxml2 cannot validate a document whose
+# entities, declared in its DTD, are left as references, so that check is
+# skipped.
+validate_xml <- function(path, schema_path, parsed = xml_parse_file(path)) {
+  doc <- parsed$doc
   if (inherits(doc, "error")) {
     return(parse_failure("well-formed XML", doc))
   }
-  # The XSDs import their companions (spdx.xsd, xmldsig-core-schema.xsd,
-  # xml.xsd) by a relative schemaLocation, which libxml2 resolves against the
-  # XSD's own URL, not the working directory.
+  # An XSD imports its companions (spdx.xsd for CycloneDX) by a relative
+  # schemaLocation, which libxml2 resolves against the XSD's own URL, not the
+  # working directory.
   schema <- xml2::read_xml(schema_path, options = c("NOBLANKS", "NONET"))
   ok <- xml2::xml_validate(doc, schema)
   if (isTRUE(ok)) {
@@ -538,7 +548,7 @@ validate_xml <- function(path, format, version) {
   errs <- as.character(attr(ok, "errors"))
   # libxml2's own error, which begins its message, not a value it quotes.
   internal <- any(startsWith(errs, "Internal error: xmlSchemaVDocWalk"))
-  if (internal && length(grepRaw("<!ENTITY", bytes, fixed = TRUE)) > 0L) {
+  if (internal && length(grepRaw("<!ENTITY", parsed$bytes, fixed = TRUE)) > 0L) {
     return(validation_result(
       "skipped",
       data.frame(
@@ -559,6 +569,130 @@ validate_xml <- function(path, format, version) {
   )
 }
 
+# The note of a SWID tag that follows sbom's structural rules.
+swid_partial_message <- paste(
+  "sbom does not bundle the ISO/IEC 19770-2:2015 schema, so the tag was checked against sbom's structural rules;",
+  "set the option sbom.swid_xsd to a copy of the ISO schema to check it fully."
+)
+
+# The SHA-256 of the ISO/IEC 19770-2:2015 schema as ISO publishes it, at
+# https://standards.iso.org/iso/19770/-2/2015-current/schema.xsd. The option
+# sbom.swid_xsd must name a file with exactly these bytes.
+swid_iso_sha256 <- "6af9d0554932102ace5c696f723c1dc4a4b1a9846908cddec67ccc0518c0e5d4"
+
+# The two schemas that the ISO schema imports by URL, as its schemaLocation
+# values name them; sbom bundles both, unmodified, under the same base names.
+swid_iso_imports <- c(
+  "http://www.w3.org/TR/xmldsig-core/xmldsig-core-schema.xsd",
+  "http://www.w3.org/2001/xml.xsd"
+)
+
+# The note of a SWID tag checked against sbom's structural rules because the
+# option sbom.swid_xsd names something other than the ISO schema.
+swid_iso_note <- paste0(
+  "sbom.swid_xsd is not the ISO/IEC 19770-2:2015 schema as ISO publishes it (SHA-256 ",
+  swid_iso_sha256, "), so the tag was checked against sbom's structural rules."
+)
+
+# The note of a SWID tag checked against sbom's structural rules because the
+# W3C schemas that sbom bundles could not be copied beside the ISO schema.
+swid_imports_note <- paste(
+  "The W3C schemas that the ISO/IEC 19770-2:2015 schema imports could not be copied from sbom's installation,",
+  "so the tag was checked against sbom's structural rules."
+)
+
+# The option sbom.swid_xsd: NULL when it is not set; the bytes of the file it
+# names when those bytes are the ISO schema; and NA for any other value. The
+# file is read once, and the bytes hashed are the bytes used, so only that
+# exact schema is ever compiled, even if the file changes meanwhile, and no
+# schema a user or a document supplies can make libxml2 load anything: xml2's
+# entity loader fetches what a schema imports by URL with download.file(),
+# whatever the parser options say.
+swid_xsd_option <- function() {
+  path <- getOption("sbom.swid_xsd")
+  if (is.null(path)) {
+    return(NULL)
+  }
+  if (!is_string(path) || !nzchar(path)) {
+    return(NA_character_)
+  }
+  path <- path.expand(path)
+  if (!file.exists(path) || dir.exists(path)) {
+    return(NA_character_)
+  }
+  bytes <- readBin(path, "raw", file.size(path))
+  if (!identical(cli::hash_raw_sha256(bytes), swid_iso_sha256)) {
+    return(NA_character_)
+  }
+  bytes
+}
+
+# The bundled copies of the two W3C schemas that the ISO schema imports: a
+# function, so that a test can stand in for a damaged installation.
+swid_w3c_files <- function() {
+  system.file("schemas", "swid", basename(swid_iso_imports), package = "sbom")
+}
+
+# Calls `f` with the path of a copy of the ISO schema, written from `bytes`,
+# whose two imports name the W3C schemas that sbom bundles, copied beside it,
+# so that compiling it needs no network. The copy is made in a new temporary
+# folder, deleted afterwards. `bytes` are the ISO schema, byte for byte, so
+# each import is replaced exactly once. Returns NULL, calling nothing, when
+# the W3C schemas cannot be copied: the ISO schema would not compile without
+# them, and libxml2 would then follow the tag's own schema location.
+swid_with_local_schema <- function(bytes, f) {
+  dir <- tempfile("sbom-swid-")
+  dir.create(dir)
+  on.exit(unlink(dir, recursive = TRUE), add = TRUE)
+  w3c <- swid_w3c_files()
+  if (length(w3c) != length(swid_iso_imports) || !all(suppressWarnings(file.copy(w3c, dir)))) {
+    return(NULL)
+  }
+  text <- rawToChar(bytes)
+  for (location in swid_iso_imports) {
+    text <- sub(
+      paste0('schemaLocation="', location, '"'), paste0('schemaLocation="', basename(location), '"'),
+      text, fixed = TRUE, useBytes = TRUE
+    )
+  }
+  copy <- file.path(dir, "swid-2015.xsd")
+  writeBin(charToRaw(text), copy)
+  f(copy)
+}
+
+# A SWID tag. sbom does not bundle the ISO/IEC 19770-2:2015 schema, so the
+# tag gets sbom's structural rules, and at best "partial", unless the option
+# sbom.swid_xsd names the ISO schema as ISO publishes it. Then the tag is
+# checked against that schema, and against the standard's rule that it has a
+# tagCreator, which the schema only documents.
+validate_swid <- function(path) {
+  parsed <- xml_parse_file(path)
+  if (inherits(parsed$doc, "error")) {
+    return(parse_failure("well-formed XML", parsed$doc))
+  }
+  xsd <- swid_xsd_option()
+  note <- if (is.null(xsd)) swid_partial_message else swid_iso_note
+  if (is.raw(xsd)) {
+    res <- swid_with_local_schema(xsd, function(schema) validate_xml(path, schema, parsed))
+    if (!is.null(res)) {
+      creator <- swid_creator_findings(parsed$doc)
+      if (nrow(creator) == 0L) {
+        return(res)
+      }
+      return(validation_result("fail", rbind(if (res$status == "fail") res$findings, creator)))
+    }
+    note <- swid_imports_note
+  }
+  findings <- swid_structure_findings(parsed$doc)
+  if (nrow(findings) > 0L) {
+    if (!is.null(xsd)) {
+      findings <- rbind(findings, data.frame(location = "", message = note, stringsAsFactors = FALSE))
+    }
+    return(validation_result("fail", findings))
+  }
+  validation_result("partial", data.frame(location = "", message = note, stringsAsFactors = FALSE))
+}
+
 # libxml2's messages quote names and values from the document between single
 # quotes, and stop at about 64 KB, inside a quote when the value is long.
 # Each quoted text is quoted short, and the message as a whole is cut at
@@ -575,7 +709,7 @@ xsd_message <- function(errs) {
   quote_value(errs, 2000L)
 }
 
-#' Validate a written document against the bundled schema
+#' Validate a written document against the schema of its format
 #'
 #' Returns `list(status, findings)`, where `findings` is a data frame with
 #' columns `location` and `message`. `status` is one of:
@@ -583,16 +717,18 @@ xsd_message <- function(errs) {
 #' * `"pass"`: the document satisfies the schema.
 #' * `"fail"`: it does not, or it could not be parsed; `findings` says why.
 #' * `"skipped"`: the package needed to check it is not installed, the JSON
-#'   schema check could not run, the document is too large for it, or an XML
+#'   schema check could not run, the document is too large for it, an XML
 #'   document uses entities declared in its DTD, which libxml2 cannot
 #'   validate unexpanded.
 #' * `"partial"`: the format has no official schema (SPDX XML and tag-value),
 #'   so the document was read back into the SPDX JSON model and that passed;
-#'   or the schema covers only part of the rules (SPDX 3, whose SHACL rules are
-#'   not checked). `findings` holds one note saying which.
+#'   the schema covers only part of the rules (SPDX 3, whose SHACL rules are
+#'   not checked); or sbom does not bundle the schema (SWID, unless the option
+#'   `sbom.swid_xsd` names the ISO schema), and the tag follows sbom's
+#'   structural rules. `findings` holds one note saying which.
 #'
 #' @param path Path of the document.
-#' @param format One of the formats with a bundled schema.
+#' @param format One of the formats sbom reads (`read_formats`).
 #' @param version The format version; `NULL` for the default.
 #' @param doc For SPDX YAML, XML and tag-value, the document's SPDX JSON model
 #'   when it has been read already, as `read_document()` reads it, so that
@@ -604,8 +740,8 @@ schema_validate <- function(path, format, version = NULL, doc = NULL) {
     cli::cli_abort("{.arg path} must be an existing file, not {.val {path}}.")
   }
   switch(format,
-    `cyclonedx-xml` = ,
-    swid = validate_xml(path, format, version),
+    `cyclonedx-xml` = validate_xml(path, schema_file(format, version)),
+    swid = validate_swid(path),
     `spdx-yaml` = validate_yaml(path, version, doc),
     `spdx-xml` = validate_spdx_xml(path, version, doc),
     `spdx-tv` = validate_spdx_tv(path, version, doc),

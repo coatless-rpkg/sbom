@@ -19,16 +19,34 @@ validation_error_on <- c("never", "error", "warning")
 #' `validate_sbom()` runs two layers of checks on a file.
 #'
 #' The **schema layer** checks the file against the schema of its format and
-#' version. sbom bundles the schemas, so validation works offline:
+#' version. sbom bundles the schemas, except the ISO schema of SWID tags, so
+#' validation works offline:
 #'
 #' * CycloneDX JSON, SPDX JSON and YAML, and SPDX 3 JSON-LD are checked with
 #'   jsonvalidate, which must be installed.
-#' * CycloneDX XML and SWID tags are checked against their XSDs with xml2.
+#' * CycloneDX XML is checked against its XSD with xml2.
 #' * SPDX has no official schema for XML or tag-value, so those files are
 #'   read into the SPDX JSON model and checked against the SPDX JSON schema.
 #'   At best they are `partial`.
 #' * SPDX 3 is also `partial` at best, since SPDX's SHACL rules are not
 #'   checked.
+#' * sbom does not bundle the ISO/IEC 19770-2:2015 schema of SWID tags, since
+#'   ISO's notice does not clearly allow it to be redistributed. So a SWID tag
+#'   is checked against sbom's structural rules, and is `partial` at best.
+#'   They are no stricter than the ISO schema: the root is `SoftwareIdentity`
+#'   in the 2015 namespace, with a `name` and a `tagId`; every `Entity` has a
+#'   `name` and a `role`, and every `Link` an `href` and a `rel`; the roles,
+#'   `rel` and `versionScheme` are tokens, and `tagVersion` an integer. As
+#'   the standard requires, an `Entity` must also have the role `tagCreator`.
+#'
+#'   To check a tag fully, download the ISO schema from
+#'   <https://standards.iso.org/iso/19770/-2/2015-current/schema.xsd> and set
+#'   the option `sbom.swid_xsd` to the path of the file. sbom accepts only
+#'   that file as ISO publishes it, by its SHA-256, and checks the tag against
+#'   it with xml2, giving `pass` or `fail`, and against the rule that it has a
+#'   `tagCreator`. sbom bundles the two W3C schemas that the ISO schema
+#'   imports, so the check needs no network. With any other value, the option
+#'   gives the structural rules, and a note.
 #'
 #' A version with no bundled schema, such as CycloneDX 1.3, is not checked,
 #' and a note says so. Each finding of this layer has the check `schema`. It
@@ -69,7 +87,8 @@ validation_error_on <- c("never", "error", "warning")
 #'   the JSON schema check could not run, or when an XML document uses
 #'   entities declared in its DTD, which sbom does not expand.
 #' * `"partial"`: no layer failed, but one was skipped or could check only
-#'   part of the rules (SPDX XML, SPDX tag-value and SPDX 3).
+#'   part of the rules (SPDX XML, SPDX tag-value and SPDX 3, and SWID unless
+#'   the option `sbom.swid_xsd` names the ISO schema).
 #' * `"pass"`: every layer that ran passed.
 #'
 #' @section The NTIA minimum elements:
@@ -173,8 +192,11 @@ validation_error_on <- c("never", "error", "warning")
 #'   such as `/packages/3`, or `""` for the document as a whole. A file that is
 #'   not JSON was read into a JSON model, into which the pointer points: the
 #'   CycloneDX JSON model for CycloneDX XML, and the SPDX JSON model for SPDX
-#'   YAML, XML and tag-value. An XSD finding (CycloneDX XML and SWID) has the
-#'   location `""`, since xml2 does not say where libxml2 found the problem.
+#'   YAML, XML and tag-value. An XSD finding (CycloneDX XML, and SWID with the
+#'   option `sbom.swid_xsd`) has the location `""`, since xml2 does not say
+#'   where libxml2 found the problem. A finding of sbom's structural rules for
+#'   SWID has an XPath-like location, such as `/SoftwareIdentity/Entity[2]`
+#'   for the second `Entity`.
 #'   For an `<sbom>` object, the location is `"component <ref>"` or a metadata
 #'   field.
 #'   The findings are ordered by severity, the schema findings first, then by

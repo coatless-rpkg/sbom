@@ -83,7 +83,7 @@ test_that("an SBOM with two advisories is valid in every format and version", {
   expect_valid_in_every_format(x, "two advisories")
   expected <- c(
     `cyclonedx-json` = "pass", `cyclonedx-xml` = "pass", `spdx-json` = "pass", `spdx-yaml` = "pass",
-    `spdx-xml` = "partial", `spdx-tv` = "partial", `spdx3-jsonld` = "partial", swid = "pass"
+    `spdx-xml` = "partial", `spdx-tv` = "partial", `spdx3-jsonld` = "partial", swid = "partial"
   )
   for (fv in every_format_version()) {
     tf <- withr::local_tempfile(fileext = fv$extension)

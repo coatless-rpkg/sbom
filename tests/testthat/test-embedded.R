@@ -83,7 +83,7 @@ test_that("embedded components nest in CycloneDX and validate everywhere", {
   top <- vapply(d$components, `[[`, "", "bom-ref")
   expect_false("local/srcpkg#embedded/cranpkg" %in% top)
   expected <- c(`cyclonedx-json` = "pass", `cyclonedx-xml` = "pass", `spdx-json` = "pass", `spdx-yaml` = "pass",
-                `spdx-xml` = "partial", `spdx-tv` = "partial", `spdx3-jsonld` = "partial", swid = "pass")
+                `spdx-xml` = "partial", `spdx-tv` = "partial", `spdx3-jsonld` = "partial", swid = "partial")
   ext <- stats::setNames(sbom_formats()$extension, sbom_formats()$format)
   for (f in names(expected)) {
     tf <- withr::local_tempfile(fileext = ext[[f]]); write_sbom(x, tf, format = f)
@@ -217,7 +217,7 @@ test_that("one bundled library without a version is named alone, and a known ver
   expect_false(grepl("sqlite", msg, fixed = TRUE))
 })
 
-test_that("zstd and mbedtls keep both sides of their dual licences", {
+test_that("zstd and mbedtls keep both sides of their dual licenses", {
   r <- vendored_rules()
   expect_equal(r$license[r$name == "zstd"], "BSD-3-Clause OR GPL-2.0-only")
   expect_equal(r$license[r$name == "mbedtls"], "Apache-2.0 OR GPL-2.0-or-later")
@@ -245,7 +245,7 @@ test_that("an installed package with compiled code and no clues raises one issue
   expect_equal(iss$ref, sbom_components(x)$ref[sbom_components(x)$is_root])
   expect_equal(
     iss$message,
-    paste0("1 package contains compiled code, but sbom recognised no bundled library in its COPYRIGHTS ",
+    paste0("1 package contains compiled code, but sbom recognized no bundled library in its COPYRIGHTS ",
            "file or cph entries, so it could not look inside it: cpkg 1.0.")
   )
   expect_false(any(sbom_components(x)$ecosystem == "vendored"))
@@ -327,7 +327,7 @@ test_that("several packages with compiled code share one issue, labels in radix 
   expect_equal(nrow(iss), 1L)
   expect_equal(
     iss$message,
-    paste0("3 packages contain compiled code, but sbom recognised no bundled library in their COPYRIGHTS ",
+    paste0("3 packages contain compiled code, but sbom recognized no bundled library in their COPYRIGHTS ",
            "file or cph entries, so it could not look inside them: Alpha 1.0, mid 1.0, zeta 1.0.")
   )
 })
@@ -358,7 +358,7 @@ test_that("bundled JavaScript is found in htmlwidgets YAML and by header", {
   expect_equal(note$severity, "info")
   expect_equal(
     note$message,
-    "sbom does not read the licences of bundled JavaScript, so these have none recorded: d3 7.8.5, jquery 3.7.1."
+    "sbom does not read the licenses of bundled JavaScript, so these have none recorded: d3 7.8.5, jquery 3.7.1."
   )
   expect_false(any(issues$code == "license-missing" & grepl("#js/", issues$ref, fixed = TRUE)))
   rel <- sbom_dependencies(x)
@@ -566,7 +566,7 @@ test_that("candidates are chosen by file name before the cap, and a hit cap is n
   dir.create(www, recursive = TRUE)
   for (i in 1:5) write_text("var x = 1;\n", file.path(www, sprintf("a%d.js", i)))
   write_text("/*! jQuery v3.7.1 | x */\n", file.path(www, "jquery.min.js"))
-  # Five other .js files come first, but only candidates count towards the cap.
+  # Five other .js files come first, but only candidates count toward the cap.
   res <- javascript_components(dir, js_parent(), max_files = 1L)
   expect_equal(res$components$name, "jquery")
   expect_false("javascript-scan-truncated" %in% res$issues$code)
@@ -583,7 +583,7 @@ test_that("candidates are chosen by file name before the cap, and a hit cap is n
   )
 })
 
-test_that("a root licence override leaves the JavaScript licence note in place", {
+test_that("a root license override leaves the JavaScript license note in place", {
   x <- sbom_package(
     test_path("fixtures/pkgs/widgetpkg"), lib = local_fake_lib(list()),
     overrides = data.frame(

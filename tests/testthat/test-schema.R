@@ -230,7 +230,7 @@ test_that("the CycloneDX test files validate as upstream says", {
   expect_identical(bad$findings$location, "/components/0/type")
 })
 
-test_that("our own output still passes every schema", {
+test_that("our own output validates in every format", {
   skip_if_not_installed("jsonvalidate")
   skip_if_not_installed("yaml")
   expect_valid_in_every_format(fixture_sbom(), "fixture")
@@ -557,4 +557,345 @@ test_that("an XML document that uses entities declared in its DTD skips the XSD 
     '<component type="xmlSchemaVDocWalk entity reference"><name>a</name></component></components></bom>'
   ), tf)
   expect_identical(schema_validate(tf, "cyclonedx-xml", "1.6")$status, "fail")
+})
+
+# SWID ---------------------------------------------------------------------------
+
+swid_iso_note <- paste(
+  "sbom.swid_xsd is not the ISO/IEC 19770-2:2015 schema as ISO publishes it",
+  "(SHA-256 6af9d0554932102ace5c696f723c1dc4a4b1a9846908cddec67ccc0518c0e5d4),",
+  "so the tag was checked against sbom's structural rules."
+)
+
+swid_imports_note <- paste(
+  "The W3C schemas that the ISO/IEC 19770-2:2015 schema imports could not be copied from sbom's installation,",
+  "so the tag was checked against sbom's structural rules."
+)
+
+swid_bundle_note <- paste(
+  "sbom does not bundle the ISO/IEC 19770-2:2015 schema, so the tag was checked against sbom's structural rules;",
+  "set the option sbom.swid_xsd to a copy of the ISO schema to check it fully."
+)
+
+swid_tag_path <- function(x = fixture_sbom(), env = parent.frame()) {
+  tf <- withr::local_tempfile(fileext = ".swidtag", .local_envir = env)
+  write_text(swid_tag(x), tf)
+  tf
+}
+
+swid_text_path <- function(text, env = parent.frame()) {
+  tf <- withr::local_tempfile(fileext = ".swidtag", .local_envir = env)
+  write_text(text, tf)
+  tf
+}
+
+notes_of <- function(message) {
+  data.frame(location = rep("", length(message)), message = message)
+}
+
+# Makes every way xml2 reaches the network fail loudly and be recorded, for
+# the rest of the calling test: its entity loader calls download_file_callback()
+# in xml2's namespace, which calls utils::download.file(), and read_xml()
+# opens a URL with curl::curl() when curl is installed, and with url()
+# otherwise. Checks first that the tripwire works on both routes: a schema
+# that imports by URL reaches it, and so does read_xml() given a URL.
+# Returns the environment whose `urls` lists what was asked for.
+local_no_network <- function(env = parent.frame()) {
+  hits <- new.env(parent = emptyenv())
+  hits$urls <- character()
+  record <- function(url, ...) {
+    hits$urls <- c(hits$urls, as.character(url)[[1L]])
+    stop("sbom must not use the network.")
+  }
+  local_mocked_bindings(download_file_callback = record, .package = "xml2", .env = env)
+  local_mocked_bindings(download.file = record, .package = "utils", .env = env)
+  local_mocked_bindings(url = record, .package = "base", .env = env)
+  if (requireNamespace("curl", quietly = TRUE)) {
+    local_mocked_bindings(curl = record, .package = "curl", .env = env)
+  }
+  probe <- withr::local_tempfile(fileext = ".xsd")
+  write_text(paste0(
+    '<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">',
+    '<xs:import namespace="urn:a" schemaLocation="http://example.invalid/tripwire.xsd"/>',
+    '<xs:element name="r"/></xs:schema>'
+  ), probe)
+  xml2::xml_validate(xml2::read_xml("<r/>"), xml2::read_xml(probe, options = c("NOBLANKS", "NONET")))
+  expect_error(xml2::read_xml("http://example.invalid/tripwire.xml"), "sbom must not use the network.", fixed = TRUE)
+  expect_identical(hits$urls, c("http://example.invalid/tripwire.xsd", "http://example.invalid/tripwire.xml"))
+  hits$urls <- character()
+  hits
+}
+
+test_that("the ISO SWID schema is not bundled, and the two W3C schemas it imports are", {
+  expect_identical(system.file("schemas", "swid", "swid-2015.xsd", package = "sbom"), "")
+  expect_setequal(
+    list.files(system.file("schemas", "swid", package = "sbom")), c("xmldsig-core-schema.xsd", "xml.xsd")
+  )
+  m <- utils::read.csv(system.file("schemas", "MANIFEST.csv", package = "sbom"), colClasses = "character")
+  swid <- m[startsWith(m$file, "swid/"), ]
+  expect_identical(swid$file, c("swid/xmldsig-core-schema.xsd", "swid/xml.xsd"))
+  expect_identical(swid$modified, c("FALSE", "FALSE"))
+})
+
+test_that("COPYRIGHTS names every bundled schema and data file, with the W3C notices in full", {
+  text <- paste(readLines(system.file("COPYRIGHTS", package = "sbom"), warn = FALSE, encoding = "UTF-8"), collapse = "\n")
+  for (dir in c("schemas", "extdata")) {
+    for (f in list.files(system.file(dir, package = "sbom"), recursive = TRUE)) {
+      path <- file.path("inst", dir, f)
+      named <- grepl(path, text, fixed = TRUE) || grepl(paste0(dirname(path), "/*"), text, fixed = TRUE)
+      expect_true(named, label = path)
+    }
+  }
+  expect_false(grepl("inst/schemas/swid/swid-2015.xsd", text, fixed = TRUE))
+  # W3C-19980720 asks for the full text of its notice; W3C-20150513 too.
+  for (sentence in c(
+    "W3C® SOFTWARE NOTICE AND LICENSE",
+    "The full text of this NOTICE in a location viewable to users of the redistributed or derivative work.",
+    "This formulation of W3C's notice and license became active on August 14 1998",
+    "If none exist, the W3C Software and Document Short Notice should be included.",
+    "Title to copyright in this work will at all times remain with copyright holders."
+  )) {
+    expect_true(grepl(sentence, text, fixed = TRUE), label = sentence)
+  }
+})
+
+test_that("COPYRIGHTS gives the xmldsig schema the licence its header states", {
+  xsd <- readLines(system.file("schemas", "swid", "xmldsig-core-schema.xsd", package = "sbom"), warn = FALSE)
+  expect_true(any(grepl("copyright-software-19980720", xsd, fixed = TRUE)))
+  lines <- readLines(system.file("COPYRIGHTS", package = "sbom"), warn = FALSE, encoding = "UTF-8")
+  start <- which(lines == "inst/schemas/swid/xmldsig-core-schema.xsd")
+  expect_length(start, 1L)
+  blank <- which(lines[-seq_len(start)] == "")
+  entry <- paste(lines[start:(start + blank[[1]] - 1L)], collapse = "\n")
+  expect_match(entry, "W3C Software License (SPDX: W3C-19980720)", fixed = TRUE)
+  expect_match(entry, "The Internet Society and W3C", fixed = TRUE)
+})
+
+test_that("the option names the ISO schema only by its SHA-256 as ISO publishes it", {
+  expect_identical(swid_iso_sha256, "6af9d0554932102ace5c696f723c1dc4a4b1a9846908cddec67ccc0518c0e5d4")
+  hits <- local_no_network()
+  good <- swid_tag_path()
+  broken <- swid_text_path(sub('tagVersion="[0-9]+"', 'tagVersion="x"', swid_tag(fixture_sbom())))
+  other <- withr::local_tempfile(fileext = ".xsd")
+  write_text('<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"/>\n', other)
+  for (value in list(other, file.path(withr::local_tempdir(), "missing.xsd"), withr::local_tempdir(), TRUE, "")) {
+    withr::local_options(sbom.swid_xsd = value)
+    label <- paste(format(value), collapse = "")
+    # Any other value gets the structural rules, with a note saying so.
+    expect_identical(schema_validate(good, "swid"), list(status = "partial", findings = notes_of(swid_iso_note)), label = label)
+    # So a broken tag still fails.
+    expect_identical(schema_validate(broken, "swid"), list(
+      status = "fail",
+      findings = data.frame(
+        location = c("/SoftwareIdentity", ""),
+        message = c("The tagVersion x is not an integer.", swid_iso_note)
+      )
+    ), label = label)
+  }
+  expect_identical(hits$urls, character())
+  # Unset, the note is the one that says what to set.
+  withr::local_options(sbom.swid_xsd = NULL)
+  expect_identical(schema_validate(good, "swid"), list(status = "partial", findings = notes_of(swid_bundle_note)))
+})
+
+test_that("schemas that would reach the network are never compiled", {
+  hits <- local_no_network()
+  dir <- withr::local_tempdir()
+  xs <- '<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"'
+  write_text(paste0(xs, '><xs:import namespace="urn:a" schemaLocation="http://example.invalid/a.xsd"/></xs:schema>\n'),
+             file.path(dir, "remote.xsd"))
+  probes <- list(
+    # A file: URL whose target imports by http.
+    file_url = paste0(xs, '><xs:include schemaLocation="file://', file.path(dir, "remote.xsd"), '"/></xs:schema>\n'),
+    # xml:base turns a relative location into a URL.
+    xml_base = paste0(xs, ' xml:base="http://example.invalid/base/"><xs:import namespace="urn:a" schemaLocation="a.xsd"/></xs:schema>\n'),
+    # An external entity in a schema it imports.
+    entity = paste0(xs, '><xs:import namespace="urn:b" schemaLocation="entity.xsd"/></xs:schema>\n'),
+    # A schema that does not compile, so libxml2 would follow the tag's own
+    # xsi:schemaLocation.
+    broken = paste0(xs, '><xs:element name="SoftwareIdentity" type="nope:type"/></xs:schema>\n')
+  )
+  write_text(paste0(
+    '<!DOCTYPE xs:schema [<!ENTITY e SYSTEM "http://example.invalid/entity">]>\n',
+    xs, ' targetNamespace="urn:b"><xs:annotation><xs:documentation>&e;</xs:documentation></xs:annotation></xs:schema>\n'
+  ), file.path(dir, "entity.xsd"))
+  hinted <- swid_text_path(sub(
+    "<SoftwareIdentity ",
+    paste0(
+      '<SoftwareIdentity xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ',
+      'xsi:schemaLocation="http://standards.iso.org/iso/19770/-2/2015/schema.xsd http://example.invalid/evil.xsd" '
+    ),
+    swid_tag(fixture_sbom()), fixed = TRUE
+  ))
+  for (nm in names(probes)) {
+    path <- file.path(dir, paste0(nm, ".xsd"))
+    write_text(probes[[nm]], path)
+    withr::local_options(sbom.swid_xsd = path)
+    expect_identical(schema_validate(hinted, "swid"), list(status = "partial", findings = notes_of(swid_iso_note)), label = nm)
+  }
+  expect_identical(hits$urls, character())
+})
+
+test_that("a tag the schema accepts still fails without a tagCreator", {
+  # Stands in for the ISO schema a schema that accepts any SoftwareIdentity.
+  xsd <- withr::local_tempfile(fileext = ".xsd")
+  write_text(paste0(
+    '<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" ',
+    'targetNamespace="http://standards.iso.org/iso/19770/-2/2015/schema.xsd">',
+    '<xs:element name="SoftwareIdentity"><xs:complexType><xs:sequence>',
+    '<xs:any processContents="skip" minOccurs="0" maxOccurs="unbounded"/>',
+    '</xs:sequence><xs:anyAttribute processContents="skip"/></xs:complexType></xs:element></xs:schema>\n'
+  ), xsd)
+  local_mocked_bindings(
+    swid_xsd_option = function() readBin(xsd, "raw", file.size(xsd)),
+    swid_with_local_schema = function(bytes, f) f(xsd)
+  )
+  tag <- swid_tag(fixture_sbom())
+  expect_identical(schema_validate(swid_text_path(tag), "swid"), list(status = "pass", findings = empty_findings()))
+  orphan <- swid_text_path(sub('role="tagCreator"', 'role="softwareCreator"', tag, fixed = TRUE))
+  expect_identical(schema_validate(orphan, "swid"), list(
+    status = "fail",
+    findings = data.frame(location = "/SoftwareIdentity", message = "No Entity element has the role tagCreator.")
+  ))
+})
+
+# A file that imports the two W3C schemas as the ISO schema does, standing in
+# for it: the test gives sbom its SHA-256 as the ISO schema's.
+local_stand_in_xsd <- function(env = parent.frame()) {
+  xsd <- withr::local_tempfile(fileext = ".xsd", .local_envir = env)
+  write_text(paste0(
+    '<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">\n',
+    '<xs:import namespace="http://www.w3.org/2000/09/xmldsig#" ',
+    'schemaLocation="http://www.w3.org/TR/xmldsig-core/xmldsig-core-schema.xsd"/>\n',
+    '<xs:import namespace="http://www.w3.org/XML/1998/namespace" schemaLocation="http://www.w3.org/2001/xml.xsd"/>\n',
+    '</xs:schema>\n'
+  ), xsd)
+  local_mocked_bindings(swid_iso_sha256 = cli::hash_file_sha256(xsd), .env = env)
+  withr::local_options(sbom.swid_xsd = xsd, .local_envir = env)
+  xsd
+}
+
+test_that("the option's file is read once, and the copy holds the bytes that were checked", {
+  xsd <- local_stand_in_xsd()
+  checked <- readBin(xsd, "raw", file.size(xsd))
+  bytes <- swid_xsd_option()
+  expect_identical(bytes, checked)
+  # The file changes after it was checked; the copy is made from the bytes
+  # checked, never from the file.
+  write_text('<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"/>\n', xsd)
+  copy <- swid_with_local_schema(bytes, function(schema) {
+    list(files = sort(list.files(dirname(schema))), text = rawToChar(readBin(schema, "raw", file.size(schema))))
+  })
+  expect_identical(copy$files, c("swid-2015.xsd", "xml.xsd", "xmldsig-core-schema.xsd"))
+  expected <- sub('"http://www.w3.org/TR/xmldsig-core/xmldsig-core-schema.xsd"', '"xmldsig-core-schema.xsd"', rawToChar(checked), fixed = TRUE)
+  expect_identical(copy$text, sub('"http://www.w3.org/2001/xml.xsd"', '"xml.xsd"', expected, fixed = TRUE))
+})
+
+test_that("a missing bundled W3C schema gives the structural rules, and nothing is compiled", {
+  hits <- local_no_network()
+  local_stand_in_xsd()
+  compiled <- new.env(parent = emptyenv())
+  compiled$n <- 0L
+  local_mocked_bindings(validate_xml = function(...) {
+    compiled$n <- compiled$n + 1L
+    validation_result("pass")
+  })
+  # The install lacks xml.xsd, as a damaged or trimmed one would.
+  w3c <- system.file("schemas", "swid", "xmldsig-core-schema.xsd", package = "sbom")
+  missing <- file.path(withr::local_tempdir(), "xml.xsd")
+  for (files in list(w3c, c(w3c, missing))) {
+    local_mocked_bindings(swid_w3c_files = function() files)
+    res <- expect_no_warning(schema_validate(swid_tag_path(), "swid"))
+    expect_identical(res, list(status = "partial", findings = notes_of(swid_imports_note)))
+    broken <- swid_text_path(sub('tagVersion="[0-9]+"', 'tagVersion="x"', swid_tag(fixture_sbom())))
+    res <- expect_no_warning(schema_validate(broken, "swid"))
+    expect_identical(res, list(
+      status = "fail",
+      findings = data.frame(
+        location = c("/SoftwareIdentity", ""),
+        message = c("The tagVersion x is not an integer.", swid_imports_note)
+      )
+    ))
+  }
+  expect_identical(compiled$n, 0L)
+  expect_identical(hits$urls, character())
+})
+
+test_that("with the option naming the ISO schema, a tag is checked fully and offline", {
+  xsd <- Sys.getenv("SBOM_TEST_SWID_XSD")
+  skip_if(!nzchar(xsd), "SBOM_TEST_SWID_XSD names no copy of the ISO schema.")
+  expect_identical(cli::hash_file_sha256(xsd), swid_iso_sha256)
+  hits <- local_no_network()
+  withr::local_options(sbom.swid_xsd = xsd)
+  copies <- function() grep("^sbom-swid-", list.files(tempdir(), all.files = TRUE), value = TRUE)
+  expect_identical(copies(), character())
+  for (x in list(fixture_sbom(), sbom_installed(lib = fixture_lib()), minimal_sbom())) {
+    res <- expect_no_warning(schema_validate(swid_tag_path(x), "swid"))
+    expect_identical(res, list(status = "pass", findings = empty_findings()))
+  }
+  expect_identical(schema_validate(fx("dplyr-1.2.1.swidtag"), "swid")$status, "pass")
+  # The structural rules are no stricter than the schema.
+  lenient <- paste0(
+    '<SoftwareIdentity xmlns="http://standards.iso.org/iso/19770/-2/2015/schema.xsd" ',
+    'name="" tagId="" version="" versionScheme="calendar">',
+    '<Entity name="" role="tagCreator"/><Link href="" rel="requires"/></SoftwareIdentity>\n'
+  )
+  expect_identical(schema_validate(swid_text_path(lenient), "swid")$status, "pass")
+  # A tag the schema rejects fails with libxml2's finding, which the
+  # structural rules would not have caught: a bad boolean, and a signature
+  # that the bundled XML Signature schema rejects.
+  tag <- swid_tag(fixture_sbom())
+  res <- schema_validate(swid_text_path(sub("<SoftwareIdentity ", "<SoftwareIdentity corpus=\"maybe\" ", tag, fixed = TRUE)), "swid")
+  expect_identical(res$status, "fail")
+  expect_match(res$findings$message[[1]], "corpus")
+  signed <- sub(
+    "</SoftwareIdentity>",
+    '<Signature xmlns="http://www.w3.org/2000/09/xmldsig#"><Bogus/></Signature></SoftwareIdentity>',
+    tag, fixed = TRUE
+  )
+  res <- schema_validate(swid_text_path(signed), "swid")
+  expect_identical(res$status, "fail")
+  expect_match(res$findings$message[[1]], "SignedInfo")
+  # The schema passes a tag with no tagCreator, which the standard requires.
+  orphan <- sub('role="tagCreator"', 'role="softwareCreator"', tag, fixed = TRUE)
+  expect_identical(schema_validate(swid_text_path(orphan), "swid"), list(
+    status = "fail",
+    findings = data.frame(location = "/SoftwareIdentity", message = "No Entity element has the role tagCreator.")
+  ))
+  # validate_sbom() gets no schema note.
+  v <- validate_sbom(swid_tag_path(), profile = "none")
+  expect_false("schema" %in% v$findings$check)
+  # The ISO schema with one import changed is not the ISO schema.
+  changed <- withr::local_tempfile(fileext = ".xsd")
+  text <- rawToChar(readBin(xsd, "raw", file.size(xsd)))
+  writeBin(charToRaw(sub(
+    "http://www.w3.org/TR/xmldsig-core/xmldsig-core-schema.xsd", "file:///nonexistent/xmldsig-core-schema.xsd",
+    text, fixed = TRUE, useBytes = TRUE
+  )), changed)
+  withr::local_options(sbom.swid_xsd = changed)
+  expect_identical(schema_validate(swid_text_path(signed), "swid"), list(status = "partial", findings = notes_of(swid_iso_note)))
+  expect_identical(hits$urls, character())
+  # The temporary copies of the schema are gone.
+  expect_identical(copies(), character())
+})
+
+test_that("CycloneDX XSD validation never reaches the network", {
+  hits <- local_no_network()
+  for (v in c("1.4", "1.5", "1.6", "1.7")) {
+    tf <- withr::local_tempfile(fileext = ".cdx.xml")
+    write_sbom(fixture_sbom(), tf, format = "cyclonedx-xml", version = v)
+    expect_identical(schema_validate(tf, "cyclonedx-xml", v)$status, "pass", label = v)
+  }
+  # A schemaLocation hint in the document is not followed.
+  hinted <- withr::local_tempfile(fileext = ".cdx.xml")
+  write_text(sub(
+    "<bom ",
+    paste0(
+      '<bom xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ',
+      'xsi:schemaLocation="http://cyclonedx.org/schema/bom/1.6 http://example.invalid/bom.xsd" '
+    ),
+    cdx_xml(fixture_sbom(), "1.6"), fixed = TRUE
+  ), hinted)
+  expect_identical(schema_validate(hinted, "cyclonedx-xml", "1.6")$status, "pass")
+  expect_identical(hits$urls, character())
 })

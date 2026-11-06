@@ -70,7 +70,7 @@ test_that("with a regid, tagId and requires targets start with its authority", {
   expect_equal(xml2::xml_attr(xml2::xml_root(xml2::read_xml(swid_tag(lib))), "tagId"), "example.org/sw/r-library")
   for (y in list(x, lib)) {
     tf <- withr::local_tempfile(fileext = ".swidtag"); write_text(swid_tag(y), tf)
-    expect_equal(schema_validate(tf, "swid", "2015")$status, "pass")
+    expect_equal(schema_validate(tf, "swid", "2015")$status, "partial")
   }
 })
 
@@ -175,42 +175,20 @@ test_that("SWID is deterministic and ends up as UTF-8 under a C locale", {
   expect_identical(swid_tag(x), swid_tag(x))
 })
 
-test_that("package and library tags pass the SWID schema", {
+test_that("package and library tags break no SWID structural rule", {
   for (x in list(fixture_sbom(), sbom_installed(lib = fixture_lib()))) {
     tf <- withr::local_tempfile(fileext = ".swidtag"); write_text(swid_tag(x), tf)
     res <- expect_no_warning(schema_validate(tf, "swid", "2015"))
-    expect_equal(res$status, "pass")
+    expect_equal(res$status, "partial")
   }
 })
 
-test_that("a tag that breaks the SWID schema fails", {
+test_that("a tag that breaks a SWID structural rule fails", {
   tf <- withr::local_tempfile(fileext = ".swidtag")
   write_text(sub("tagVersion=\"[0-9]+\"", "tagVersion=\"x\"", swid_tag(fixture_sbom())), tf)
   res <- schema_validate(tf, "swid", "2015")
   expect_equal(res$status, "fail")
   expect_gt(nrow(res$findings), 0L)
-})
-
-test_that("the bundled SWID schema has one import per namespace and keeps its notice", {
-  xsd <- system.file("schemas/swid/swid-2015.xsd", package = "sbom")
-  txt <- paste(readLines(xsd, warn = FALSE), collapse = "\n")
-  expect_equal(lengths(regmatches(txt, gregexpr("<xs:import", txt, fixed = TRUE))), 2L)
-  expect_false(grepl("http://www.w3.org/2001/xml.xsd", txt, fixed = TRUE))
-  expect_match(txt, "for the purpose of implementing the", fixed = TRUE)
-})
-
-test_that("COPYRIGHTS gives the xmldsig schema the licence its header states", {
-  xsd <- readLines(system.file("schemas/swid/xmldsig-core-schema.xsd", package = "sbom"), warn = FALSE)
-  expect_true(any(grepl("copyright-software-19980720", xsd, fixed = TRUE)))
-  lines <- readLines(system.file("COPYRIGHTS", package = "sbom"), warn = FALSE)
-  start <- which(lines == "inst/schemas/swid/xmldsig-core-schema.xsd")
-  expect_length(start, 1L)
-  blank <- which(lines[-seq_len(start)] == "")
-  end <- if (length(blank) > 0L) start + blank[1] - 1L else length(lines)
-  entry <- paste(lines[start:end], collapse = "\n")
-  expect_match(entry, "W3C Software License (SPDX: W3C-19980720)", fixed = TRUE)
-  expect_match(entry, "The Internet Society and W3C", fixed = TRUE)
-  expect_false(grepl("W3C-20150513", entry, fixed = TRUE))
 })
 
 test_that("SWID is in the registry", {
@@ -234,7 +212,7 @@ test_that("SWID matches R Observatory's dplyr 1.2.1 sample", {
   expect_equal(normalize_swid(ours), normalize_swid(theirs))
 })
 
-test_that("R Observatory's own sample passes the bundled schema", {
+test_that("R Observatory's own sample breaks no SWID structural rule", {
   res <- schema_validate(test_path("fixtures/r-observatory/dplyr-1.2.1.swidtag"), "swid", "2015")
-  expect_equal(res$status, "pass")
+  expect_equal(res$status, "partial")
 })

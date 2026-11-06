@@ -468,12 +468,13 @@ cdx_xml_model <- function(root) {
   doc
 }
 
-# The attributes the bundled SWID XSD declares on each element, keyed as
-# cdx_xml_declared_attrs is. Meta, and SoftwareMeta which extends it, also
-# admit any other attribute, of any namespace or none
+# The attributes the ISO/IEC 19770-2:2015 schema (the SWID XSD) declares on
+# each element, keyed as cdx_xml_declared_attrs is. Meta, and SoftwareMeta
+# which extends it, also admit any other attribute, of any namespace or none
 # (`<xs:anyAttribute processContents="lax">`), so an undeclared one such as
-# purl would pass the schema there; only these are read. A test recomputes
-# the table from the XSD.
+# purl would pass the schema there; only these are read. sbom does not bundle
+# the schema; a test recomputes the table from a copy of it when the
+# environment variable SBOM_TEST_SWID_XSD names one.
 swid_declared_attrs <- list(
   Directory = c("key", "location", "name", "root"),
   Entity = c("name", "regid", "role", "thumbprint"),

@@ -319,7 +319,7 @@ test_that("a library SBOM with embedded and system components validates in every
   }
   expect_true("pkg:cran/helperpkg@2.0" %in% refs)
   expected <- c(`cyclonedx-json` = "pass", `cyclonedx-xml` = "pass", `spdx-json` = "pass", `spdx-yaml` = "pass",
-                `spdx-xml` = "partial", `spdx-tv` = "partial", `spdx3-jsonld` = "partial", swid = "pass")
+                `spdx-xml` = "partial", `spdx-tv` = "partial", `spdx3-jsonld` = "partial", swid = "partial")
   d1 <- withr::local_tempdir(); d2 <- withr::local_tempdir()
   write_sbom(build(), d1, format = "all"); write_sbom(build(), d2, format = "all")
   files <- list.files(d1, full.names = TRUE)

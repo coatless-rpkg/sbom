@@ -1,7 +1,7 @@
 tp <- function(...) test_path("fixtures", "third-party", ...)
 
 # The parts of a CycloneDX JSON model that its XML serialization carries:
-# per component, depth-first, its identity, licences, hashes and external
+# per component, depth-first, its identity, licenses, hashes and external
 # references; the dependencies; and the metadata's timestamp, authors, tools
 # and component. Arrays are sorted by bom-ref or ref.
 by_key <- function(items, key) {
@@ -223,7 +223,7 @@ test_that("SWID attributes of a token type are trimmed, and only those", {
     '  <Link rel=" requires " use=" required " ownership=" shared " href=" swid:a "/>\n',
     "</SoftwareIdentity>\n"
   ), tf)
-  expect_identical(schema_validate(tf, "swid", "2015")$status, "pass")
+  expect_identical(schema_validate(tf, "swid", "2015")$status, "partial")
   d <- read_document(tf)$doc
   # NMTOKEN, NMTOKENS and their restrictions are tokens; strings and URIs
   # keep their spaces.
@@ -474,13 +474,19 @@ xsd_declarations <- function(paths) {
   list(attrs = out[srt(names(out))], token_text = srt(token_text), token_attrs = srt(token_attrs))
 }
 
-test_that("the declared-attribute tables are those of the bundled XSDs", {
+test_that("the CycloneDX declared-attribute tables are those of the bundled XSDs", {
   versions <- format_registry()[["cyclonedx-xml"]]$versions
   cdx <- xsd_declarations(vapply(versions, function(v) schema_file("cyclonedx-xml", v), ""))
   expect_identical(cdx_xml_declared_attrs, cdx$attrs)
   expect_identical(cdx_xml_token_text, cdx$token_text)
   expect_identical(cdx_xml_token_attrs, cdx$token_attrs)
-  swid <- xsd_declarations(schema_file("swid", "2015"))
+})
+
+test_that("the SWID declared-attribute tables are those of the ISO schema", {
+  # sbom does not bundle the ISO schema; SBOM_TEST_SWID_XSD names a copy.
+  xsd <- Sys.getenv("SBOM_TEST_SWID_XSD")
+  skip_if(!nzchar(xsd), "SBOM_TEST_SWID_XSD names no copy of the ISO schema.")
+  swid <- xsd_declarations(xsd)
   expect_identical(swid_declared_attrs, swid$attrs)
   expect_length(swid$token_text, 0L)
   expect_identical(swid_token_attrs, swid$token_attrs)

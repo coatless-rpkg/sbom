@@ -46,8 +46,11 @@ the result. Use it in scripts and continuous integration.}
 such as \verb{/packages/3}, or \code{""} for the document as a whole. A file that is
 not JSON was read into a JSON model, into which the pointer points: the
 CycloneDX JSON model for CycloneDX XML, and the SPDX JSON model for SPDX
-YAML, XML and tag-value. An XSD finding (CycloneDX XML and SWID) has the
-location \code{""}, since xml2 does not say where libxml2 found the problem.
+YAML, XML and tag-value. An XSD finding (CycloneDX XML, and SWID with the
+option \code{sbom.swid_xsd}) has the location \code{""}, since xml2 does not say
+where libxml2 found the problem. A finding of sbom's structural rules for
+SWID has an XPath-like location, such as \verb{/SoftwareIdentity/Entity[2]}
+for the second \code{Entity}.
 For an \verb{<sbom>} object, the location is \code{"component <ref>"} or a metadata
 field.
 The findings are ordered by severity, the schema findings first, then by
@@ -77,16 +80,34 @@ tool, in any of the eight formats that \code{\link[=read_sbom]{read_sbom()}} rea
 \code{validate_sbom()} runs two layers of checks on a file.
 
 The \strong{schema layer} checks the file against the schema of its format and
-version. sbom bundles the schemas, so validation works offline:
+version. sbom bundles the schemas, except the ISO schema of SWID tags, so
+validation works offline:
 \itemize{
 \item CycloneDX JSON, SPDX JSON and YAML, and SPDX 3 JSON-LD are checked with
 jsonvalidate, which must be installed.
-\item CycloneDX XML and SWID tags are checked against their XSDs with xml2.
+\item CycloneDX XML is checked against its XSD with xml2.
 \item SPDX has no official schema for XML or tag-value, so those files are
 read into the SPDX JSON model and checked against the SPDX JSON schema.
 At best they are \code{partial}.
 \item SPDX 3 is also \code{partial} at best, since SPDX's SHACL rules are not
 checked.
+\item sbom does not bundle the ISO/IEC 19770-2:2015 schema of SWID tags, since
+ISO's notice does not clearly allow it to be redistributed. So a SWID tag
+is checked against sbom's structural rules, and is \code{partial} at best.
+They are no stricter than the ISO schema: the root is \code{SoftwareIdentity}
+in the 2015 namespace, with a \code{name} and a \code{tagId}; every \code{Entity} has a
+\code{name} and a \code{role}, and every \code{Link} an \code{href} and a \code{rel}; the roles,
+\code{rel} and \code{versionScheme} are tokens, and \code{tagVersion} an integer. As
+the standard requires, an \code{Entity} must also have the role \code{tagCreator}.
+
+To check a tag fully, download the ISO schema from
+\url{https://standards.iso.org/iso/19770/-2/2015-current/schema.xsd} and set
+the option \code{sbom.swid_xsd} to the path of the file. sbom accepts only
+that file as ISO publishes it, by its SHA-256, and checks the tag against
+it with xml2, giving \code{pass} or \code{fail}, and against the rule that it has a
+\code{tagCreator}. sbom bundles the two W3C schemas that the ISO schema
+imports, so the check needs no network. With any other value, the option
+gives the structural rules, and a note.
 }
 
 A version with no bundled schema, such as CycloneDX 1.3, is not checked,
@@ -129,7 +150,8 @@ bundles no schema for the version, when the document is too large, when
 the JSON schema check could not run, or when an XML document uses
 entities declared in its DTD, which sbom does not expand.
 \item \code{"partial"}: no layer failed, but one was skipped or could check only
-part of the rules (SPDX XML, SPDX tag-value and SPDX 3).
+part of the rules (SPDX XML, SPDX tag-value and SPDX 3, and SWID unless
+the option \code{sbom.swid_xsd} names the ISO schema).
 \item \code{"pass"}: every layer that ran passed.
 }
 }

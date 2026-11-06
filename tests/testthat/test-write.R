@@ -75,7 +75,7 @@ test_that("a library SBOM, and an SBOM with overrides and a latin1 maintainer, v
                  c("spdx-yaml", "2.3"), c("spdx-xml", "2.3"), c("spdx-tv", "2.3"), c("spdx3-jsonld", "3.0.1"),
                  c("swid", "2015"))
   ext <- stats::setNames(sbom_formats()$extension, sbom_formats()$format)
-  partial <- c("spdx-xml", "spdx-tv", "spdx3-jsonld")
+  partial <- c("spdx-xml", "spdx-tv", "spdx3-jsonld", "swid")
   for (nm in names(sboms)) for (ck in checks) {
     tf <- withr::local_tempfile(fileext = ext[[ck[1]]])
     write_sbom(sboms[[nm]], tf, format = ck[1], version = ck[2])

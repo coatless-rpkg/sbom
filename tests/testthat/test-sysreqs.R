@@ -278,7 +278,7 @@ test_that("a SWID tag gives the root's SystemRequirements text", {
   skip_if_not_installed("jsonvalidate")
   tf <- withr::local_tempfile(fileext = ".swidtag")
   write_sbom(x, tf, format = "swid")
-  expect_equal(schema_validate(tf, "swid")$status, "pass")
+  expect_equal(schema_validate(tf, "swid")$status, "partial")
 })
 
 test_that("the programs are pak's tool rules and the older program names", {

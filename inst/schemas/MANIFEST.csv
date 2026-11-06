@@ -14,6 +14,5 @@ cyclonedx/cryptography-defs.schema.json,https://raw.githubusercontent.com/Cyclon
 spdx/spdx-2.3.schema.json,https://raw.githubusercontent.com/spdx/spdx-spec/v2.3/schemas/spdx-schema.json,v2.3,239208b7ac287b3cf5d9a9af23f9d69863971102a5e1587a27a398b43490b89b,FALSE
 spdx/spdx-2.2.schema.json,https://raw.githubusercontent.com/spdx/spdx-spec/v2.2.2/schemas/spdx-schema.json,v2.2.2,c8328d14c33621a6be917569ad4c323d370220412edbaddc37ccf1e93e3ca88a,FALSE
 spdx/spdx-3.0.1.schema.json,https://spdx.org/schema/3.0.1/spdx-json-schema.json,3.0.1,582c64e809d5b3ef9bd0c4de13a32391b47b0284a3e8d199569fb96f649234b1,FALSE
-swid/swid-2015.xsd,https://standards.iso.org/iso/19770/-2/2015-current/schema.xsd,2015-current,11a6dfc074dea763dd58d0574daf0fdecd6c3c8e95b925ccf7758135a4189a73,TRUE
 swid/xmldsig-core-schema.xsd,https://www.w3.org/TR/xmldsig-core/xmldsig-core-schema.xsd,,d102ad3df7664c307e0c2c776ba4a90513b1969974d8a940bae1a77f9f21e15d,FALSE
 swid/xml.xsd,https://www.w3.org/2001/xml.xsd,,61960fb3131e38022caad5360e2f33a3382578ab3c80cd58bd74320ede61b20c,FALSE

@@ -549,7 +549,7 @@ test_that("every reader's SBOM validates in every format and is byte-identical a
     rsconnect = function() sbom_rsconnect(test_path("fixtures/rsconnect/manifest.json")),
     project = function() sbom(test_path("fixtures/project"), lib = local_fake_lib(list())))
   expected <- c(`cyclonedx-json` = "pass", `cyclonedx-xml` = "pass", `spdx-json` = "pass", `spdx-yaml` = "pass",
-                `spdx-xml` = "partial", `spdx-tv` = "partial", `spdx3-jsonld` = "partial", swid = "pass")
+                `spdx-xml` = "partial", `spdx-tv` = "partial", `spdx3-jsonld` = "partial", swid = "partial")
   for (nm in names(build)) {
     d1 <- withr::local_tempdir(); d2 <- withr::local_tempdir()
     write_sbom(build[[nm]](), d1, format = "all"); write_sbom(build[[nm]](), d2, format = "all")

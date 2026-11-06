@@ -58,7 +58,7 @@ test_that("a manifest SBOM validates in every format", {
   x <- sbom_rsconnect(test_path("fixtures/rsconnect/manifest.json"))
   ext <- stats::setNames(sbom_formats()$extension, sbom_formats()$format)
   expected <- c(`cyclonedx-json` = "pass", `cyclonedx-xml` = "pass", `spdx-json` = "pass", `spdx-yaml` = "pass",
-                `spdx-xml` = "partial", `spdx-tv` = "partial", `spdx3-jsonld` = "partial", swid = "pass")
+                `spdx-xml` = "partial", `spdx-tv` = "partial", `spdx3-jsonld` = "partial", swid = "partial")
   for (f in names(expected)) {
     tf <- withr::local_tempfile(fileext = ext[[f]]); write_sbom(x, tf, format = f)
     expect_identical(schema_validate(tf, f)$status, expected[[f]], label = f)

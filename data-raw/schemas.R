@@ -66,56 +66,29 @@ rows[[length(rows) + 1L]] <- data.frame(
   sha256 = cli::hash_file_sha256(spdx3_dest), modified = FALSE
 )
 
-# SWID tags (ISO/IEC 19770-2:2015). The ISO schema imports the XML Signature
-# and XML namespace schemas by URL; those imports are rewritten to the local
-# copies, so validation needs no network. There must stay exactly one import
-# per namespace, or libxml2 warns that it is skipping one.
+# SWID tags (ISO/IEC 19770-2:2015). The ISO schema is not bundled: ISO's
+# notice grants use of it for implementing the standard, not clearly its
+# redistribution. validate_sbom() checks a SWID tag against sbom's structural
+# rules, or against the user's own copy of the ISO schema, named by the option
+# sbom.swid_xsd, which sbom accepts only as ISO publishes it:
+#   https://standards.iso.org/iso/19770/-2/2015-current/schema.xsd
+#   SHA-256 6af9d0554932102ace5c696f723c1dc4a4b1a9846908cddec67ccc0518c0e5d4
+# (swid_iso_sha256 in R/schema.R). That schema imports the W3C XML Signature
+# and XML namespace schemas by URL; sbom bundles both, unmodified, and points
+# a temporary copy of the user's schema at them, so validation needs no
+# network.
 dir.create("inst/schemas/swid", recursive = TRUE, showWarnings = FALSE)
 swid_files <- list(
-  list(
-    file = "swid-2015.xsd",
-    url = "https://standards.iso.org/iso/19770/-2/2015-current/schema.xsd",
-    tag = "2015-current"
-  ),
-  list(
-    file = "xmldsig-core-schema.xsd",
-    url = "https://www.w3.org/TR/xmldsig-core/xmldsig-core-schema.xsd", tag = ""
-  ),
-  list(file = "xml.xsd", url = "https://www.w3.org/2001/xml.xsd", tag = "")
+  list(file = "xmldsig-core-schema.xsd", url = "https://www.w3.org/TR/xmldsig-core/xmldsig-core-schema.xsd"),
+  list(file = "xml.xsd", url = "https://www.w3.org/2001/xml.xsd")
 )
 for (s in swid_files) {
   file <- file.path("swid", s$file)
   dest <- file.path("inst/schemas", file)
   fetch(s$url, dest)
-  modified <- FALSE
-  if (s$file == "swid-2015.xsd") {
-    # Work on bytes, so the file's CRLF line endings and notice are kept.
-    x <- rawToChar(readBin(dest, "raw", file.size(dest)))
-    Encoding(x) <- "UTF-8"
-    y <- x
-    for (loc in c(
-      "http://www.w3.org/TR/xmldsig-core/xmldsig-core-schema.xsd",
-      "http://www.w3.org/2001/xml.xsd"
-    )) {
-      if (lengths(regmatches(y, gregexpr(loc, y, fixed = TRUE))) != 1L) {
-        stop("Expected exactly one import of ", loc, " in ", s$file)
-      }
-      y <- sub(loc, basename(loc), y, fixed = TRUE)
-    }
-    imports <- regmatches(y, gregexpr("namespace=\"[^\"]*\"\\s+schemaLocation=\"[^\"]*\"", y))[[1]]
-    namespaces <- sub("^namespace=\"([^\"]*)\".*$", "\\1", imports)
-    if (length(imports) != 2L || anyDuplicated(namespaces)) {
-      stop("Expected exactly one import per namespace in ", s$file)
-    }
-    if (!grepl("for the purpose of implementing the", y, fixed = TRUE)) {
-      stop("The ISO copyright notice is missing from ", s$file)
-    }
-    modified <- !identical(x, y)
-    writeBin(charToRaw(y), dest)
-  }
   rows[[length(rows) + 1L]] <- data.frame(
-    file = file, source_url = s$url, tag = s$tag,
-    sha256 = cli::hash_file_sha256(dest), modified = modified
+    file = file, source_url = s$url, tag = "",
+    sha256 = cli::hash_file_sha256(dest), modified = FALSE
   )
 }
 

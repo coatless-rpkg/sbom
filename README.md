@@ -202,9 +202,10 @@ if (nzchar(Sys.which("zip"))) {
 
 `read_sbom()` reads an SBOM in any of the eight formats, made by sbom or by
 any other tool, into an `<sbom>` that you can inspect, compare or write again.
-`validate_sbom()` checks a file against the bundled schema of its format, and
-checks the content of a file or an `<sbom>` against integrity rules and the
-NTIA 2021 minimum elements, without network access. It prints a report with a
+`validate_sbom()` checks a file against the schema of its format, which sbom
+bundles for every format but SWID, and checks the content of a file or an
+`<sbom>` against integrity rules and the NTIA 2021 minimum elements, without
+network access. It prints a report with a
 hint for each problem, and `as.data.frame()` gives the findings for review.
 
 ``` r
@@ -216,8 +217,10 @@ The status is `fail` when any layer fails, `skipped` when every layer that ran
 was skipped (as with `checks = "schema"` on a version sbom has no schema for),
 `partial` when a layer was skipped or could check only part of the rules (SPDX
 XML and tag-value have no official schema, SPDX's SHACL rules for SPDX 3 are
-not checked, and without jsonvalidate the JSON schemas are not checked), and
-`pass` otherwise.
+not checked, sbom does not bundle the ISO schema of SWID tags and checks them
+against its own structural rules unless the option `sbom.swid_xsd` names the
+ISO schema as ISO publishes it, and without jsonvalidate the JSON schemas are
+not checked), and `pass` otherwise.
 
 ## Inside packages
 
