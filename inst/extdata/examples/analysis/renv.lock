@@ -1,0 +1,13 @@
+{
+  "R": {"Version": "4.5.1",
+        "Repositories": [{"Name": "CRAN", "URL": "https://cloud.r-project.org"}]},
+  "Packages": {
+    "cli": {"Package": "cli", "Version": "3.6.5", "Source": "Repository",
+      "Repository": "CRAN", "License": "MIT + file LICENSE",
+      "Maintainer": "Gábor Csárdi <gabor@posit.co>",
+      "Depends": ["R (>= 3.4)"], "Imports": ["utils"]},
+    "jsonlite": {"Package": "jsonlite", "Version": "2.0.0", "Source": "Repository",
+      "Repository": "CRAN", "License": "MIT + file LICENSE",
+      "Maintainer": "Jeroen Ooms <jeroenooms@gmail.com>", "Imports": ["methods"]}
+  }
+}

@@ -32,7 +32,7 @@
 #' @param manifest The path to a `manifest.json` file.
 #' @return An `<sbom>` object. See [sbom_components()] to read it.
 #' @examples
-#' sbom_rsconnect(system.file("extdata", "manifest.json", package = "sbom"), system = FALSE)
+#' sbom_rsconnect(file.path(sbom_example("connect-app"), "manifest.json"), system = FALSE)
 #' @export
 sbom_rsconnect <- function(manifest = "manifest.json",
                            author = getOption("sbom.author"),

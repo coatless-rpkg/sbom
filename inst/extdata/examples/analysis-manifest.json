@@ -1,0 +1,8 @@
+{
+  "version": 1, "platform": "4.5.1", "metadata": {"appmode": "api"},
+  "packages": {"cli": {"Source": "CRAN", "Repository": "https://cloud.r-project.org",
+    "description": {"Package": "cli", "Version": "3.6.6", "License": "MIT + file LICENSE",
+      "Maintainer": "Gábor Csárdi <gabor@posit.co>", "Repository": "CRAN",
+      "Depends": "R (>= 3.4)", "Imports": "utils"}}},
+  "files": {"analysis.R": {"checksum": "b2bb9dff7e4a799d34e4033c66be7d6f"}}
+}

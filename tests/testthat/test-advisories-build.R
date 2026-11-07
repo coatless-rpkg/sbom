@@ -718,7 +718,7 @@ test_that("every builder takes advisories", {
     installed = sbom_installed("fakepkg", lib = p$lib, embedded = FALSE, system = FALSE, advisories = osv_zip()),
     renv = sbom_renv(lock, embedded = FALSE, system = FALSE, advisories = osv_zip()),
     rsconnect = sbom_rsconnect(
-      system.file("extdata", "manifest.json", package = "sbom"), embedded = FALSE, system = FALSE,
+      file.path(sbom_example("connect-app"), "manifest.json"), embedded = FALSE, system = FALSE,
       advisories = osv_zip()
     ),
     nix = sbom_nix(nix, nix = FALSE, embedded = FALSE, system = FALSE, advisories = osv_zip())

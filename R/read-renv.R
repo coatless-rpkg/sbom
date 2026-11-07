@@ -24,7 +24,7 @@
 #' subfolder and, in a package folder, the files a package does not ship.
 #'
 #' Lockfiles from older versions of renv record only the names a package
-#' requires, or nothing at all, and no licence or maintainer. What is missing
+#' requires, or nothing at all, and no license or maintainer. What is missing
 #' is read from the installed package, but only when its version is the
 #' locked one. Otherwise it is recorded as unknown, with an issue. A package
 #' whose dependencies are unknown gets no dependency entry in CycloneDX,
@@ -45,7 +45,7 @@
 #'   project's renv library when there is one.
 #' @return An `<sbom>` object. See [sbom_components()] to read it.
 #' @examples
-#' sbom_renv(system.file("extdata", "renv.lock", package = "sbom"), system = FALSE)
+#' sbom_renv(file.path(sbom_example("connect-app"), "renv.lock"), system = FALSE)
 #' @export
 sbom_renv <- function(lockfile = "renv.lock", library = NULL,
                       author = getOption("sbom.author"),
@@ -270,10 +270,10 @@ description_shaped <- function(fields) {
   any(!bare)
 }
 
-# What a record lacks (licence, maintainer, and dependencies when
+# What a record lacks (license, maintainer, and dependencies when
 # `deps_known` is FALSE for it), from the installed copy when its version is
 # the locked one. Returns the records, what was borrowed for each (a list of
-# "licence", "maintainer" and "dependencies"), the updated `deps_known`, and
+# "license", "maintainer" and "dependencies"), the updated `deps_known`, and
 # `not_installed`, the records that lacked something with no such copy.
 fill_from_library <- function(records, lookup, deps_known) {
   borrowed <- list()
@@ -300,7 +300,7 @@ fill_from_library <- function(records, lookup, deps_known) {
       any(!is.na(values))
     }
     if (need_license && copy("License")) {
-      got <- c(got, "licence")
+      got <- c(got, "license")
     }
     if (need_maint && copy(c("Maintainer", "Authors@R"))) {
       got <- c(got, "maintainer")
@@ -330,7 +330,7 @@ borrowed_issue <- function(issues, ref, fields, label, source) {
   } else {
     fields
   }
-  field <- c(licence = "license", maintainer = "maintainer", dependencies = "dependencies")
+  field <- c(license = "license", maintainer = "maintainer", dependencies = "dependencies")
   add_issue(
     issues, ref, field[[fields[[1L]]]], "fields-from-library",
     paste0(

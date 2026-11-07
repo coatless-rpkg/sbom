@@ -37,7 +37,8 @@ issue is recorded. The default is the \code{sbom.regid} option, as
 \item{timestamp}{The creation time, as a date-time or as seconds since
 1970-01-01 UTC. An explicit \code{timestamp} wins. Without one, the
 \code{SOURCE_DATE_EPOCH} environment variable is used when it is set, so that
-builds are reproducible, and a note says so; otherwise it is now. Nix sets
+builds are reproducible, and a note records that the timestamp came from
+it; otherwise it is the current time. Nix sets
 \code{SOURCE_DATE_EPOCH} to 1980-01-01 in every \code{nix-shell}, and when the
 timestamp is that value a note says it is a placeholder.}
 
@@ -80,7 +81,7 @@ error.}
 \item{embedded}{Whether to record the code that packages carry inside them.
 A package named in \code{LinkingTo} is recorded as an embedded component of
 the package that compiles it in, nested under that package, as
-inferred, at the version and with the licence that the library,
+inferred, at the version and with the license that the library,
 lockfile or manifest records for it now. A C or C++ library that a package
 copies into its \verb{src/} folder (source packages), or names in its
 \code{COPYRIGHTS} file or \code{cph} entries (source and installed packages), is
@@ -90,7 +91,7 @@ header when there is one, and is otherwise unknown. A JavaScript or CSS
 library declared in htmlwidgets YAML, or found by the header comment of a
 file under \verb{www/}, \verb{htmlwidgets/lib/} or \verb{lib/} (under \verb{inst/} in source
 packages), is recorded as an npm component of that package, from the
-rules in \code{inst/extdata/javascript.csv}. Its licence is not read.}
+rules in \code{inst/extdata/javascript.csv}. Its license is not read.}
 
 \item{system}{Whether to detect system libraries. A package's
 \code{SystemRequirements} text is mapped to system libraries and programs
@@ -110,7 +111,8 @@ come from CRAN, because sbom could not tell where it came from (as for a
 package that is not installed), or because it was installed from a
 local source or from GitHub, GitLab, Bitbucket or git, is named in an
 \code{advisories-not-cran} issue. Bioconductor packages are not compared:
-OSV does not cover them yet, and when the SBOM holds one a note says so.
+OSV does not cover them yet, and when the SBOM holds one a note states
+that the advisory database leaves them out.
 Matching is local, with the versions and package URLs after
 \code{overrides}, so no package name leaves the machine.
 
@@ -171,5 +173,5 @@ the code in the folder, or, when none are found, from the recorded packages
 that no other recorded package requires.
 }
 \examples{
-sbom_rsconnect(system.file("extdata", "manifest.json", package = "sbom"), system = FALSE)
+sbom_rsconnect(file.path(sbom_example("connect-app"), "manifest.json"), system = FALSE)
 }

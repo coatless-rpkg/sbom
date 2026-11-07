@@ -1,0 +1,20 @@
+{
+  "bomFormat": "CycloneDX", "specVersion": "1.5", "version": 1,
+  "serialNumber": "urn:uuid:3e671687-395b-41f5-a30f-a58921a69b79",
+  "metadata": {
+    "timestamp": "2026-03-01T09:00:00Z",
+    "tools": [{"vendor": "Example", "name": "py-sbom-maker", "version": "2.1"}],
+    "component": {"bom-ref": "app", "type": "application", "name": "dashboard",
+                  "version": "1.4.0"}
+  },
+  "components": [
+    {"bom-ref": "requests", "type": "library", "name": "requests", "version": "2.32.3",
+     "purl": "pkg:pypi/requests@2.32.3", "licenses": [{"license": {"id": "Apache-2.0"}}]},
+    {"bom-ref": "urllib3", "type": "library", "name": "urllib3", "version": "2.2.2",
+     "purl": "pkg:pypi/urllib3@2.2.2", "licenses": [{"expression": "MIT"}]}
+  ],
+  "dependencies": [
+    {"ref": "app", "dependsOn": ["requests"]},
+    {"ref": "requests", "dependsOn": ["urllib3"]}
+  ]
+}

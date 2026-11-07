@@ -1,8 +1,8 @@
-Licences of files bundled in this package
+Licenses of files bundled in this package
 =========================================
 
 The sbom package itself is MIT licensed (see LICENSE). This file lists every
-file under inst/ with its source, copyright, licence and changes. The schemas
+file under inst/ with its source, copyright, license and changes. The schemas
 are third-party, copied unmodified from upstream unless stated otherwise;
 their exact sources, tags and checksums are in inst/schemas/MANIFEST.csv, and
 data-raw/schemas.R reproduces them.
@@ -20,7 +20,7 @@ inst/schemas/cyclonedx/*   (all files in this directory)
              349314a9d7671d7d2ca5b711a725f49a73979da6), schema/
   Copyright: OWASP Foundation, as the upstream LICENSE states ("Copyright
              OWASP Foundation")
-  Licence:   Apache License 2.0 (SPDX: Apache-2.0),
+  License:   Apache License 2.0 (SPDX: Apache-2.0),
              https://www.apache.org/licenses/LICENSE-2.0
              Upstream file LICENSE; the schemas also state this in their headers.
   NOTICE:    The repository has no NOTICE file, so there is no notice text to
@@ -45,7 +45,7 @@ inst/schemas/spdx/spdx-2.3.schema.json
              specification at that tag states: "Copyright (c) 2010-2022 Linux
              Foundation and its Contributors."
   Source:    https://github.com/spdx/spdx-spec/blob/v2.3/schemas/spdx-schema.json
-  Licence:   Creative Commons Attribution 3.0 Unported (SPDX: CC-BY-3.0),
+  License:   Creative Commons Attribution 3.0 Unported (SPDX: CC-BY-3.0),
              https://creativecommons.org/licenses/by/3.0/
              Upstream file LICENSE at tag v2.3 (GitHub does not detect it
              automatically; the file text is the CC BY 3.0 legal code).
@@ -57,7 +57,7 @@ inst/schemas/spdx/spdx-2.2.schema.json
              specification at that tag states: "Copyright (c) 2010-2020 Linux
              Foundation and its Contributors."
   Source:    https://github.com/spdx/spdx-spec/blob/v2.2.2/schemas/spdx-schema.json
-  Licence:   Creative Commons Attribution 3.0 Unported (SPDX: CC-BY-3.0),
+  License:   Creative Commons Attribution 3.0 Unported (SPDX: CC-BY-3.0),
              https://creativecommons.org/licenses/by/3.0/
              Upstream file LICENSE at tag v2.2.2 (GitHub does not detect it
              automatically; the file text is the CC BY 3.0 legal code).
@@ -73,12 +73,12 @@ inst/schemas/spdx/spdx-3.0.1.schema.json
              states: "Copyright (c) 2010-2024, The Linux Foundation and its
              Contributors, including SPDX Model contributions from OMG and its
              Contributors."
-  Licence:   Community Specification License 1.0 (SPDX: Community-Spec-1.0),
+  License:   Community Specification License 1.0 (SPDX: Community-Spec-1.0),
              https://spdx.org/licenses/Community-Spec-1.0.html
              Upstream file License.md at tag 3.0.1 of spdx/spdx-3-model (GitHub
              does not detect it automatically); the LICENSE of spdx/spdx-spec at
              tag 3.0.1 says the same of the specification. The schema file
-             itself carries no licence header. Section 1.2 of that licence asks
+             itself carries no license header. Section 1.2 of that license asks
              for attribution to the Working Group by the material's name,
              version and source, which this entry gives.
   Changes:   None.
@@ -90,10 +90,10 @@ inst/schemas/swid/xmldsig-core-schema.xsd
   Copyright: 2001 The Internet Society and W3C (Massachusetts Institute of
              Technology, Institut National de Recherche en Informatique et en
              Automatique, Keio University), as the file's header states
-  Licence:   W3C Software License (SPDX: W3C-19980720), as the file's header
+  License:   W3C Software License (SPDX: W3C-19980720), as the file's header
              states, http://www.w3.org/Consortium/Legal/copyright-software-19980720
              Its notice is reproduced in full under "W3C notices" below, as
-             the licence asks.
+             the license asks.
   Use:       Imported by the ISO/IEC 19770-2:2015 schema, so that a copy of
              that schema named by the option sbom.swid_xsd is checked offline.
   Changes:   None; the file is unmodified, with its header notice intact.
@@ -103,10 +103,10 @@ inst/schemas/swid/xml.xsd
              (http://www.w3.org/XML/1998/namespace)
   Source:    https://www.w3.org/2001/xml.xsd
   Copyright: W3C (MIT, ERCIM, Keio, Beihang)
-  Licence:   W3C Software and Document License (SPDX: W3C-20150513),
+  License:   W3C Software and Document License (SPDX: W3C-20150513),
              https://www.w3.org/Consortium/Legal/2015/copyright-software-and-document
-             The file itself carries no licence header. The notice is
-             reproduced in full under "W3C notices" below, as the licence asks.
+             The file itself carries no license header. The notice is
+             reproduced in full under "W3C notices" below, as the license asks.
   Use:       Imported by the ISO/IEC 19770-2:2015 schema, as above.
   Changes:   None; the file is unmodified.
 
@@ -116,20 +116,20 @@ inst/extdata/spdx-licenses.csv, inst/extdata/spdx-licenses.dcf
              https://github.com/spdx/license-list-XML. data-raw/spdx-licenses.R
              reproduces the files.
   Copyright: SPDX Workgroup, a Linux Foundation Project
-  Licence:   Neither repository ships a licence file for the list data, and neither
+  License:   Neither repository ships a license file for the list data, and neither
              states one for it (checked at tag v3.29.0; the license-list-data README
              defers to the license-list-XML repository, which has none either). The
              only explicit statement found is the SPDX-License-Identifier: CC0-1.0
              in the license-list-XML schema, schema/ListedLicense.xsd. Only the
              short identifiers and each identifier's deprecation flag are kept: no
-             licence text, name or URL. They are listed here with attribution.
+             license text, name or URL. They are listed here with attribution.
   Changes:   Reduced to the columns id, kind (license or exception) and deprecated,
              sorted by id.
 
 W3C notices
 -----------
 
-The full text of the two W3C licences above, as the SPDX License List
+The full text of the two W3C licenses above, as the SPDX License List
 (version 3.29.0, text/W3C-19980720.txt and text/W3C-20150513.txt) gives it.
 
 W3C Software License (W3C-19980720), for inst/schemas/swid/xmldsig-core-schema.xsd:
@@ -186,35 +186,49 @@ scripts, and are MIT licensed like the rest of it, with the copyright holder
 that LICENSE names.
 
 inst/extdata/licenses.csv, inst/extdata/licenses.dcf
-  The SPDX expression for each licence specification (the License field) in
+  The SPDX expression for each license specification (the License field) in
   use on CRAN and Bioconductor, generated by data-raw/licenses.R; licenses.dcf
   records when and from what. The specifications are every distinct License
   value in tools::CRAN_package_db() and in the Bioconductor release VIEWS files
   (software, annotation, experiment and workflow packages), and R's own
-  "GPL-2 | GPL-3". Each is mapped to SPDX by R's own licence analysis:
-  tools:::analyze_license() and the SPDX identifiers in R's licence database
+  "GPL-2 | GPL-3". Each is mapped to SPDX by R's own license analysis:
+  tools:::analyze_license() and the SPDX identifiers in R's license database
   (share/licenses/license.db, read with tools:::R_license_db()), which are
   part of R. Following R Observatory's rule, an expression is kept only when
   every alternative maps to SPDX, none is "file LICENSE" alone, and
-  "+ file LICENSE" follows only a licence that R's database marks as
+  "+ file LICENSE" follows only a license that R's database marks as
   extensible; otherwise the spdx column is empty. The deprecated id
   BSD-2-Clause-FreeBSD is replaced with BSD-2-Clause-Views. The file holds
-  licence specifications and SPDX identifiers only, no licence text.
+  license specifications and SPDX identifiers only, no license text.
 
 inst/extdata/javascript.csv
-  sbom's rules for recognising JavaScript and CSS libraries that packages
+  sbom's rules for recognizing JavaScript and CSS libraries that packages
   bundle, by file name and header; written for this package.
 
 inst/extdata/vendored.csv
-  sbom's rules for recognising C and C++ libraries that packages copy into
+  sbom's rules for recognizing C and C++ libraries that packages copy into
   their sources; written for this package.
 
-inst/extdata/app.R, inst/extdata/manifest.json, inst/extdata/renv.lock
-  Example inputs for the examples of sbom_rsconnect(), sbom_renv() and sbom(),
-  written for this package. The packages they name are fictitious (ghpkg,
-  ppmpkg, biocpkg, localpkg, with example.org addresses), except cli and glue,
-  which are described by short excerpts of their CRAN package metadata (name,
-  version, title, licence field, maintainer, URLs).
+inst/extdata/examples/*
+inst/extdata/examples/analysis/*
+inst/extdata/examples/connect-app/*
+inst/extdata/examples/library/cli/*
+inst/extdata/examples/nix-project/*
+inst/extdata/examples/report-after/*
+inst/extdata/examples/report-before/*
+inst/extdata/examples/shiny-app/*
+inst/extdata/examples/shiny-app/www/*
+inst/extdata/examples/study/*
+  The example projects and files that sbom_example() returns, written for this
+  package; data-raw/examples.R makes osv-all.zip. The packages they name are
+  fictitious (holeypkg, inhouse, notarealpkg, ghpkg, ppmpkg, biocpkg,
+  localpkg, with example.org and example.com addresses), except cli, glue and
+  jsonlite, which are described by short excerpts of their CRAN package
+  metadata (name, version, title, license field, maintainer, URLs), and shiny
+  and xml2, which the example code only calls. shiny-app/www/jquery-3.7.1.min.js
+  holds only the one-line header comment of jQuery 3.7.1 (copyright OpenJS
+  Foundation, MIT license), no jQuery code. dashboard.cdx.json names the
+  Python packages requests and urllib3 by name, version and license only.
 
 inst/schemas/MANIFEST.csv
   The source, tag, SHA-256 checksum and modification flag of each bundled
@@ -242,7 +256,7 @@ tests/testthat/fixtures/third-party/spdx-2.3/*
              Linux Foundation and its Contributors."
   Source:    https://github.com/spdx/spdx-spec/tree/support/2.3/examples
              (commit 6f2cb47d13db19b12c23885573b22ef32ec1ada5)
-  Licence:   Creative Commons Attribution 3.0 Unported (SPDX: CC-BY-3.0),
+  License:   Creative Commons Attribution 3.0 Unported (SPDX: CC-BY-3.0),
              https://creativecommons.org/licenses/by/3.0/
              Upstream file LICENSE on that branch.
   Changes:   None; each file is unmodified.
@@ -256,7 +270,7 @@ tests/testthat/fixtures/third-party/spdx-2.2/*
              Linux Foundation and its Contributors."
   Source:    https://github.com/spdx/spdx-spec/tree/development/v2.2.2/examples
              (commit 4694d1fe63ecd269262c26bd4370d4e11e6f7f8f)
-  Licence:   Creative Commons Attribution 3.0 Unported (SPDX: CC-BY-3.0),
+  License:   Creative Commons Attribution 3.0 Unported (SPDX: CC-BY-3.0),
              https://creativecommons.org/licenses/by/3.0/
              Upstream file LICENSE on that branch.
   Changes:   None; each file is unmodified.
@@ -270,7 +284,7 @@ tests/testthat/fixtures/third-party/spdx-3/package_sbom.json
              contributions from OMG and its Contributors."
   Source:    https://github.com/spdx/spdx-spec/blob/support/3.0/examples/jsonld/package_sbom.json
              (commit 0232660029bc66f6e25b33c49379c03c87fdaaed)
-  Licence:   The upstream LICENSE (https://github.com/spdx/spdx-spec/blob/support/3.0/LICENSE)
+  License:   The upstream LICENSE (https://github.com/spdx/spdx-spec/blob/support/3.0/LICENSE)
              says: "The SPDX Specification is provided under the Community
              Specification License 1.0 (Community-Spec-1.0)", whose full text
              it includes and which is listed at
@@ -289,7 +303,7 @@ tests/testthat/fixtures/third-party/cyclonedx/*
              6470e34ef83f915868ece48934cff52e10c9eb49),
              tools/src/test/resources/{1.3,1.4,1.5,1.6,1.7}/
   Copyright: OWASP Foundation, as the upstream LICENSE states
-  Licence:   Apache License 2.0 (SPDX: Apache-2.0),
+  License:   Apache License 2.0 (SPDX: Apache-2.0),
              https://www.apache.org/licenses/LICENSE-2.0
              Upstream file LICENSE. The repository has no NOTICE file (checked
              at that commit), so there is no notice text to reproduce.

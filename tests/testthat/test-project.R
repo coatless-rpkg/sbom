@@ -470,7 +470,7 @@ test_that("the code scan ignores the renv that renv infers from its own lockfile
   write_text("library(cli)\n", file.path(dir, "analysis.R"))
   lib <- local_fake_lib(list())
   expect_false(any(grepl("^renv ", sbom_issues(sbom(dir, library = lib, lib = lib))$message)))
-  expect_false(any(grepl("^renv ", sbom_issues(sbom(system.file("extdata", package = "sbom")))$message)))
+  expect_false(any(grepl("^renv ", sbom_issues(sbom(sbom_example("connect-app", copy = TRUE)))$message)))
 })
 
 test_that("a git project takes its commit as the version", {
@@ -676,7 +676,7 @@ test_that("sbom() applies sbom-overrides.csv from the folder unless overrides ar
   expect_false("overrides" %in% y$metadata$inputs$kind)
 })
 
-test_that("a read failure's reason names no path, whatever cli's colours", {
+test_that("a read failure's reason names no path, whatever cli's colors", {
   withr::local_options(cli.num_colors = 256)
   dir <- withr::local_tempdir()
   file.copy(test_path("fixtures/renv/modern/renv.lock"), dir)

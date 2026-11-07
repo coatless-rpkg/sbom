@@ -1,2 +1,3 @@
 inst/schemas/** -text
 tests/testthat/fixtures/** -text
+inst/extdata/examples/** -text

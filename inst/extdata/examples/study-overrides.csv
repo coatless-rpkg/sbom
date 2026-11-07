@@ -1,0 +1,9 @@
+component,field,value,asserted_by,reason
+R,supplier_name,The R Foundation,Jo Reviewer,Publisher of R.
+R,purl,pkg:generic/r@4.5.1,Jo Reviewer,No purl type covers R itself.
+inhouse,license_spdx,LicenseRef-Proprietary,Jo Reviewer,Agreed with legal (LEG-42).
+inhouse,supplier_name,Example Pharma Ltd,Jo Reviewer,Built in house.
+inhouse,purl,pkg:generic/inhouse@0.3.0,Jo Reviewer,Internal package.
+study,version,2026.1,Jo Reviewer,Release tag of the study code.
+study,supplier_name,Example Pharma Ltd,Jo Reviewer,Our study.
+study,purl,pkg:generic/study@2026.1,Jo Reviewer,Our study.

@@ -1,0 +1,11 @@
+{
+  "R": {"Version": "4.5.1"},
+  "Packages": {
+    "cli": {"Package": "cli", "Version": "3.6.5", "Source": "Repository",
+      "Repository": "CRAN", "License": "MIT + file LICENSE"},
+    "glue": {"Package": "glue", "Version": "1.8.0", "Source": "Repository",
+      "Repository": "CRAN", "License": "MIT + file LICENSE"},
+    "notarealpkg": {"Package": "notarealpkg", "Version": "1.0.0", "Source": "Repository",
+      "Repository": "CRAN", "License": "GPL-3"}
+  }
+}

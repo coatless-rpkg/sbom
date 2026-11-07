@@ -95,7 +95,7 @@
 #'   advisories are matched after the overrides.
 #' @return An `<sbom>` object. See [sbom_components()] to read it.
 #' @examples
-#' x <- sbom(system.file("extdata", package = "sbom"), system = FALSE)
+#' x <- sbom(sbom_example("connect-app"), system = FALSE)
 #' x
 #' sbom_issues(x)
 #' @export

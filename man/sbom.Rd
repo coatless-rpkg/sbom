@@ -58,7 +58,8 @@ left out, and so is the code in any subfolder that holds its own
 In a package folder, so are test fixtures and snapshots,
 \code{inst/extdata} and the files \code{.Rbuildignore} excludes. The root is the
 folder, an application named after it, with its git commit as the
-version. This is the weakest evidence, and a note says so.
+version. This is the weakest evidence, and a note states that the
+packages come from a scan of the code, at their installed versions.
 }
 
 A folder that is a Shiny app (see \code{\link[=sbom_shiny]{sbom_shiny()}}) is described by
@@ -79,8 +80,9 @@ cannot be read for a cross-check, or a \code{manifest.json} that is not a
 Posit Connect manifest, is an issue, not an error. So is a hand-written
 \code{default.nix} that sbom cannot read, even when it is the strongest source:
 one on a machine without Nix, or, under the default \code{nix = NA}, one that
-Nix fails to evaluate or whose environment has not been built. A warning
-says so, and the SBOM is built from the next source. Any other failure to
+Nix fails to evaluate or whose environment has not been built. The SBOM is
+built from the next source, and a \code{cross-check-failed} issue of severity
+\code{warning} gives the reason and names that source. Any other failure to
 read the strongest source, such as \code{nix = TRUE} on a machine without Nix,
 is an error. A cross-check reads \code{default.nix} with \code{nix} as given (by
 default, Nix is used when it is installed, and \code{nix = FALSE} never calls
@@ -105,7 +107,7 @@ components are added). The cross-checks never read advisory data. See
 The \code{inputs} element of the SBOM's metadata lists every source read.
 }
 \examples{
-x <- sbom(system.file("extdata", package = "sbom"), system = FALSE)
+x <- sbom(sbom_example("connect-app"), system = FALSE)
 x
 sbom_issues(x)
 }

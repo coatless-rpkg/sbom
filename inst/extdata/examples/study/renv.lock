@@ -1,0 +1,12 @@
+{
+  "R": {"Version": "4.5.1",
+        "Repositories": [{"Name": "CRAN", "URL": "https://cloud.r-project.org"}]},
+  "Packages": {
+    "holeypkg": {"Package": "holeypkg", "Version": "1.0.0", "Source": "Repository",
+      "Repository": "CRAN", "License": "MIT + file LICENSE",
+      "Maintainer": "Ann Example <ann@example.org>"},
+    "inhouse": {"Package": "inhouse", "Version": "0.3.0", "Source": "Local",
+      "License": "file LICENSE", "Maintainer": "Stats Team <stats@example.com>",
+      "Imports": ["holeypkg"]}
+  }
+}
