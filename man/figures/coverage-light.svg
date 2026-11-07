@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 410" role="img" aria-labelledby="t d">
+  <title id="t">What read_sbom() gets back from each format</title>
+  <desc id="d">A matrix of eight kinds of value and four format families. Names, versions and package URLs come back from all four. Dependencies come back from CycloneDX, SPDX 2 and SPDX 3, and from SWID only for the root. SPDX licenses come back from all but SWID. The license as written and the evidence come back only from CycloneDX. Suppliers come back from CycloneDX, in part from SPDX 2 and 3, not from SWID. Minimum versions come back from CycloneDX and SWID. Advisories come back in part from CycloneDX, SPDX 2 and SPDX 3, and not from SWID.</desc>
+  <style>.s{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}.c{font-family:"DIN Condensed","Barlow Condensed","Roboto Condensed","Arial Narrow",system-ui,sans-serif}.m{font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace}.card{fill:#FBF6EC}.code{fill:#F2E8D5}.ink{fill:#2E2218}.body{fill:#4F4030}.muted{fill:#7D6B55}.faint{fill:#A3927A}.wal{fill:#4A3218}.onwal{fill:#F6EBD3}.onwalm{fill:#CDB898}.walcard{fill:#5C4126}.wood{fill:#CDA56C}.woodsoft{fill:#EEDFC2}.accent{fill:#9A5A22}.onaccent{fill:#FFF8EC}.fn{fill:#8A4610}.str{fill:#4E6B35}.com{fill:#9A8A72}.key{fill:#6B4A2A}.ok{fill:#3F7D4E}.oksoft{fill:#DDEBDA}.warn{fill:#A0640F}.warnsoft{fill:#F6E6C6}.folder{fill:#C9963F}.walfn{fill:#F2C27E}.walok{fill:#8FCB9B}.ev1{fill:#9A5A22}.ev2{fill:#3F7D4E}.ev3{fill:#3E6F86}.err{fill:#A8322A}.errsoft{fill:#F3DAD3}.slat{fill:#C29A61}.slatdark{fill:#B08850}.crate{fill:#CDA56C}.oncrate{fill:#4A3218}.onwood{fill:#3B2814}.edge-s{stroke:#E6D8BE;fill:none}.rail-s{stroke:#CDB898;fill:none}.walrail-s{stroke:#7A5A38;fill:none}.file-s{stroke:#A3927A;fill:none}.arrow-s{stroke:#9A5A22;fill:none}.onaccent-s{stroke:#FFF8EC;fill:none}.walcheck-s{stroke:#2E2218;fill:none}.seam-s{stroke:#B08850;fill:none}.wal-s{stroke:#4A3218;fill:none}.ink-s{stroke:#2E2218;fill:none}.lead-s{stroke:#B9A486;fill:none}.cratefr-s{stroke:#4A3218;fill:none}</style>
+  <rect class="card edge-s" stroke-width="1" x="16" y="16" width="688" height="378" rx="12"/>
+  <text class="s ink" x="358" y="52" font-size="14.5" font-weight="700" text-anchor="middle">CycloneDX</text>
+  <text class="s ink" x="456" y="52" font-size="14.5" font-weight="700" text-anchor="middle">SPDX 2</text>
+  <text class="s ink" x="554" y="52" font-size="14.5" font-weight="700" text-anchor="middle">SPDX 3</text>
+  <text class="s ink" x="652" y="52" font-size="14.5" font-weight="700" text-anchor="middle">SWID</text>
+  <rect class="code" x="24" y="66" width="672" height="36" rx="6"/>
+  <text class="s ink" x="38" y="89" font-size="14.5">Name, version, purl</text>
+  <circle class="wal" cx="358" cy="84" r="8"/>
+  <circle class="wal" cx="456" cy="84" r="8"/>
+  <circle class="wal" cx="554" cy="84" r="8"/>
+  <circle class="wal" cx="652" cy="84" r="8"/>
+  <text class="s ink" x="38" y="125" font-size="14.5">Dependencies</text>
+  <circle class="wal" cx="358" cy="120" r="8"/>
+  <circle class="wal" cx="456" cy="120" r="8"/>
+  <circle class="wal" cx="554" cy="120" r="8"/>
+  <circle class="wal-s" stroke-width="2" cx="652" cy="120" r="7"/>
+  <path class="wal" d="M652 113 A7 7 0 0 0 652 127 Z"/>
+  <rect class="code" x="24" y="138" width="672" height="36" rx="6"/>
+  <text class="s ink" x="38" y="161" font-size="14.5">SPDX license</text>
+  <circle class="wal" cx="358" cy="156" r="8"/>
+  <circle class="wal" cx="456" cy="156" r="8"/>
+  <circle class="wal" cx="554" cy="156" r="8"/>
+  <circle class="lead-s" stroke-width="2" cx="652" cy="156" r="7"/>
+  <text class="s ink" x="38" y="197" font-size="14.5">License as written</text>
+  <circle class="wal" cx="358" cy="192" r="8"/>
+  <circle class="lead-s" stroke-width="2" cx="456" cy="192" r="7"/>
+  <circle class="lead-s" stroke-width="2" cx="554" cy="192" r="7"/>
+  <circle class="lead-s" stroke-width="2" cx="652" cy="192" r="7"/>
+  <rect class="code" x="24" y="210" width="672" height="36" rx="6"/>
+  <text class="s ink" x="38" y="233" font-size="14.5">Supplier</text>
+  <circle class="wal" cx="358" cy="228" r="8"/>
+  <circle class="wal-s" stroke-width="2" cx="456" cy="228" r="7"/>
+  <path class="wal" d="M456 221 A7 7 0 0 0 456 235 Z"/>
+  <circle class="wal-s" stroke-width="2" cx="554" cy="228" r="7"/>
+  <path class="wal" d="M554 221 A7 7 0 0 0 554 235 Z"/>
+  <circle class="lead-s" stroke-width="2" cx="652" cy="228" r="7"/>
+  <text class="s ink" x="38" y="269" font-size="14.5">Evidence</text>
+  <circle class="wal" cx="358" cy="264" r="8"/>
+  <circle class="lead-s" stroke-width="2" cx="456" cy="264" r="7"/>
+  <circle class="lead-s" stroke-width="2" cx="554" cy="264" r="7"/>
+  <circle class="lead-s" stroke-width="2" cx="652" cy="264" r="7"/>
+  <rect class="code" x="24" y="282" width="672" height="36" rx="6"/>
+  <text class="s ink" x="38" y="305" font-size="14.5">Minimum versions</text>
+  <circle class="wal" cx="358" cy="300" r="8"/>
+  <circle class="lead-s" stroke-width="2" cx="456" cy="300" r="7"/>
+  <circle class="lead-s" stroke-width="2" cx="554" cy="300" r="7"/>
+  <circle class="wal" cx="652" cy="300" r="8"/>
+  <text class="s ink" x="38" y="341" font-size="14.5">Advisories</text>
+  <circle class="wal-s" stroke-width="2" cx="358" cy="336" r="7"/>
+  <path class="wal" d="M358 329 A7 7 0 0 0 358 343 Z"/>
+  <circle class="wal-s" stroke-width="2" cx="456" cy="336" r="7"/>
+  <path class="wal" d="M456 329 A7 7 0 0 0 456 343 Z"/>
+  <circle class="wal-s" stroke-width="2" cx="554" cy="336" r="7"/>
+  <path class="wal" d="M554 329 A7 7 0 0 0 554 343 Z"/>
+  <circle class="lead-s" stroke-width="2" cx="652" cy="336" r="7"/>
+  <circle class="wal" cx="46" cy="365" r="7"/>
+  <text class="s muted" x="62" y="370" font-size="13.5">comes back</text>
+  <circle class="wal-s" stroke-width="2" cx="196" cy="365" r="6"/>
+  <path class="wal" d="M196 359 A6 6 0 0 0 196 371 Z"/>
+  <text class="s muted" x="212" y="370" font-size="13.5">in part</text>
+  <circle class="lead-s" stroke-width="2" cx="346" cy="365" r="6"/>
+  <text class="s muted" x="362" y="370" font-size="13.5">lost</text>
+  <text class="s muted" x="682" y="370" font-size="13.5" text-anchor="end">Details: ?read_sbom</text>
+</svg>

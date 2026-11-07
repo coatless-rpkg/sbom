@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 330" role="img" aria-labelledby="t d">
+  <title id="t">Everything sbom does runs on your machine, unless you ask for one of four things</title>
+  <desc id="d">Inside your machine: reading DESCRIPTION files, lockfiles and manifests, building the SBOM, writing every format, validating against bundled schemas, and matching OSV advisories. Outside, reached only when asked: OSV&#x27;s advisory export with advisories = TRUE, api.osv.dev for CVSS ratings, sent only public ids, Posit Package Manager with snapshot = &quot;ppm&quot;, and nixpkgs in Nix mode.</desc>
+  <style>.s{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}.c{font-family:"DIN Condensed","Barlow Condensed","Roboto Condensed","Arial Narrow",system-ui,sans-serif}.m{font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace}.card{fill:#241B13}.code{fill:#2E241A}.ink{fill:#F2E6CF}.body{fill:#D8C8AC}.muted{fill:#A8957A}.faint{fill:#7F6E58}.wal{fill:#E9D8B8}.onwal{fill:#2E2218}.onwalm{fill:#6E5A42}.walcard{fill:#DCC6A0}.wood{fill:#CDA56C}.woodsoft{fill:#3F3022}.accent{fill:#E3AA68}.onaccent{fill:#241B13}.fn{fill:#EDB46C}.str{fill:#A9C98A}.com{fill:#8C7A62}.key{fill:#D9B88F}.ok{fill:#86C994}.oksoft{fill:#20352A}.warn{fill:#E8B04B}.warnsoft{fill:#3B2C12}.folder{fill:#D9A441}.walfn{fill:#8A4610}.walok{fill:#3F7D4E}.ev1{fill:#E3AA68}.ev2{fill:#86C994}.ev3{fill:#8DBBD3}.err{fill:#E5735F}.errsoft{fill:#3A1E18}.slat{fill:#6A4C2C}.slatdark{fill:#4A331D}.crate{fill:#5A3F25}.oncrate{fill:#F2E4C6}.onwood{fill:#2E2218}.edge-s{stroke:#3D2F22;fill:none}.rail-s{stroke:#5A4630;fill:none}.walrail-s{stroke:#B49A74;fill:none}.file-s{stroke:#7F6E58;fill:none}.arrow-s{stroke:#E3AA68;fill:none}.onaccent-s{stroke:#241B13;fill:none}.walcheck-s{stroke:#F6EBD3;fill:none}.seam-s{stroke:#4E3820;fill:none}.wal-s{stroke:#D2AE78;fill:none}.ink-s{stroke:#F2E6CF;fill:none}.lead-s{stroke:#6E5A42;fill:none}.cratefr-s{stroke:#D2AE78;fill:none}</style>
+  <rect class="card edge-s" stroke-width="1" x="16" y="16" width="352" height="298" rx="14"/>
+  <text class="c ink" x="38" y="56" font-size="26" font-weight="700">Your machine</text>
+  <text class="s muted" x="38" y="78" font-size="14">always</text>
+  <circle class="ok" cx="46.5" cy="107.5" r="8.5"/>
+  <path class="onaccent-s" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M42.9 107.7 l2.7 2.7 l4.9 -5.6"/>
+  <text class="s body" x="66" y="112" font-size="14.5">Read DESCRIPTION files, lockfiles</text>
+  <circle class="ok" cx="46.5" cy="145.5" r="8.5"/>
+  <path class="onaccent-s" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M42.9 145.7 l2.7 2.7 l4.9 -5.6"/>
+  <text class="s body" x="66" y="150" font-size="14.5">Build the SBOM</text>
+  <circle class="ok" cx="46.5" cy="183.5" r="8.5"/>
+  <path class="onaccent-s" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M42.9 183.7 l2.7 2.7 l4.9 -5.6"/>
+  <text class="s body" x="66" y="188" font-size="14.5">Write every format</text>
+  <circle class="ok" cx="46.5" cy="221.5" r="8.5"/>
+  <path class="onaccent-s" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M42.9 221.7 l2.7 2.7 l4.9 -5.6"/>
+  <text class="s body" x="66" y="226" font-size="14.5">Validate with bundled schemas</text>
+  <circle class="ok" cx="46.5" cy="259.5" r="8.5"/>
+  <path class="onaccent-s" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M42.9 259.7 l2.7 2.7 l4.9 -5.6"/>
+  <text class="s body" x="66" y="264" font-size="14.5">Match OSV advisories</text>
+  <text class="c ink" x="448" y="56" font-size="26" font-weight="700">Only when you ask</text>
+  <rect class="code" x="448" y="78" width="256" height="50" rx="9"/>
+  <text class="s ink" x="464" y="99" font-size="14.5" font-weight="700">OSV advisory export</text>
+  <text class="m fn" x="464" y="118" font-size="13">advisories = TRUE</text>
+  <path class="lead-s" stroke-width="1.6" stroke-dasharray="5 4" d="M368 103 H448"/>
+  <circle class="accent" cx="368" cy="103" r="3.5"/>
+  <rect class="code" x="448" y="138" width="256" height="50" rx="9"/>
+  <text class="s ink" x="464" y="159" font-size="14.5" font-weight="700">api.osv.dev</text>
+  <text class="m fn" x="464" y="178" font-size="13">CVSS ratings, public ids only</text>
+  <path class="lead-s" stroke-width="1.6" stroke-dasharray="5 4" d="M368 163 H448"/>
+  <circle class="accent" cx="368" cy="163" r="3.5"/>
+  <rect class="code" x="448" y="198" width="256" height="50" rx="9"/>
+  <text class="s ink" x="464" y="219" font-size="14.5" font-weight="700">Posit Package Manager</text>
+  <text class="m fn" x="464" y="238" font-size="13">snapshot = "ppm"</text>
+  <path class="lead-s" stroke-width="1.6" stroke-dasharray="5 4" d="M368 223 H448"/>
+  <circle class="accent" cx="368" cy="223" r="3.5"/>
+  <rect class="code" x="448" y="258" width="256" height="50" rx="9"/>
+  <text class="s ink" x="464" y="279" font-size="14.5" font-weight="700">nixpkgs</text>
+  <text class="m fn" x="464" y="298" font-size="13">Nix mode</text>
+  <path class="lead-s" stroke-width="1.6" stroke-dasharray="5 4" d="M368 283 H448"/>
+  <circle class="accent" cx="368" cy="283" r="3.5"/>
+</svg>

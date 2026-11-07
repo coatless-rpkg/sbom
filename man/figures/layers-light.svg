@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 320" role="img" aria-labelledby="t d">
+  <title id="t">validate_sbom() checks two layers, and sums them up in one status</title>
+  <desc id="d">Two layers stacked like boards. At the bottom, the schema layer: the format&#x27;s own schema, bundled. On top, the content layer: sbom&#x27;s integrity rules, on ids, relationships, licenses, purls and R package names, and, under the default profile, the NTIA 2021 minimum elements. The status is pass when every layer that ran passed, partial when one was skipped or could check only part, fail when one failed, and skipped when none ran.</desc>
+  <style>.s{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}.c{font-family:"DIN Condensed","Barlow Condensed","Roboto Condensed","Arial Narrow",system-ui,sans-serif}.m{font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace}.card{fill:#FBF6EC}.code{fill:#F2E8D5}.ink{fill:#2E2218}.body{fill:#4F4030}.muted{fill:#7D6B55}.faint{fill:#A3927A}.wal{fill:#4A3218}.onwal{fill:#F6EBD3}.onwalm{fill:#CDB898}.walcard{fill:#5C4126}.wood{fill:#CDA56C}.woodsoft{fill:#EEDFC2}.accent{fill:#9A5A22}.onaccent{fill:#FFF8EC}.fn{fill:#8A4610}.str{fill:#4E6B35}.com{fill:#9A8A72}.key{fill:#6B4A2A}.ok{fill:#3F7D4E}.oksoft{fill:#DDEBDA}.warn{fill:#A0640F}.warnsoft{fill:#F6E6C6}.folder{fill:#C9963F}.walfn{fill:#F2C27E}.walok{fill:#8FCB9B}.ev1{fill:#9A5A22}.ev2{fill:#3F7D4E}.ev3{fill:#3E6F86}.err{fill:#A8322A}.errsoft{fill:#F3DAD3}.slat{fill:#C29A61}.slatdark{fill:#B08850}.crate{fill:#CDA56C}.oncrate{fill:#4A3218}.onwood{fill:#3B2814}.edge-s{stroke:#E6D8BE;fill:none}.rail-s{stroke:#CDB898;fill:none}.walrail-s{stroke:#7A5A38;fill:none}.file-s{stroke:#A3927A;fill:none}.arrow-s{stroke:#9A5A22;fill:none}.onaccent-s{stroke:#FFF8EC;fill:none}.walcheck-s{stroke:#2E2218;fill:none}.seam-s{stroke:#B08850;fill:none}.wal-s{stroke:#4A3218;fill:none}.ink-s{stroke:#2E2218;fill:none}.lead-s{stroke:#B9A486;fill:none}.cratefr-s{stroke:#4A3218;fill:none}</style>
+  <path class="slat" d="M30 18 H434 L420 32 H16 Z"/>
+  <path class="slatdark" d="M420 32 L434 18 V168 L420 182 Z"/>
+  <rect class="wood" x="16" y="32" width="404" height="150" rx="3"/>
+  <text class="c onwood" x="36" y="62" font-size="24" font-weight="700">Content</text>
+  <rect class="card" x="32" y="78" width="178" height="78" rx="7"/>
+  <text class="s ink" x="44" y="100" font-size="14.5" font-weight="700">Integrity rules</text>
+  <text class="s muted" x="44" y="120" font-size="12.5">ids, relationships,</text>
+  <text class="s muted" x="44" y="137" font-size="12.5">licenses, purls</text>
+  <rect class="card" x="222" y="78" width="178" height="78" rx="7"/>
+  <text class="s ink" x="234" y="100" font-size="14.5" font-weight="700">NTIA 2021</text>
+  <text class="s muted" x="234" y="120" font-size="12.5">seven minimum</text>
+  <text class="s muted" x="234" y="137" font-size="12.5">elements, by default</text>
+  <path class="slat" d="M30 196 H434 L420 210 H16 Z"/>
+  <path class="slatdark" d="M420 210 L434 196 V274 L420 288 Z"/>
+  <rect class="wood" x="16" y="210" width="404" height="78" rx="3"/>
+  <text class="c onwood" x="36" y="240" font-size="24" font-weight="700">Schema</text>
+  <text class="s onwood" x="36" y="264" font-size="14">the format's own, bundled</text>
+  <text class="c ink" x="452" y="46" font-size="26" font-weight="700">One status</text>
+  <rect class="ok" x="452" y="76" width="84" height="26" rx="13"/>
+  <text class="s onaccent" x="494" y="94" font-size="13.5" font-weight="700" text-anchor="middle">pass</text>
+  <text class="s body" x="548" y="94" font-size="13.5">every layer that ran</text>
+  <text class="s body" x="548" y="112" font-size="13.5">passed</text>
+  <rect class="warn" x="452" y="144" width="84" height="26" rx="13"/>
+  <text class="s onaccent" x="494" y="162" font-size="13.5" font-weight="700" text-anchor="middle">partial</text>
+  <text class="s body" x="548" y="162" font-size="13.5">a layer was skipped, or</text>
+  <text class="s body" x="548" y="180" font-size="13.5">checked only part</text>
+  <rect class="err" x="452" y="212" width="84" height="26" rx="13"/>
+  <text class="s onaccent" x="494" y="230" font-size="13.5" font-weight="700" text-anchor="middle">fail</text>
+  <text class="s body" x="548" y="230" font-size="13.5">a layer failed</text>
+  <rect class="muted" x="452" y="262" width="84" height="26" rx="13"/>
+  <text class="s onaccent" x="494" y="280" font-size="13.5" font-weight="700" text-anchor="middle">skipped</text>
+  <text class="s body" x="548" y="280" font-size="13.5">no layer ran</text>
+</svg>

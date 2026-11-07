@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 320" role="img" aria-labelledby="t d">
+  <title id="t">How strongly sbom() trusts each source in a project folder</title>
+  <desc id="d">Five sources, as bars from strongest to weakest: renv.lock, manifest.json, default.nix, DESCRIPTION and the R code. sbom() builds from the strongest one present and cross-checks it against the others. In the analysis example, renv.lock builds the SBOM; manifest.json and the code cross-check it; default.nix and DESCRIPTION are not in the folder.</desc>
+  <style>.s{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}.c{font-family:"DIN Condensed","Barlow Condensed","Roboto Condensed","Arial Narrow",system-ui,sans-serif}.m{font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace}.card{fill:#241B13}.code{fill:#2E241A}.ink{fill:#F2E6CF}.body{fill:#D8C8AC}.muted{fill:#A8957A}.faint{fill:#7F6E58}.wal{fill:#E9D8B8}.onwal{fill:#2E2218}.onwalm{fill:#6E5A42}.walcard{fill:#DCC6A0}.wood{fill:#CDA56C}.woodsoft{fill:#3F3022}.accent{fill:#E3AA68}.onaccent{fill:#241B13}.fn{fill:#EDB46C}.str{fill:#A9C98A}.com{fill:#8C7A62}.key{fill:#D9B88F}.ok{fill:#86C994}.oksoft{fill:#20352A}.warn{fill:#E8B04B}.warnsoft{fill:#3B2C12}.folder{fill:#D9A441}.walfn{fill:#8A4610}.walok{fill:#3F7D4E}.ev1{fill:#E3AA68}.ev2{fill:#86C994}.ev3{fill:#8DBBD3}.err{fill:#E5735F}.errsoft{fill:#3A1E18}.slat{fill:#6A4C2C}.slatdark{fill:#4A331D}.crate{fill:#5A3F25}.oncrate{fill:#F2E4C6}.onwood{fill:#2E2218}.edge-s{stroke:#3D2F22;fill:none}.rail-s{stroke:#5A4630;fill:none}.walrail-s{stroke:#B49A74;fill:none}.file-s{stroke:#7F6E58;fill:none}.arrow-s{stroke:#E3AA68;fill:none}.onaccent-s{stroke:#241B13;fill:none}.walcheck-s{stroke:#F6EBD3;fill:none}.seam-s{stroke:#4E3820;fill:none}.wal-s{stroke:#D2AE78;fill:none}.ink-s{stroke:#F2E6CF;fill:none}.lead-s{stroke:#6E5A42;fill:none}.cratefr-s{stroke:#D2AE78;fill:none}</style>
+  <text class="c ink" x="16" y="36" font-size="26" font-weight="700">Evidence strength</text>
+  <text class="s muted" x="16" y="58" font-size="14">in the analysis example</text>
+  <text class="m ink" x="136" y="105" font-size="14" font-weight="600" text-anchor="end">renv.lock</text>
+  <rect class="wal" x="150" y="84" width="370" height="30" rx="6"/>
+  <text class="s accent" x="532" y="104" font-size="14" font-weight="700">builds the SBOM</text>
+  <text class="m ink" x="136" y="147" font-size="14" font-weight="600" text-anchor="end">manifest.json</text>
+  <rect class="wood" x="150" y="126" width="296" height="30" rx="6"/>
+  <text class="s accent" x="458" y="146" font-size="14" font-weight="700">cross-checks</text>
+  <text class="m faint" x="136" y="189" font-size="14" font-weight="600" text-anchor="end">default.nix</text>
+  <rect class="card edge-s" stroke-width="1" x="150" y="168" width="222" height="30" rx="6"/>
+  <text class="s faint" x="384" y="188" font-size="14">not in this folder</text>
+  <text class="m faint" x="136" y="231" font-size="14" font-weight="600" text-anchor="end">DESCRIPTION</text>
+  <rect class="card edge-s" stroke-width="1" x="150" y="210" width="148" height="30" rx="6"/>
+  <text class="s faint" x="310" y="230" font-size="14">not in this folder</text>
+  <text class="m ink" x="136" y="273" font-size="14" font-weight="600" text-anchor="end">the R code</text>
+  <rect class="wood" x="150" y="252" width="74" height="30" rx="6"/>
+  <text class="s accent" x="236" y="272" font-size="14" font-weight="700">cross-checks</text>
+  <text class="s muted" x="150" y="304" font-size="13">stronger</text>
+  <path class="lead-s" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" d="M216 300 H450"/>
+  <text class="s muted" x="520" y="304" font-size="13" text-anchor="end">weaker</text>
+  <path class="lead-s" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" d="M216 300 l7 -4 M216 300 l7 4"/>
+  <path class="lead-s" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" d="M450 300 l-7 -4 M450 300 l-7 4"/>
+</svg>

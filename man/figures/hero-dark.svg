@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 380" role="img" aria-labelledby="t d">
+  <title id="t">sbom() turns an R project into a software bill of materials</title>
+  <desc id="d">Left: an R project, a folder holding an analysis script, a Quarto report and an renv lockfile, and the call sbom(&quot;my-analysis&quot;). Right: the SBOM it makes, a packing list of every component with its version, license and supplier: cli 3.6.5, jsonlite 2.0.0 and xml2 1.4.0, all MIT and from CRAN, and an in-house package, inhouse 0.3.0, whose license and supplier are unknown. Those two gaps are flagged in the list, and an override can supply them. write_sbom() saves the list as CycloneDX, SPDX 2, SPDX 3, SWID or a CSV.</desc>
+  <style>.s{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}.c{font-family:"DIN Condensed","Barlow Condensed","Roboto Condensed","Arial Narrow",system-ui,sans-serif}.m{font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace}.card{fill:#241B13}.code{fill:#2E241A}.ink{fill:#F2E6CF}.body{fill:#D8C8AC}.muted{fill:#A8957A}.faint{fill:#7F6E58}.wal{fill:#E9D8B8}.onwal{fill:#2E2218}.onwalm{fill:#6E5A42}.walcard{fill:#DCC6A0}.wood{fill:#CDA56C}.woodsoft{fill:#3F3022}.accent{fill:#E3AA68}.onaccent{fill:#241B13}.fn{fill:#EDB46C}.str{fill:#A9C98A}.com{fill:#8C7A62}.key{fill:#D9B88F}.ok{fill:#86C994}.oksoft{fill:#20352A}.warn{fill:#E8B04B}.warnsoft{fill:#3B2C12}.folder{fill:#D9A441}.walfn{fill:#8A4610}.walok{fill:#3F7D4E}.ev1{fill:#E3AA68}.ev2{fill:#86C994}.ev3{fill:#8DBBD3}.err{fill:#E5735F}.errsoft{fill:#3A1E18}.slat{fill:#6A4C2C}.slatdark{fill:#4A331D}.crate{fill:#5A3F25}.oncrate{fill:#F2E4C6}.onwood{fill:#2E2218}.edge-s{stroke:#3D2F22;fill:none}.rail-s{stroke:#5A4630;fill:none}.walrail-s{stroke:#B49A74;fill:none}.file-s{stroke:#7F6E58;fill:none}.arrow-s{stroke:#E3AA68;fill:none}.onaccent-s{stroke:#241B13;fill:none}.walcheck-s{stroke:#F6EBD3;fill:none}.seam-s{stroke:#4E3820;fill:none}.wal-s{stroke:#D2AE78;fill:none}.ink-s{stroke:#F2E6CF;fill:none}.lead-s{stroke:#6E5A42;fill:none}.cratefr-s{stroke:#D2AE78;fill:none}</style>
+  <rect class="card edge-s" stroke-width="1" x="12" y="12" width="262" height="356" rx="12"/>
+  <text class="c ink" x="32" y="52" font-size="26" font-weight="700">Your R project</text>
+  <path class="folder" d="M34 85 h5 l2 2 h7 v9 h-14 z"/>
+  <text class="m ink" x="56" y="94" font-size="14" font-weight="600">my-analysis/</text>
+  <path class="rail-s" stroke-width="1" d="M41 100 L41 118"/>
+  <path class="rail-s" stroke-width="1" d="M41 118 L52 118"/>
+  <path class="file-s" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" d="M59 111 h7 l4 4 v10 h-11 z M66 111 v4 h4"/>
+  <text class="m body" x="78" y="122" font-size="14">analysis.R</text>
+  <path class="rail-s" stroke-width="1" d="M41 128 L41 146"/>
+  <path class="rail-s" stroke-width="1" d="M41 146 L52 146"/>
+  <path class="file-s" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" d="M59 139 h7 l4 4 v10 h-11 z M66 139 v4 h4"/>
+  <text class="m body" x="78" y="150" font-size="14">report.qmd</text>
+  <path class="rail-s" stroke-width="1" d="M41 156 L41 174"/>
+  <path class="rail-s" stroke-width="1" d="M41 174 L52 174"/>
+  <path class="file-s" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" d="M59 167 h7 l4 4 v10 h-11 z M66 167 v4 h4"/>
+  <text class="m body" x="78" y="178" font-size="14">renv.lock</text>
+  <rect class="code" x="28" y="218" width="230" height="54" rx="8"/>
+  <text class="m" x="42" y="251" font-size="14" xml:space="preserve"><tspan class="fn">sbom</tspan><tspan class="body">(</tspan><tspan class="str">"my-analysis"</tspan><tspan class="body">)</tspan></text>
+  <text class="s muted" x="32" y="308" font-size="13.5">A package, a library, a lockfile,</text>
+  <text class="s muted" x="32" y="326.9" font-size="13.5">a Shiny app or a Nix file works too.</text>
+  <circle class="accent" cx="302" cy="190" r="17"/>
+  <path class="onaccent-s" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M295 190 H309 M303.5 184.5 L309 190 L303.5 195.5"/>
+  <rect class="card edge-s" stroke-width="1" x="330" y="12" width="618" height="356" rx="12"/>
+  <path class="wal" d="M330 24 a12 12 0 0 1 12 -12 h594 a12 12 0 0 1 12 12 v44 h-618 z"/>
+  <text class="c onwal" x="352" y="51" font-size="23" font-weight="700" letter-spacing="1.5">SOFTWARE BILL OF MATERIALS</text>
+  <text class="m onwalm" x="926" y="49" font-size="14" text-anchor="end">my-analysis</text>
+  <text class="s muted" x="352" y="98" font-size="13" font-weight="700">Component</text>
+  <text class="s muted" x="502" y="98" font-size="13" font-weight="700">Version</text>
+  <text class="s muted" x="592" y="98" font-size="13" font-weight="700">License</text>
+  <text class="s muted" x="782" y="98" font-size="13" font-weight="700">Supplier</text>
+  <path class="edge-s" stroke-width="1.2" d="M346 108 L932 108"/>
+  <text class="m ink" x="352" y="136" font-size="15" font-weight="600">cli</text>
+  <text class="m body" x="502" y="136" font-size="15">3.6.5</text>
+  <text class="s body" x="592" y="136" font-size="15">MIT</text>
+  <text class="s body" x="782" y="136" font-size="15">CRAN</text>
+  <path class="edge-s" stroke-width="1" d="M346 148 L932 148"/>
+  <text class="m ink" x="352" y="170" font-size="15" font-weight="600">jsonlite</text>
+  <text class="m body" x="502" y="170" font-size="15">2.0.0</text>
+  <text class="s body" x="592" y="170" font-size="15">MIT</text>
+  <text class="s body" x="782" y="170" font-size="15">CRAN</text>
+  <path class="edge-s" stroke-width="1" d="M346 182 L932 182"/>
+  <text class="m ink" x="352" y="204" font-size="15" font-weight="600">xml2</text>
+  <text class="m body" x="502" y="204" font-size="15">1.4.0</text>
+  <text class="s body" x="592" y="204" font-size="15">MIT</text>
+  <text class="s body" x="782" y="204" font-size="15">CRAN</text>
+  <path class="edge-s" stroke-width="1" d="M346 216 L932 216"/>
+  <rect class="warnsoft" x="342" y="215" width="594" height="34" rx="7"/>
+  <text class="m ink" x="352" y="238" font-size="15" font-weight="600">inhouse</text>
+  <text class="m body" x="502" y="238" font-size="15">0.3.0</text>
+  <path class="warn" d="M599.5 225.5 L606.6 238.9 H592.4 Z"/>
+  <text class="s onaccent" x="599.5" y="237.4" font-size="10.714285714285714" font-weight="800" text-anchor="middle">!</text>
+  <text class="s warn" x="614" y="238" font-size="15" font-weight="700">unknown</text>
+  <path class="warn" d="M789.5 225.5 L796.6 238.9 H782.4 Z"/>
+  <text class="s onaccent" x="789.5" y="237.4" font-size="10.714285714285714" font-weight="800" text-anchor="middle">!</text>
+  <text class="s warn" x="804" y="238" font-size="15" font-weight="700">unknown</text>
+  <text class="s muted" x="352" y="272" font-size="13.5">and R with its base packages</text>
+  <text class="s body" x="352" y="310" font-size="14">Supply the missing license and supplier with an override.</text>
+  <path class="edge-s" stroke-width="1.2" d="M346 323 L932 323"/>
+  <text class="m" x="352" y="349" font-size="14" xml:space="preserve"><tspan class="fn">write_sbom</tspan><tspan class="body">()</tspan></text>
+  <rect class="woodsoft" x="472" y="333" width="92" height="24" rx="12.0"/>
+  <text class="s ink" x="518" y="349.5" font-size="12.5" font-weight="600" text-anchor="middle">CycloneDX</text>
+  <rect class="woodsoft" x="572" y="333" width="70" height="24" rx="12.0"/>
+  <text class="s ink" x="607" y="349.5" font-size="12.5" font-weight="600" text-anchor="middle">SPDX 2</text>
+  <rect class="woodsoft" x="650" y="333" width="70" height="24" rx="12.0"/>
+  <text class="s ink" x="685" y="349.5" font-size="12.5" font-weight="600" text-anchor="middle">SPDX 3</text>
+  <rect class="woodsoft" x="728" y="333" width="58" height="24" rx="12.0"/>
+  <text class="s ink" x="757" y="349.5" font-size="12.5" font-weight="600" text-anchor="middle">SWID</text>
+  <rect class="woodsoft" x="794" y="333" width="50" height="24" rx="12.0"/>
+  <text class="s ink" x="819" y="349.5" font-size="12.5" font-weight="600" text-anchor="middle">CSV</text>
+</svg>

@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 360" role="img" aria-labelledby="t d">
+  <title id="t">sbom_diff() lines up two SBOMs and names each change</title>
+  <desc id="d">The report&#x27;s lockfile before and after an update. cli went from 3.6.4 to 3.6.5, a version change. glue 1.8.0 was added. jsonlite 1.8.9 was removed. notarealpkg stayed at 1.0.0 but its license went from GPL-2.0-only to GPL-3.0-only, a license change. sbom_diff() sums it up as 1 added, 1 removed, 2 changed.</desc>
+  <style>.s{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}.c{font-family:"DIN Condensed","Barlow Condensed","Roboto Condensed","Arial Narrow",system-ui,sans-serif}.m{font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace}.card{fill:#FBF6EC}.code{fill:#F2E8D5}.ink{fill:#2E2218}.body{fill:#4F4030}.muted{fill:#7D6B55}.faint{fill:#A3927A}.wal{fill:#4A3218}.onwal{fill:#F6EBD3}.onwalm{fill:#CDB898}.walcard{fill:#5C4126}.wood{fill:#CDA56C}.woodsoft{fill:#EEDFC2}.accent{fill:#9A5A22}.onaccent{fill:#FFF8EC}.fn{fill:#8A4610}.str{fill:#4E6B35}.com{fill:#9A8A72}.key{fill:#6B4A2A}.ok{fill:#3F7D4E}.oksoft{fill:#DDEBDA}.warn{fill:#A0640F}.warnsoft{fill:#F6E6C6}.folder{fill:#C9963F}.walfn{fill:#F2C27E}.walok{fill:#8FCB9B}.ev1{fill:#9A5A22}.ev2{fill:#3F7D4E}.ev3{fill:#3E6F86}.err{fill:#A8322A}.errsoft{fill:#F3DAD3}.slat{fill:#C29A61}.slatdark{fill:#B08850}.crate{fill:#CDA56C}.oncrate{fill:#4A3218}.onwood{fill:#3B2814}.edge-s{stroke:#E6D8BE;fill:none}.rail-s{stroke:#CDB898;fill:none}.walrail-s{stroke:#7A5A38;fill:none}.file-s{stroke:#A3927A;fill:none}.arrow-s{stroke:#9A5A22;fill:none}.onaccent-s{stroke:#FFF8EC;fill:none}.walcheck-s{stroke:#2E2218;fill:none}.seam-s{stroke:#B08850;fill:none}.wal-s{stroke:#4A3218;fill:none}.ink-s{stroke:#2E2218;fill:none}.lead-s{stroke:#B9A486;fill:none}.cratefr-s{stroke:#4A3218;fill:none}</style>
+  <rect class="card edge-s" stroke-width="1" x="16" y="16" width="250" height="280" rx="12"/>
+  <text class="m ink" x="34" y="46" font-size="15" font-weight="700">report-before</text>
+  <text class="m muted" x="34" y="66" font-size="13">renv.lock</text>
+  <rect class="card edge-s" stroke-width="1" x="454" y="16" width="250" height="280" rx="12"/>
+  <text class="m ink" x="472" y="46" font-size="15" font-weight="700">report-after</text>
+  <text class="m muted" x="472" y="66" font-size="13">renv.lock</text>
+  <rect class="code" x="28" y="84" width="226" height="42" rx="7"/>
+  <text class="m ink" x="42" y="111" font-size="14" font-weight="600">cli</text>
+  <text class="m fn" x="240" y="111" font-size="14" font-weight="700" text-anchor="end">3.6.4</text>
+  <rect class="code" x="466" y="84" width="226" height="42" rx="7"/>
+  <text class="m ink" x="480" y="111" font-size="14" font-weight="600">cli</text>
+  <text class="m fn" x="678" y="111" font-size="14" font-weight="700" text-anchor="end">3.6.5</text>
+  <path class="lead-s" stroke-width="1.3" d="M254 105 H466"/>
+  <rect class="accent" x="308" y="92" width="104" height="26" rx="13"/>
+  <text class="s onaccent" x="330" y="110" font-size="15" font-weight="800" text-anchor="middle">~</text>
+  <text class="s onaccent" x="368" y="109.5" font-size="13" font-weight="700" text-anchor="middle">version</text>
+  <rect class="lead-s" stroke-width="1.3" stroke-dasharray="4 4" fill="none" x="28" y="134" width="226" height="42" rx="7"/>
+  <rect class="oksoft" x="466" y="134" width="226" height="42" rx="7"/>
+  <text class="m ink" x="480" y="161" font-size="14" font-weight="600">glue</text>
+  <text class="m body" x="678" y="161" font-size="14" text-anchor="end">1.8.0</text>
+  <path class="lead-s" stroke-width="1.3" d="M254 155 H466"/>
+  <rect class="ok" x="308" y="142" width="104" height="26" rx="13"/>
+  <text class="s onaccent" x="330" y="160" font-size="15" font-weight="800" text-anchor="middle">+</text>
+  <text class="s onaccent" x="368" y="159.5" font-size="13" font-weight="700" text-anchor="middle">added</text>
+  <rect class="errsoft" x="28" y="184" width="226" height="42" rx="7"/>
+  <text class="m ink" x="42" y="211" font-size="14" font-weight="600">jsonlite</text>
+  <text class="m body" x="240" y="211" font-size="14" text-anchor="end">1.8.9</text>
+  <rect class="lead-s" stroke-width="1.3" stroke-dasharray="4 4" fill="none" x="466" y="184" width="226" height="42" rx="7"/>
+  <path class="lead-s" stroke-width="1.3" d="M254 205 H466"/>
+  <rect class="err" x="308" y="192" width="104" height="26" rx="13"/>
+  <text class="s onaccent" x="330" y="210" font-size="15" font-weight="800" text-anchor="middle">−</text>
+  <text class="s onaccent" x="368" y="209.5" font-size="13" font-weight="700" text-anchor="middle">removed</text>
+  <rect class="code" x="28" y="234" width="226" height="42" rx="7"/>
+  <text class="m ink" x="42" y="253" font-size="14" font-weight="600">notarealpkg</text>
+  <text class="m body" x="240" y="253" font-size="14" text-anchor="end">1.0.0</text>
+  <text class="m fn" x="42" y="269" font-size="12.5" font-weight="700">GPL-2.0-only</text>
+  <rect class="code" x="466" y="234" width="226" height="42" rx="7"/>
+  <text class="m ink" x="480" y="253" font-size="14" font-weight="600">notarealpkg</text>
+  <text class="m body" x="678" y="253" font-size="14" text-anchor="end">1.0.0</text>
+  <text class="m fn" x="480" y="269" font-size="12.5" font-weight="700">GPL-3.0-only</text>
+  <path class="lead-s" stroke-width="1.3" d="M254 255 H466"/>
+  <rect class="accent" x="308" y="242" width="104" height="26" rx="13"/>
+  <text class="s onaccent" x="330" y="260" font-size="15" font-weight="800" text-anchor="middle">~</text>
+  <text class="s onaccent" x="368" y="259.5" font-size="13" font-weight="700" text-anchor="middle">license</text>
+  <rect class="code" x="16" y="308" width="688" height="40" rx="8"/>
+  <text class="m" x="32" y="333" font-size="14" xml:space="preserve"><tspan class="fn">sbom_diff</tspan><tspan class="body">(before, after)</tspan></text>
+  <text class="m ink" x="688" y="333" font-size="14" text-anchor="end">1 added, 1 removed, 2 changed</text>
+</svg>

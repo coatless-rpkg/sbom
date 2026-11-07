@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 340" role="img" aria-labelledby="t d">
+  <title id="t">One component of an SBOM, and what each field is for</title>
+  <desc id="d">The component cli, version 3.6.5. Its package URL is pkg:cran/cli@3.6.5, a name every SBOM tool understands. Its license is MIT, translated to SPDX from the license as written, MIT + file LICENSE, which is kept too. Its supplier is CRAN and its maintainer Gábor Csárdi, who to ask. Its evidence is declared: a package said so.</desc>
+  <style>.s{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}.c{font-family:"DIN Condensed","Barlow Condensed","Roboto Condensed","Arial Narrow",system-ui,sans-serif}.m{font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace}.card{fill:#241B13}.code{fill:#2E241A}.ink{fill:#F2E6CF}.body{fill:#D8C8AC}.muted{fill:#A8957A}.faint{fill:#7F6E58}.wal{fill:#E9D8B8}.onwal{fill:#2E2218}.onwalm{fill:#6E5A42}.walcard{fill:#DCC6A0}.wood{fill:#CDA56C}.woodsoft{fill:#3F3022}.accent{fill:#E3AA68}.onaccent{fill:#241B13}.fn{fill:#EDB46C}.str{fill:#A9C98A}.com{fill:#8C7A62}.key{fill:#D9B88F}.ok{fill:#86C994}.oksoft{fill:#20352A}.warn{fill:#E8B04B}.warnsoft{fill:#3B2C12}.folder{fill:#D9A441}.walfn{fill:#8A4610}.walok{fill:#3F7D4E}.ev1{fill:#E3AA68}.ev2{fill:#86C994}.ev3{fill:#8DBBD3}.err{fill:#E5735F}.errsoft{fill:#3A1E18}.slat{fill:#6A4C2C}.slatdark{fill:#4A331D}.crate{fill:#5A3F25}.oncrate{fill:#F2E4C6}.onwood{fill:#2E2218}.edge-s{stroke:#3D2F22;fill:none}.rail-s{stroke:#5A4630;fill:none}.walrail-s{stroke:#B49A74;fill:none}.file-s{stroke:#7F6E58;fill:none}.arrow-s{stroke:#E3AA68;fill:none}.onaccent-s{stroke:#241B13;fill:none}.walcheck-s{stroke:#F6EBD3;fill:none}.seam-s{stroke:#4E3820;fill:none}.wal-s{stroke:#D2AE78;fill:none}.ink-s{stroke:#F2E6CF;fill:none}.lead-s{stroke:#6E5A42;fill:none}.cratefr-s{stroke:#D2AE78;fill:none}</style>
+  <path class="card edge-s" stroke-width="1.2" d="M44 16 H356 a12 12 0 0 1 12 12 V312 a12 12 0 0 1 -12 12 H28 a12 12 0 0 1 -12 -12 V44 Z"/>
+  <circle class="woodsoft" cx="46" cy="46" r="8"/>
+  <circle class="edge-s" stroke-width="1.2" cx="46" cy="46" r="8"/>
+  <text class="c ink" x="68" y="56" font-size="30" font-weight="700">cli</text>
+  <text class="m muted" x="108" y="56" font-size="16">3.6.5</text>
+  <text class="s muted" x="38" y="98" font-size="13.5">purl</text>
+  <text class="m fn" x="128" y="98" font-size="14">pkg:cran/cli@3.6.5</text>
+  <path class="edge-s" stroke-width="1" d="M32 109 L352 109"/>
+  <text class="s muted" x="38" y="129" font-size="13.5">license</text>
+  <text class="m fn" x="128" y="129" font-size="14">MIT</text>
+  <path class="edge-s" stroke-width="1" d="M32 140 L352 140"/>
+  <text class="s muted" x="38" y="160" font-size="13.5">as written</text>
+  <text class="m fn" x="128" y="160" font-size="14">MIT + file LICENSE</text>
+  <path class="edge-s" stroke-width="1" d="M32 171 L352 171"/>
+  <text class="s muted" x="38" y="191" font-size="13.5">supplier</text>
+  <text class="m ink" x="128" y="191" font-size="14">CRAN</text>
+  <path class="edge-s" stroke-width="1" d="M32 202 L352 202"/>
+  <text class="s muted" x="38" y="222" font-size="13.5">maintainer</text>
+  <text class="m ink" x="128" y="222" font-size="14">Gábor Csárdi</text>
+  <path class="edge-s" stroke-width="1" d="M32 233 L352 233"/>
+  <text class="s muted" x="38" y="253" font-size="13.5">scope</text>
+  <text class="m ink" x="128" y="253" font-size="14">required</text>
+  <path class="edge-s" stroke-width="1" d="M32 264 L352 264"/>
+  <text class="s muted" x="38" y="284" font-size="13.5">evidence</text>
+  <text class="m ink" x="128" y="284" font-size="14">declared</text>
+  <path class="lead-s" stroke-width="1.3" d="M358 93 H376 V60 H410"/>
+  <circle class="accent" cx="358" cy="93" r="3"/>
+  <text class="s body" x="418" y="65" font-size="14">A package URL: the one name</text>
+  <text class="s body" x="418" y="84" font-size="14">every SBOM tool understands.</text>
+  <path class="lead-s" stroke-width="1.3" d="M358 124 H376 V132 H410"/>
+  <circle class="accent" cx="358" cy="124" r="3"/>
+  <text class="s body" x="418" y="137" font-size="14">Translated to SPDX with R's own</text>
+  <text class="s body" x="418" y="156" font-size="14">license database. The original</text>
+  <text class="s body" x="418" y="175" font-size="14">is kept beside it.</text>
+  <path class="lead-s" stroke-width="1.3" d="M358 186 H376 V216 H410"/>
+  <circle class="accent" cx="358" cy="186" r="3"/>
+  <text class="s body" x="418" y="221" font-size="14">Who distributes it, and</text>
+  <text class="s body" x="418" y="240" font-size="14">who to ask about it.</text>
+  <path class="lead-s" stroke-width="1.3" d="M358 279 H376 V282 H410"/>
+  <circle class="accent" cx="358" cy="279" r="3"/>
+  <text class="s" x="418" y="287" font-size="14" xml:space="preserve"><tspan class="body">How </tspan><tspan class="fn m">{sbom}</tspan><tspan class="body"> knows: declared,</tspan></text>
+  <text class="s body" x="418" y="306" font-size="14">observed or inferred.</text>
+</svg>

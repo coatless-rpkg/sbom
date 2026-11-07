@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 360" role="img" aria-labelledby="t d">
+  <title id="t">What sbom finds inside a package, and how it knows</title>
+  <desc id="d">A crate stands for a package. Inside it: its dependencies from Depends and Imports, and the code compiled in through LinkingTo, both declared in its DESCRIPTION; C or C++ libraries copied into src/, and JavaScript or CSS bundled in inst/, both inferred because a rule matched. Under the crate are the system libraries it needs: declared through SystemRequirements, by {pak}&#x27;s rules, and observed in what the installed binary links.</desc>
+  <style>.s{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}.c{font-family:"DIN Condensed","Barlow Condensed","Roboto Condensed","Arial Narrow",system-ui,sans-serif}.m{font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace}.card{fill:#FBF6EC}.code{fill:#F2E8D5}.ink{fill:#2E2218}.body{fill:#4F4030}.muted{fill:#7D6B55}.faint{fill:#A3927A}.wal{fill:#4A3218}.onwal{fill:#F6EBD3}.onwalm{fill:#CDB898}.walcard{fill:#5C4126}.wood{fill:#CDA56C}.woodsoft{fill:#EEDFC2}.accent{fill:#9A5A22}.onaccent{fill:#FFF8EC}.fn{fill:#8A4610}.str{fill:#4E6B35}.com{fill:#9A8A72}.key{fill:#6B4A2A}.ok{fill:#3F7D4E}.oksoft{fill:#DDEBDA}.warn{fill:#A0640F}.warnsoft{fill:#F6E6C6}.folder{fill:#C9963F}.walfn{fill:#F2C27E}.walok{fill:#8FCB9B}.ev1{fill:#9A5A22}.ev2{fill:#3F7D4E}.ev3{fill:#3E6F86}.err{fill:#A8322A}.errsoft{fill:#F3DAD3}.slat{fill:#C29A61}.slatdark{fill:#B08850}.crate{fill:#CDA56C}.oncrate{fill:#4A3218}.onwood{fill:#3B2814}.edge-s{stroke:#E6D8BE;fill:none}.rail-s{stroke:#CDB898;fill:none}.walrail-s{stroke:#7A5A38;fill:none}.file-s{stroke:#A3927A;fill:none}.arrow-s{stroke:#9A5A22;fill:none}.onaccent-s{stroke:#FFF8EC;fill:none}.walcheck-s{stroke:#2E2218;fill:none}.seam-s{stroke:#B08850;fill:none}.wal-s{stroke:#4A3218;fill:none}.ink-s{stroke:#2E2218;fill:none}.lead-s{stroke:#B9A486;fill:none}.cratefr-s{stroke:#4A3218;fill:none}</style>
+  <rect class="crate" x="20" y="20" width="440" height="230" rx="10"/>
+  <rect class="slatdark" x="20" y="76.5" width="440" height="2"/>
+  <rect class="slatdark" x="20" y="134" width="440" height="2"/>
+  <rect class="slatdark" x="20" y="191.5" width="440" height="2"/>
+  <rect class="cratefr-s" stroke-width="10" fill="none" x="25" y="25" width="430" height="220" rx="6"/>
+  <text class="c oncrate" x="240" y="60" font-size="22" font-weight="700" text-anchor="middle" letter-spacing="3">YOUR PACKAGE</text>
+  <rect class="card" x="46" y="82" width="188" height="64" rx="8"/>
+  <circle class="ev1" cx="64" cy="104" r="6"/>
+  <text class="s ink" x="78" y="109" font-size="14.5" font-weight="700">Dependencies</text>
+  <text class="m muted" x="62" y="132" font-size="13">Depends, Imports</text>
+  <rect class="card" x="246" y="82" width="188" height="64" rx="8"/>
+  <circle class="ev1" cx="264" cy="104" r="6"/>
+  <text class="s ink" x="278" y="109" font-size="14.5" font-weight="700">Compiled in</text>
+  <text class="m muted" x="262" y="132" font-size="13">LinkingTo: cpp11</text>
+  <rect class="card" x="46" y="158" width="188" height="64" rx="8"/>
+  <circle class="ev3" cx="64" cy="180" r="6"/>
+  <text class="s ink" x="78" y="185" font-size="14.5" font-weight="700">Copied C or C++</text>
+  <text class="m muted" x="62" y="208" font-size="13">src/sqlite3.c</text>
+  <rect class="card" x="246" y="158" width="188" height="64" rx="8"/>
+  <circle class="ev3" cx="264" cy="180" r="6"/>
+  <text class="s ink" x="278" y="185" font-size="14.5" font-weight="700">Bundled JS and CSS</text>
+  <text class="m muted" x="262" y="208" font-size="13">inst/htmlwidgets/</text>
+  <rect class="code edge-s" stroke-width="1" x="14" y="264" width="452" height="74" rx="10"/>
+  <text class="s ink" x="36" y="291" font-size="15" font-weight="700">System libraries</text>
+  <circle class="ev1" cx="42" cy="313" r="6"/>
+  <text class="s" x="54" y="318" font-size="13.5" xml:space="preserve"><tspan class="body">SystemRequirements, by </tspan><tspan class="fn m">{pak}</tspan><tspan class="body">'s rules</tspan></text>
+  <circle class="ev2" cx="308" cy="313" r="6"/>
+  <text class="s body" x="320" y="318" font-size="13.5">what it links</text>
+  <text class="c ink" x="500" y="50" font-size="24" font-weight="700">Evidence</text>
+  <circle class="ev1" cx="508" cy="81" r="7"/>
+  <text class="s ink" x="524" y="86" font-size="15" font-weight="700">Declared</text>
+  <text class="s muted" x="524" y="107" font-size="13.5">in DESCRIPTION</text>
+  <circle class="ev2" cx="508" cy="137" r="7"/>
+  <text class="s ink" x="524" y="142" font-size="15" font-weight="700">Observed</text>
+  <text class="s muted" x="524" y="163" font-size="13.5">read from your library</text>
+  <circle class="ev3" cx="508" cy="193" r="7"/>
+  <text class="s ink" x="524" y="198" font-size="15" font-weight="700">Inferred</text>
+  <text class="s muted" x="524" y="219" font-size="13.5">matched by a file rule:</text>
+  <text class="s muted" x="524" y="237" font-size="13.5">review these first</text>
+</svg>

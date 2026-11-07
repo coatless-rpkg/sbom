@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 410" role="img" aria-labelledby="t d">
+  <title id="t">The NTIA minimum elements of the study&#x27;s SBOM, before and after the overrides</title>
+  <desc id="d">Seven elements. In the first draft, the component names, the dependencies and the timestamp pass, and four fail: supplier (2 findings), version (1), unique identifier (3) and author (1). With the overrides and an author, all seven pass.</desc>
+  <style>.s{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}.c{font-family:"DIN Condensed","Barlow Condensed","Roboto Condensed","Arial Narrow",system-ui,sans-serif}.m{font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace}.card{fill:#241B13}.code{fill:#2E241A}.ink{fill:#F2E6CF}.body{fill:#D8C8AC}.muted{fill:#A8957A}.faint{fill:#7F6E58}.wal{fill:#E9D8B8}.onwal{fill:#2E2218}.onwalm{fill:#6E5A42}.walcard{fill:#DCC6A0}.wood{fill:#CDA56C}.woodsoft{fill:#3F3022}.accent{fill:#E3AA68}.onaccent{fill:#241B13}.fn{fill:#EDB46C}.str{fill:#A9C98A}.com{fill:#8C7A62}.key{fill:#D9B88F}.ok{fill:#86C994}.oksoft{fill:#20352A}.warn{fill:#E8B04B}.warnsoft{fill:#3B2C12}.folder{fill:#D9A441}.walfn{fill:#8A4610}.walok{fill:#3F7D4E}.ev1{fill:#E3AA68}.ev2{fill:#86C994}.ev3{fill:#8DBBD3}.err{fill:#E5735F}.errsoft{fill:#3A1E18}.slat{fill:#6A4C2C}.slatdark{fill:#4A331D}.crate{fill:#5A3F25}.oncrate{fill:#F2E4C6}.onwood{fill:#2E2218}.edge-s{stroke:#3D2F22;fill:none}.rail-s{stroke:#5A4630;fill:none}.walrail-s{stroke:#B49A74;fill:none}.file-s{stroke:#7F6E58;fill:none}.arrow-s{stroke:#E3AA68;fill:none}.onaccent-s{stroke:#241B13;fill:none}.walcheck-s{stroke:#F6EBD3;fill:none}.seam-s{stroke:#4E3820;fill:none}.wal-s{stroke:#D2AE78;fill:none}.ink-s{stroke:#F2E6CF;fill:none}.lead-s{stroke:#6E5A42;fill:none}.cratefr-s{stroke:#D2AE78;fill:none}</style>
+  <rect class="card edge-s" stroke-width="1" x="16" y="16" width="688" height="378" rx="12"/>
+  <text class="s muted" x="38" y="52" font-size="14" font-weight="700">NTIA minimum element</text>
+  <text class="s muted" x="446" y="52" font-size="14" font-weight="700" text-anchor="middle">First draft</text>
+  <text class="s muted" x="596" y="52" font-size="14" font-weight="700" text-anchor="middle">With overrides</text>
+  <rect class="code" x="24" y="66" width="672" height="40" rx="6"/>
+  <text class="s ink" x="38" y="91" font-size="15" font-weight="700">Supplier</text>
+  <text class="s muted" x="212" y="91" font-size="13.5">2 components without one</text>
+  <circle class="err" cx="446" cy="86" r="9"/>
+  <path class="onaccent-s" stroke-width="2.2" stroke-linecap="round" fill="none" d="M442 82 L450 90 M450 82 L442 90"/>
+  <circle class="ok" cx="596" cy="86" r="9"/>
+  <path class="onaccent-s" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M592.1 86.3 l2.8 2.8 l5.1 -5.9"/>
+  <text class="s ink" x="38" y="131" font-size="15" font-weight="700">Component name</text>
+  <circle class="ok" cx="446" cy="126" r="9"/>
+  <path class="onaccent-s" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M442.1 126.3 l2.8 2.8 l5.1 -5.9"/>
+  <circle class="ok" cx="596" cy="126" r="9"/>
+  <path class="onaccent-s" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M592.1 126.3 l2.8 2.8 l5.1 -5.9"/>
+  <rect class="code" x="24" y="146" width="672" height="40" rx="6"/>
+  <text class="s ink" x="38" y="171" font-size="15" font-weight="700">Version</text>
+  <text class="s muted" x="212" y="171" font-size="13.5">the study</text>
+  <circle class="err" cx="446" cy="166" r="9"/>
+  <path class="onaccent-s" stroke-width="2.2" stroke-linecap="round" fill="none" d="M442 162 L450 170 M450 162 L442 170"/>
+  <circle class="ok" cx="596" cy="166" r="9"/>
+  <path class="onaccent-s" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M592.1 166.3 l2.8 2.8 l5.1 -5.9"/>
+  <text class="s ink" x="38" y="211" font-size="15" font-weight="700">Unique identifier</text>
+  <text class="s muted" x="212" y="211" font-size="13.5">3 without a package URL</text>
+  <circle class="err" cx="446" cy="206" r="9"/>
+  <path class="onaccent-s" stroke-width="2.2" stroke-linecap="round" fill="none" d="M442 202 L450 210 M450 202 L442 210"/>
+  <circle class="ok" cx="596" cy="206" r="9"/>
+  <path class="onaccent-s" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M592.1 206.3 l2.8 2.8 l5.1 -5.9"/>
+  <rect class="code" x="24" y="226" width="672" height="40" rx="6"/>
+  <text class="s ink" x="38" y="251" font-size="15" font-weight="700">Dependencies</text>
+  <circle class="ok" cx="446" cy="246" r="9"/>
+  <path class="onaccent-s" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M442.1 246.3 l2.8 2.8 l5.1 -5.9"/>
+  <circle class="ok" cx="596" cy="246" r="9"/>
+  <path class="onaccent-s" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M592.1 246.3 l2.8 2.8 l5.1 -5.9"/>
+  <text class="s ink" x="38" y="291" font-size="15" font-weight="700">Author of the SBOM</text>
+  <text class="s muted" x="212" y="291" font-size="13.5">only a tool named</text>
+  <circle class="err" cx="446" cy="286" r="9"/>
+  <path class="onaccent-s" stroke-width="2.2" stroke-linecap="round" fill="none" d="M442 282 L450 290 M450 282 L442 290"/>
+  <circle class="ok" cx="596" cy="286" r="9"/>
+  <path class="onaccent-s" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M592.1 286.3 l2.8 2.8 l5.1 -5.9"/>
+  <rect class="code" x="24" y="306" width="672" height="40" rx="6"/>
+  <text class="s ink" x="38" y="331" font-size="15" font-weight="700">Timestamp</text>
+  <circle class="ok" cx="446" cy="326" r="9"/>
+  <path class="onaccent-s" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M442.1 326.3 l2.8 2.8 l5.1 -5.9"/>
+  <circle class="ok" cx="596" cy="326" r="9"/>
+  <path class="onaccent-s" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M592.1 326.3 l2.8 2.8 l5.1 -5.9"/>
+  <path class="edge-s" stroke-width="1.2" d="M32 356 L688 356"/>
+  <text class="m fn" x="38" y="380" font-size="14">validate_sbom(x)</text>
+  <text class="s err" x="446" y="380" font-size="14" font-weight="700" text-anchor="middle">fail</text>
+  <text class="s ok" x="596" y="380" font-size="14" font-weight="700" text-anchor="middle">pass</text>
+</svg>

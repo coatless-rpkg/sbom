@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 330" role="img" aria-labelledby="t d">
+  <title id="t">read_sbom() reads eight formats into one object, and write_sbom() writes any of them</title>
+  <desc id="d">Left: the eight formats, from any tool: CycloneDX JSON and XML, SPDX JSON, YAML, XML and tag-value, SPDX 3 JSON-LD and SWID tags. read_sbom() turns any of them into one sbom object, which sbom_components(), sbom_dependencies(), sbom_issues() and sbom_advisories() inspect, and write_sbom() writes it back out in any of the formats.</desc>
+  <style>.s{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}.c{font-family:"DIN Condensed","Barlow Condensed","Roboto Condensed","Arial Narrow",system-ui,sans-serif}.m{font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace}.card{fill:#FBF6EC}.code{fill:#F2E8D5}.ink{fill:#2E2218}.body{fill:#4F4030}.muted{fill:#7D6B55}.faint{fill:#A3927A}.wal{fill:#4A3218}.onwal{fill:#F6EBD3}.onwalm{fill:#CDB898}.walcard{fill:#5C4126}.wood{fill:#CDA56C}.woodsoft{fill:#EEDFC2}.accent{fill:#9A5A22}.onaccent{fill:#FFF8EC}.fn{fill:#8A4610}.str{fill:#4E6B35}.com{fill:#9A8A72}.key{fill:#6B4A2A}.ok{fill:#3F7D4E}.oksoft{fill:#DDEBDA}.warn{fill:#A0640F}.warnsoft{fill:#F6E6C6}.folder{fill:#C9963F}.walfn{fill:#F2C27E}.walok{fill:#8FCB9B}.ev1{fill:#9A5A22}.ev2{fill:#3F7D4E}.ev3{fill:#3E6F86}.err{fill:#A8322A}.errsoft{fill:#F3DAD3}.slat{fill:#C29A61}.slatdark{fill:#B08850}.crate{fill:#CDA56C}.oncrate{fill:#4A3218}.onwood{fill:#3B2814}.edge-s{stroke:#E6D8BE;fill:none}.rail-s{stroke:#CDB898;fill:none}.walrail-s{stroke:#7A5A38;fill:none}.file-s{stroke:#A3927A;fill:none}.arrow-s{stroke:#9A5A22;fill:none}.onaccent-s{stroke:#FFF8EC;fill:none}.walcheck-s{stroke:#2E2218;fill:none}.seam-s{stroke:#B08850;fill:none}.wal-s{stroke:#4A3218;fill:none}.ink-s{stroke:#2E2218;fill:none}.lead-s{stroke:#B9A486;fill:none}.cratefr-s{stroke:#4A3218;fill:none}</style>
+  <rect class="card edge-s" stroke-width="1" x="16" y="16" width="272" height="298" rx="12"/>
+  <text class="c ink" x="36" y="56" font-size="26" font-weight="700">Eight formats</text>
+  <text class="s muted" x="36" y="78" font-size="14">from any tool</text>
+  <rect class="woodsoft" x="32" y="98" width="240" height="22" rx="11.0"/>
+  <text class="s ink" x="152" y="113.7" font-size="13" font-weight="600" text-anchor="middle">CycloneDX JSON</text>
+  <rect class="woodsoft" x="32" y="124" width="240" height="22" rx="11.0"/>
+  <text class="s ink" x="152" y="139.7" font-size="13" font-weight="600" text-anchor="middle">CycloneDX XML</text>
+  <rect class="woodsoft" x="32" y="150" width="240" height="22" rx="11.0"/>
+  <text class="s ink" x="152" y="165.7" font-size="13" font-weight="600" text-anchor="middle">SPDX JSON</text>
+  <rect class="woodsoft" x="32" y="176" width="240" height="22" rx="11.0"/>
+  <text class="s ink" x="152" y="191.7" font-size="13" font-weight="600" text-anchor="middle">SPDX YAML</text>
+  <rect class="woodsoft" x="32" y="202" width="240" height="22" rx="11.0"/>
+  <text class="s ink" x="152" y="217.7" font-size="13" font-weight="600" text-anchor="middle">SPDX XML</text>
+  <rect class="woodsoft" x="32" y="228" width="240" height="22" rx="11.0"/>
+  <text class="s ink" x="152" y="243.7" font-size="13" font-weight="600" text-anchor="middle">SPDX tag-value</text>
+  <rect class="woodsoft" x="32" y="254" width="240" height="22" rx="11.0"/>
+  <text class="s ink" x="152" y="269.7" font-size="13" font-weight="600" text-anchor="middle">SPDX 3 JSON-LD</text>
+  <rect class="woodsoft" x="32" y="280" width="240" height="22" rx="11.0"/>
+  <text class="s ink" x="152" y="295.7" font-size="13" font-weight="600" text-anchor="middle">SWID tag</text>
+  <rect class="wal" x="432" y="16" width="272" height="298" rx="12"/>
+  <text class="m onwal" x="452" y="58" font-size="28" font-weight="700">&lt;sbom&gt;</text>
+  <text class="s onwalm" x="452" y="80" font-size="14">one object, any format</text>
+  <rect class="walcard" x="448" y="100" width="240" height="44" rx="8"/>
+  <text class="m walfn" x="462" y="119" font-size="13.5" font-weight="600">sbom_components()</text>
+  <text class="s onwalm" x="462" y="136" font-size="13">what is inside</text>
+  <rect class="walcard" x="448" y="152" width="240" height="44" rx="8"/>
+  <text class="m walfn" x="462" y="171" font-size="13.5" font-weight="600">sbom_dependencies()</text>
+  <text class="s onwalm" x="462" y="188" font-size="13">what needs what</text>
+  <rect class="walcard" x="448" y="204" width="240" height="44" rx="8"/>
+  <text class="m walfn" x="462" y="223" font-size="13.5" font-weight="600">sbom_issues()</text>
+  <text class="s onwalm" x="462" y="240" font-size="13">what is unknown</text>
+  <rect class="walcard" x="448" y="256" width="240" height="44" rx="8"/>
+  <text class="m walfn" x="462" y="275" font-size="13.5" font-weight="600">sbom_advisories()</text>
+  <text class="s onwalm" x="462" y="292" font-size="13">what OSV lists</text>
+  <path class="arrow-s" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M300 134 H420"/>
+  <path class="arrow-s" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M420 134 l-9 -6 M420 134 l-9 6"/>
+  <rect class="accent" x="302" y="100" width="116" height="26" rx="13.0"/>
+  <text class="m onaccent" x="360" y="117.7" font-size="13" font-weight="600" text-anchor="middle">read_sbom()</text>
+  <path class="arrow-s" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M300 212 H420"/>
+  <path class="arrow-s" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M300 212 l9 -6 M300 212 l9 6"/>
+  <rect class="accent" x="302" y="222" width="116" height="26" rx="13.0"/>
+  <text class="m onaccent" x="360" y="239.7" font-size="13" font-weight="600" text-anchor="middle">write_sbom()</text>
+</svg>

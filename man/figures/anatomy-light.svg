@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 380" role="img" aria-labelledby="t d">
+  <title id="t">A software bill of materials, and what each part of it records</title>
+  <desc id="d">An SBOM for a project called my-analysis, written on 2026-01-01 by sbom 0.1.0. It lists every component, one row each, with its version, supplier and license: lubridate 1.9.5, MIT; generics 0.1.4, MIT, and timechange 0.4.0, GPL-3.0-only, both drawn under lubridate because lubridate needs them; data.table 1.18.6.1, whose license is unknown; and yaml 2.3.12, BSD-3-Clause. All come from CRAN, and R comes with its base packages. At the foot, the one gap, in one sentence: the license of data.table, MPL-2.0 | file LICENSE, has no SPDX expression.</desc>
+  <style>.s{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}.c{font-family:"DIN Condensed","Barlow Condensed","Roboto Condensed","Arial Narrow",system-ui,sans-serif}.m{font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace}.card{fill:#FBF6EC}.code{fill:#F2E8D5}.ink{fill:#2E2218}.body{fill:#4F4030}.muted{fill:#7D6B55}.faint{fill:#A3927A}.wal{fill:#4A3218}.onwal{fill:#F6EBD3}.onwalm{fill:#CDB898}.walcard{fill:#5C4126}.wood{fill:#CDA56C}.woodsoft{fill:#EEDFC2}.accent{fill:#9A5A22}.onaccent{fill:#FFF8EC}.fn{fill:#8A4610}.str{fill:#4E6B35}.com{fill:#9A8A72}.key{fill:#6B4A2A}.ok{fill:#3F7D4E}.oksoft{fill:#DDEBDA}.warn{fill:#A0640F}.warnsoft{fill:#F6E6C6}.folder{fill:#C9963F}.walfn{fill:#F2C27E}.walok{fill:#8FCB9B}.ev1{fill:#9A5A22}.ev2{fill:#3F7D4E}.ev3{fill:#3E6F86}.err{fill:#A8322A}.errsoft{fill:#F3DAD3}.slat{fill:#C29A61}.slatdark{fill:#B08850}.crate{fill:#CDA56C}.oncrate{fill:#4A3218}.onwood{fill:#3B2814}.edge-s{stroke:#E6D8BE;fill:none}.rail-s{stroke:#CDB898;fill:none}.walrail-s{stroke:#7A5A38;fill:none}.file-s{stroke:#A3927A;fill:none}.arrow-s{stroke:#9A5A22;fill:none}.onaccent-s{stroke:#FFF8EC;fill:none}.walcheck-s{stroke:#2E2218;fill:none}.seam-s{stroke:#B08850;fill:none}.wal-s{stroke:#4A3218;fill:none}.ink-s{stroke:#2E2218;fill:none}.lead-s{stroke:#B9A486;fill:none}.cratefr-s{stroke:#4A3218;fill:none}</style>
+  <rect class="card edge-s" stroke-width="1" x="180" y="14" width="376" height="352" rx="12"/>
+  <text class="c ink" x="200" y="50" font-size="24" font-weight="700">Software bill of materials</text>
+  <text class="s" x="200" y="72" font-size="13" xml:space="preserve"><tspan class="ink">my-analysis</tspan><tspan class="muted">, written 2026-01-01 by </tspan><tspan class="fn m">{sbom}</tspan><tspan class="muted"> 0.1.0</tspan></text>
+  <path class="ink-s" stroke-width="3" d="M196 88 L540 88"/>
+  <text class="s muted" x="200" y="110" font-size="12.5" font-weight="700">component</text>
+  <text class="s muted" x="316" y="110" font-size="12.5" font-weight="700">version</text>
+  <text class="s muted" x="392" y="110" font-size="12.5" font-weight="700">supplier</text>
+  <text class="s muted" x="450" y="110" font-size="12.5" font-weight="700">license</text>
+  <path class="edge-s" stroke-width="1.2" d="M196 120 L540 120"/>
+  <rect class="woodsoft" x="188" y="125" width="360" height="31" rx="7"/>
+  <text class="m ink" x="200" y="146" font-size="13" font-weight="600">lubridate</text>
+  <text class="m body" x="316" y="146" font-size="13">1.9.5</text>
+  <text class="s body" x="392" y="146" font-size="13">CRAN</text>
+  <text class="m fn" x="450" y="146" font-size="12.5">MIT</text>
+  <text class="m ink" x="218" y="177" font-size="13" font-weight="600">generics</text>
+  <text class="m body" x="316" y="177" font-size="13">0.1.4</text>
+  <text class="s body" x="392" y="177" font-size="13">CRAN</text>
+  <text class="m fn" x="450" y="177" font-size="12.5">MIT</text>
+  <text class="m ink" x="218" y="208" font-size="13" font-weight="600">timechange</text>
+  <text class="m body" x="316" y="208" font-size="13">0.4.0</text>
+  <text class="s body" x="392" y="208" font-size="13">CRAN</text>
+  <text class="m fn" x="450" y="208" font-size="12.5">GPL-3.0-only</text>
+  <text class="m ink" x="200" y="239" font-size="13" font-weight="600">data.table</text>
+  <text class="m body" x="316" y="239" font-size="13">1.18.6.1</text>
+  <text class="s body" x="392" y="239" font-size="13">CRAN</text>
+  <path class="warn" d="M456.5 228 L462.6 239.6 H450.4 Z"/>
+  <text class="s onaccent" x="456.5" y="238.3" font-size="9.285714285714286" font-weight="800" text-anchor="middle">!</text>
+  <text class="s warn" x="468" y="239" font-size="13" font-weight="700">unknown</text>
+  <text class="m ink" x="200" y="270" font-size="13" font-weight="600">yaml</text>
+  <text class="m body" x="316" y="270" font-size="13">2.3.12</text>
+  <text class="s body" x="392" y="270" font-size="13">CRAN</text>
+  <text class="m fn" x="450" y="270" font-size="12.5">BSD-3-Clause</text>
+  <path class="rail-s" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" d="M205 151 V203.5 H214 M205 172.5 H214"/>
+  <text class="s muted" x="200" y="298" font-size="12.5">and R, with its base packages</text>
+  <path class="edge-s" stroke-width="1.2" d="M196 312 L540 312"/>
+  <path class="warn" d="M207 324.5 L213.6 337 H200.4 Z"/>
+  <text class="s onaccent" x="207" y="335.6" font-size="10.0" font-weight="800" text-anchor="middle">!</text>
+  <text class="s body" x="222" y="335" font-size="12.5">The license of data.table, MPL-2.0 | file LICENSE,</text>
+  <text class="s body" x="222" y="352" font-size="12.5">has no SPDX expression.</text>
+  <path class="lead-s" stroke-width="1.3" d="M168 140.5 H188"/>
+  <circle class="accent" cx="188" cy="140.5" r="3"/>
+  <text class="s body" x="162" y="136.2" font-size="13" text-anchor="end">Each with its version,</text>
+  <text class="s body" x="162" y="153.8" font-size="13" text-anchor="end">supplier and license</text>
+  <path class="lead-s" stroke-width="1.3" d="M168 188 H205"/>
+  <circle class="accent" cx="205" cy="188" r="3"/>
+  <text class="s body" x="162" y="175" font-size="13" text-anchor="end">What depends on what:</text>
+  <text class="s body" x="162" y="192.5" font-size="13" text-anchor="end">lubridate needs</text>
+  <text class="s body" x="162" y="210" font-size="13" text-anchor="end">generics, timechange</text>
+  <path class="lead-s" stroke-width="1.3" d="M578 67.5 H520"/>
+  <circle class="accent" cx="520" cy="67.5" r="3"/>
+  <text class="s body" x="584" y="63.2" font-size="13">What it describes,</text>
+  <text class="s body" x="584" y="80.8" font-size="13">who wrote it, when</text>
+  <path class="lead-s" stroke-width="1.3" d="M560 125 H566 V280 H560"/>
+  <path class="lead-s" stroke-width="1.3" d="M578 202.5 H566"/>
+  <text class="s body" x="584" y="198.2" font-size="13">Every component,</text>
+  <text class="s body" x="584" y="215.8" font-size="13">one row each</text>
+  <path class="lead-s" stroke-width="1.3" d="M578 330.5 H556"/>
+  <circle class="accent" cx="556" cy="330.5" r="3"/>
+  <text class="s body" x="584" y="326.2" font-size="13">Each gap, in</text>
+  <text class="s body" x="584" y="343.8" font-size="13">one sentence</text>
+</svg>

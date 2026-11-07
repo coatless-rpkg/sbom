@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 280" role="img" aria-labelledby="t d">
+  <title id="t">One row of sbom-overrides.csv, and what each column says</title>
+  <desc id="d">The row: inhouse, license_spdx, LicenseRef-Proprietary, Jo Reviewer, Agreed with legal (LEG-42). The component is a name or ref from sbom_components(). The field is one of seven. The value is the answer. asserted_by says who gave it, and reason says why. Saved as sbom-overrides.csv in the project folder, sbom() applies the rows.</desc>
+  <style>.s{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}.c{font-family:"DIN Condensed","Barlow Condensed","Roboto Condensed","Arial Narrow",system-ui,sans-serif}.m{font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace}.card{fill:#241B13}.code{fill:#2E241A}.ink{fill:#F2E6CF}.body{fill:#D8C8AC}.muted{fill:#A8957A}.faint{fill:#7F6E58}.wal{fill:#E9D8B8}.onwal{fill:#2E2218}.onwalm{fill:#6E5A42}.walcard{fill:#DCC6A0}.wood{fill:#CDA56C}.woodsoft{fill:#3F3022}.accent{fill:#E3AA68}.onaccent{fill:#241B13}.fn{fill:#EDB46C}.str{fill:#A9C98A}.com{fill:#8C7A62}.key{fill:#D9B88F}.ok{fill:#86C994}.oksoft{fill:#20352A}.warn{fill:#E8B04B}.warnsoft{fill:#3B2C12}.folder{fill:#D9A441}.walfn{fill:#8A4610}.walok{fill:#3F7D4E}.ev1{fill:#E3AA68}.ev2{fill:#86C994}.ev3{fill:#8DBBD3}.err{fill:#E5735F}.errsoft{fill:#3A1E18}.slat{fill:#6A4C2C}.slatdark{fill:#4A331D}.crate{fill:#5A3F25}.oncrate{fill:#F2E4C6}.onwood{fill:#2E2218}.edge-s{stroke:#3D2F22;fill:none}.rail-s{stroke:#5A4630;fill:none}.walrail-s{stroke:#B49A74;fill:none}.file-s{stroke:#7F6E58;fill:none}.arrow-s{stroke:#E3AA68;fill:none}.onaccent-s{stroke:#241B13;fill:none}.walcheck-s{stroke:#F6EBD3;fill:none}.seam-s{stroke:#4E3820;fill:none}.wal-s{stroke:#D2AE78;fill:none}.ink-s{stroke:#F2E6CF;fill:none}.lead-s{stroke:#6E5A42;fill:none}.cratefr-s{stroke:#D2AE78;fill:none}</style>
+  <rect class="code" x="16" y="16" width="688" height="62" rx="10"/>
+  <text class="m ink" x="34" y="53" font-size="12.5" font-weight="600">inhouse</text>
+  <text class="m faint" x="86.5" y="53" font-size="12.5">,</text>
+  <text class="m ink" x="94" y="53" font-size="12.5" font-weight="600">license_spdx</text>
+  <text class="m faint" x="184" y="53" font-size="12.5">,</text>
+  <text class="m str" x="191.5" y="53" font-size="12.5" font-weight="600">LicenseRef-Proprietary</text>
+  <text class="m faint" x="356.5" y="53" font-size="12.5">,</text>
+  <text class="m ink" x="364" y="53" font-size="12.5" font-weight="600">Jo Reviewer</text>
+  <text class="m faint" x="446.5" y="53" font-size="12.5">,</text>
+  <text class="m ink" x="454" y="53" font-size="12.5" font-weight="600">Agreed with legal (LEG-42).</text>
+  <path class="lead-s" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" d="M35 92 v7 H85.5 v-7"/>
+  <path class="lead-s" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" d="M60.2 99 v14"/>
+  <text class="m accent" x="60.2" y="131" font-size="13" font-weight="700" text-anchor="middle">component</text>
+  <text class="s ink" x="60.2" y="150" font-size="14" text-anchor="middle">a name or ref</text>
+  <path class="lead-s" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" d="M95 92 v7 H183 v-7"/>
+  <path class="lead-s" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" d="M139 99 v62"/>
+  <text class="m accent" x="139" y="179" font-size="13" font-weight="700" text-anchor="middle">field</text>
+  <text class="s ink" x="139" y="198" font-size="14" text-anchor="middle">one of seven fields</text>
+  <path class="lead-s" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" d="M192.5 92 v7 H355.5 v-7"/>
+  <path class="lead-s" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" d="M274 99 v14"/>
+  <text class="m accent" x="274" y="131" font-size="13" font-weight="700" text-anchor="middle">value</text>
+  <text class="s ink" x="274" y="150" font-size="14" text-anchor="middle">the answer</text>
+  <path class="lead-s" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" d="M365 92 v7 H445.5 v-7"/>
+  <path class="lead-s" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" d="M405.2 99 v62"/>
+  <text class="m accent" x="405.2" y="179" font-size="13" font-weight="700" text-anchor="middle">asserted_by</text>
+  <text class="s ink" x="405.2" y="198" font-size="14" text-anchor="middle">who said so</text>
+  <path class="lead-s" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" d="M455 92 v7 H655.5 v-7"/>
+  <path class="lead-s" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" d="M555.2 99 v14"/>
+  <text class="m accent" x="555.2" y="131" font-size="13" font-weight="700" text-anchor="middle">reason</text>
+  <text class="s ink" x="555.2" y="150" font-size="14" text-anchor="middle">and why</text>
+  <text class="s" x="16" y="262" font-size="14.5" xml:space="preserve"><tspan class="muted">Save the rows as </tspan><tspan class="fn m">sbom-overrides.csv</tspan><tspan class="muted"> in the project folder.</tspan></text>
+</svg>
