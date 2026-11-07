@@ -20,9 +20,9 @@
 #' evaluates the file and may download nixpkgs, so unlike the static read it
 #' can use the network, through Nix. `snapshot` is not used. It records:
 #'
-#' * R, and each R package (every store path named `r-<name>`), labelled
+#' * R, and each R package (every store path named `r-<name>`), labeled
 #'   observed, at the version in its store path or, when the path has none,
-#'   in its `DESCRIPTION` in the store. A package's licence and maintainer
+#'   in its `DESCRIPTION` in the store. A package's license and maintainer
 #'   come from that `DESCRIPTION` when it is readable.
 #' * A package that a file written by rix fetches from git or from the CRAN
 #'   archive is described as in the static read below (its package URL,
@@ -66,11 +66,11 @@
 #'
 #' * The project folder, the folder of the file, is the root.
 #' * R, at the version of rix's `r_ver` when it is a version, as declared.
-#'   Otherwise R has no version, and an issue says so.
+#'   Otherwise R has no version, and an issue records it as missing.
 #' * Each R package that the file names, by name only. These come from a
 #'   nixpkgs snapshot that the file pins, but the file does not say which
 #'   version that snapshot holds, so their versions are unknown and one issue
-#'   says so. nixpkgs' `rPackages` holds Bioconductor packages as well as
+#'   suggests passing `snapshot` to look them up. nixpkgs' `rPackages` holds Bioconductor packages as well as
 #'   CRAN ones, so each is taken to be the CRAN package of that name, with no
 #'   supplier, and one issue says that their package URLs are inferred.
 #' * Packages that rix fetches from git, and from the CRAN archive. An archive
@@ -91,7 +91,7 @@
 #' The `sha256` values in the file are Nix's hashes of the unpacked source,
 #' not hashes of a file, so they are written in a package's description and
 #' never as a file hash. Python and Julia packages that the file installs are
-#' not listed, and an issue says so.
+#' not listed, and an issue names the kinds of software left out.
 #'
 #' ## Looking up versions
 #'
@@ -110,22 +110,23 @@
 #' Each CRAN package that the file names without a version takes the version
 #' the snapshot lists, and sbom follows `Depends`, `Imports` and `LinkingTo`
 #' in the snapshot to add the packages that Nix would install with it. The
-#' versions and the added packages and dependencies are labelled inferred,
+#' versions and the added packages and dependencies are labeled inferred,
 #' since the snapshot is a stand-in for what Nix installed. R, base and
 #' recommended packages are left to R's own handling. Archive packages keep
 #' the version in their URL, and git packages stay without a version. A
 #' package that the snapshot lists is a CRAN package. One that it lacks,
 #' named by the file or by a snapshot package's dependencies, may not be one,
 #' so it is listed without a version or package URL, with an issue. If the
-#' snapshot cannot be read, an issue says so. A snapshot given as a URL is
+#' snapshot cannot be read, the versions stay unknown and an issue gives the
+#' reason. A snapshot given as a URL is
 #' named in the notes by that URL, without its credentials, query string or
 #' fragment, and a local file by its name.
 #'
 #' `library`, `embedded` and `system` apply as for [sbom_renv()], to the
 #' packages whose version the file declares and that are installed in
 #' `library` at that version. The installed copy fills in what the file
-#' lacks: the licence and maintainer. Without `library`, nothing is read from
-#' an installed copy. One issue lists the packages left without a licence or
+#' lacks: the license and maintainer. Without `library`, nothing is read from
+#' an installed copy. One issue lists the packages left without a license or
 #' maintainer.
 #'
 #' @inheritParams sbom_package
@@ -356,7 +357,7 @@ read_nix_sbom <- function(path, nix = NA, snapshot = NULL, library = NULL,
     )
   })
 
-  # The licences and maintainers that neither the file nor an installed copy
+  # The licenses and maintainers that neither the file nor an installed copy
   # gives are one issue.
   pkgs <- comps[!comps$is_root & comps$source_input %in% "default.nix" & is.na(comps$parent_ref) &
     !comps$ecosystem %in% "nix", , drop = FALSE]
@@ -367,10 +368,14 @@ read_nix_sbom <- function(path, nix = NA, snapshot = NULL, library = NULL,
       x$issues, root_ref, "license", "nix-licenses-unknown",
       paste0(
         length(unknown), if (one) " package that " else " packages that ", file,
-        if (one) " names has" else " names have", " no licence or maintainer on record (",
+        if (one) " names has" else " names have", " no license or maintainer on record (",
         capped_list(unknown), "), because sbom read the file ",
         if (is.null(fallback)) "without Nix" else "instead of the Nix store",
-        " and found no installed copy of ", if (one) "it" else "them", " at the same version."
+        if (is.null(library)) {
+          paste0(" and was given no library to look ", if (one) "it" else "them", " up in.")
+        } else {
+          paste0(" and found no installed copy of ", if (one) "it" else "them", " at the same version.")
+        }
       )
     )
   }
@@ -540,7 +545,7 @@ parse_rix <- function(text, path = "The Nix file", call = parent.frame()) {
   )
 }
 
-# The label of the first recognised block that starts but is not closed, or
+# The label of the first recognized block that starts but is not closed, or
 # NA when every one is closed. The labels are fixed words, never file text.
 nix_unclosed <- function(mask) {
   starts <- c(
@@ -1451,7 +1456,7 @@ nix_store_sbom <- function(path, closure, file, author, organization, regid,
       x$issues, root_ref, "license", "nix-description-unreadable",
       paste0(
         "The DESCRIPTION of ", and_list(none), " could not be read from the Nix store, so ",
-        if (one) "its licence and maintainer are" else "their licences and maintainers are", " unknown."
+        if (one) "its license and maintainer are" else "their licenses and maintainers are", " unknown."
       )
     )
   }

@@ -5,7 +5,7 @@ local_plain_cli <- function(env = parent.frame()) {
   )
 }
 
-test_that("summary() counts components, licences, unknowns and drift", {
+test_that("summary() counts components, licenses, unknowns and drift", {
   local_plain_cli()
   s <- summary(fixture_sbom())
   expect_s3_class(s, "sbom_summary")
@@ -34,6 +34,15 @@ test_that("sbom_tree() prints the tree once per node and respects max_depth", {
   expect_invisible(sbom_tree(x))
 })
 
+test_that("sbom_tree() shows a minimum version as a minimum", {
+  local_plain_cli()
+  x <- fixture_sbom()
+  expect_equal(x$components$version_is[x$components$name == "R"], "minimum")
+  expect_true("+-R (>= 4.1.0)" %in% utils::capture.output(sbom_tree(x, max_depth = 1)))
+  x$components$version_is[x$components$name == "R"] <- "exact"
+  expect_true("+-R 4.1.0" %in% utils::capture.output(sbom_tree(x, max_depth = 1)))
+})
+
 test_that("sbom_tree() terminates on cycles and rejects a bad max_depth", {
   local_plain_cli()
   x <- minimal_sbom()
@@ -51,7 +60,7 @@ test_that("print.sbom_summary() writes to standard output", {
   s <- summary(fixture_sbom())
   out <- suppressMessages(capture.output(print(s)))
   expect_gt(length(out), 5L)
-  expect_true(any(grepl("Licences", out)))
+  expect_true(any(grepl("Licenses", out)))
 })
 
 test_that("print(), summary(), sbom_tree() and sbom_diff() show control characters as spaces", {

@@ -19,10 +19,12 @@ at the limit are shown but not expanded.}
 \description{
 Prints the dependencies of the root component as a tree. A component
 reached by several paths is expanded the first time it appears and marked
-\verb{(see above)} afterwards. Components reached only through \code{Suggests} are
+\verb{(see above)} afterwards. A version that is only a minimum, such as R's
+lowest stated version when R is not the one running, is shown as \verb{(>= x)}.
+Components reached only through \code{Suggests} are
 marked \code{(suggested)}, and the code a package carries inside it (its
 \code{LinkingTo} packages, vendored C and C++ libraries and bundled JavaScript)
-is marked \code{(embedded)}. Files that the root contains are leaves labelled
+is marked \code{(embedded)}. Files that the root contains are leaves labeled
 with their path.
 }
 \examples{

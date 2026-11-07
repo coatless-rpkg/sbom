@@ -1,4 +1,4 @@
-# summary() counts components, licences, unknowns and drift
+# summary() counts components, licenses, unknowns and drift
 
     Code
       print(s)
@@ -11,9 +11,9 @@
       ecosystem: cran (3), base-r (2), local (2), r (1)
       type: library (7), platform (1)
       evidence: inferred (3), observed (3), declared (2)
-      Unknown version or licence: 3
+      Unknown version or license: 3
       
-      -- Licences --
+      -- Licenses --
       
       GPL-2.0-only OR GPL-3.0-only (3), NOASSERTION (3), MIT (2)
       
@@ -33,9 +33,9 @@
       
       ecosystem: cran (2), r (1)
       type: library (2), platform (1)
-      Unknown version or licence: 3
+      Unknown version or license: 3
       
-      -- Licences --
+      -- Licenses --
       
       NOASSERTION (3)
       
@@ -49,7 +49,7 @@
       sbom_tree(x)
     Output
       srcpkg 0.1.0
-      +-R 4.1.0
+      +-R (>= 4.1.0)
       | +-methods
       | \-utils
       +-cranpkg 1.2.0
@@ -65,7 +65,7 @@
       sbom_tree(x, max_depth = 1)
     Output
       srcpkg 0.1.0
-      +-R 4.1.0
+      +-R (>= 4.1.0)
       +-cranpkg 1.2.0
       +-cranpkg 1.2.0 (embedded)
       +-localpkg 0.0.1

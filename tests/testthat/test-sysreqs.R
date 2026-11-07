@@ -237,6 +237,31 @@ test_that("pak is called with its rules update off, and the option is restored",
   expect_identical(getOption("pkg.sysreqs_db_update"), TRUE)
 })
 
+test_that("pak runs with TMPDIR set to the session's temporary folder, and TMPDIR is put back", {
+  # pak's subprocess is killed when R exits, so it never removes its own
+  # temporary folder. Inside the session's, R removes it.
+  seen <- new.env()
+  local_mocked_bindings(
+    pak_function = function(name) {
+      function(...) {
+        seen$tmpdir <- Sys.getenv("TMPDIR", unset = NA)
+        TRUE
+      }
+    }
+  )
+  before <- withr::local_tempdir()
+  withr::local_envvar(TMPDIR = before)
+  expect_true(sysreqs_platform_supported("ubuntu-22.04"))
+  expect_equal(normalizePath(seen$tmpdir), normalizePath(tempdir()))
+  expect_equal(Sys.getenv("TMPDIR"), before)
+
+  withr::local_envvar(TMPDIR = NA)
+  seen$tmpdir <- NULL
+  expect_true(sysreqs_platform_supported("ubuntu-22.04"))
+  expect_equal(normalizePath(seen$tmpdir), normalizePath(tempdir()))
+  expect_true(is.na(Sys.getenv("TMPDIR", unset = NA)))
+})
+
 test_that("the SystemRequirements text is written in every format, without pak", {
   skip_if_not_installed("jsonvalidate")
   skip_if_not_installed("yaml")

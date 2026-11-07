@@ -30,17 +30,28 @@ argument invisibly.
 }
 \description{
 Lists the components that were added or removed between two SBOMs, and the
-components whose version, licence or source changed.
+components whose version, license or source changed.
 }
 \details{
 The two root components are paired with each other. Components of type
 \code{"file"}, embedded components and system components (ecosystems
 \code{"system"}, \code{"deb"} and \code{"rpm"}) are matched by \code{ref}, all other
 components by name. A \code{"license"} change compares the SPDX
-expression, then the licence as written. A \code{"source"} change compares the
-ecosystem, then the package URL without its version. R itself is compared
-like any other component, so a change of R version shows up. Base packages
-have no versions and appear only as added or removed.
+expression, then the license as written. A \code{"source"} change compares the
+package URLs without their versions, or the ecosystems when either
+component has no package URL. R itself is compared like any other
+component, so a change of R version shows up. Base packages have no
+versions and appear only as added or removed.
+
+Only what both SBOMs state is compared. A license that one of them does not
+state at all, the license as written when only one states it, and an
+ecosystem of \code{"unknown"} are not changes. Each format keeps a different
+part of what sbom knows (an SPDX document has no field for the license as
+written, and no format records sbom's own ecosystems, such as \code{"local"}),
+so an SBOM compared with itself written in another format and read back
+shows none. An SPDX expression on one side and only the license as written
+on the other are the same license when \code{\link[=license_spdx]{license_spdx()}} translates the
+one to the other.
 }
 \examples{
 desc <- system.file("DESCRIPTION", package = "sbom")

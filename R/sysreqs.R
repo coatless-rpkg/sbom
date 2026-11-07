@@ -29,6 +29,12 @@ pak_function <- function(name) {
 # `pkg.sysreqs_db_update` FALSE it answers from the rules it has cached or
 # ships, so it never reaches the network or rewrites its cache. NULL when pak
 # is not installed or the call fails.
+#
+# The subprocess starts with the first call and is killed when R exits, so it
+# never removes its own temporary folder. TMPDIR is the session's temporary
+# folder during the call, so that the subprocess makes its folder there and R
+# removes it with the session's. TMPDIR is put back after, and a subprocess
+# that pak started earlier is left as it is.
 pak_call <- function(name, ...) {
   fun <- pak_function(name)
   if (is.null(fun)) {
@@ -36,6 +42,12 @@ pak_call <- function(name, ...) {
   }
   op <- options(pkg.sysreqs_db_update = FALSE)
   on.exit(options(op), add = TRUE)
+  old_tmpdir <- Sys.getenv("TMPDIR", unset = NA)
+  on.exit(
+    if (is.na(old_tmpdir)) Sys.unsetenv("TMPDIR") else Sys.setenv(TMPDIR = old_tmpdir),
+    add = TRUE
+  )
+  Sys.setenv(TMPDIR = tempdir())
   tryCatch(fun(...), error = function(e) NULL)
 }
 

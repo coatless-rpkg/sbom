@@ -696,7 +696,7 @@ test_that("duplicate Package rows in a snapshot pick the highest version", {
   expect_equal(comps$version[comps$name == "dplyr"], "1.10")
 })
 
-test_that("packages without a licence or maintainer are one warning, and a library fill takes them off", {
+test_that("packages without a license or maintainer are one warning, and a library fill takes them off", {
   path <- test_path("fixtures", "nix", "rix-date.nix")
   x <- sbom_nix(path, nix = FALSE, system = FALSE, embedded = FALSE)
   issues <- sbom_issues(x)
@@ -707,10 +707,10 @@ test_that("packages without a licence or maintainer are one warning, and a libra
   expect_equal(
     hit$message,
     paste0(
-      "18 packages that rix-date.nix names have no licence or maintainer on record (AER, Formula, car, ",
+      "18 packages that rix-date.nix names have no license or maintainer on record (AER, Formula, car, ",
       "data.table, dplyr, ggplot2, housing, janitor, lmtest, purrr, readxl, rlang, rvest, sandwich, ",
-      "stringr, survival, tidyr and zoo), because sbom read the file without Nix and found no ",
-      "installed copy of them at the same version."
+      "stringr, survival, tidyr and zoo), because sbom read the file without Nix and was given no ",
+      "library to look them up in."
     )
   )
   lib <- withr::local_tempdir()
@@ -719,7 +719,8 @@ test_that("packages without a licence or maintainer are one warning, and a libra
   )))
   filled <- sbom_nix(path, nix = FALSE, library = lib, system = FALSE, embedded = FALSE)
   msg <- sbom_issues(filled)$message[sbom_issues(filled)$code == "nix-licenses-unknown"]
-  expect_match(msg, "^17 packages that rix-date.nix names have no licence or maintainer on record \\(Formula, ")
+  expect_match(msg, "^17 packages that rix-date.nix names have no license or maintainer on record \\(Formula, ")
+  expect_match(msg, "read the file without Nix and found no installed copy of them at the same version.", fixed = TRUE)
   expect_false(grepl("AER", msg, fixed = TRUE))
   # It is there with a snapshot too.
   local_mocked_bindings(read_packages_file = function(location, ...) snapshot_frame())
@@ -734,8 +735,8 @@ test_that("nix-licenses-unknown is singular for one package and shows at most 20
   expect_equal(
     sbom_issues(x)$message[sbom_issues(x)$code == "nix-licenses-unknown"],
     paste0(
-      "1 package that default.nix names has no licence or maintainer on record (dplyr), because sbom ",
-      "read the file without Nix and found no installed copy of it at the same version."
+      "1 package that default.nix names has no license or maintainer on record (dplyr), because sbom ",
+      "read the file without Nix and was given no library to look it up in."
     )
   )
   many <- edited_nix("rix-commit.nix", function(text) {
@@ -744,7 +745,7 @@ test_that("nix-licenses-unknown is singular for one package and shows at most 20
   y <- sbom_nix(many, nix = FALSE, system = FALSE, embedded = FALSE)
   expect_match(
     sbom_issues(y)$message[sbom_issues(y)$code == "nix-licenses-unknown"],
-    "^22 packages that default.nix names have no licence or maintainer on record \\(p01, p02, .*, p20, and 2 more\\), because"
+    "^22 packages that default.nix names have no license or maintainer on record \\(p01, p02, .*, p20, and 2 more\\), because"
   )
 })
 
@@ -1052,7 +1053,7 @@ test_that("an unbuilt environment falls back to the file, with one issue", {
   expect_false(any(grepl("read from the Nix store", x$metadata$notes)))
   expect_match(
     sbom_issues(x)$message[sbom_issues(x)$code == "nix-licenses-unknown"],
-    "because sbom read the file instead of the Nix store and found no installed copy of them", fixed = TRUE
+    "because sbom read the file instead of the Nix store and was given no library to look them up in.", fixed = TRUE
   )
 })
 

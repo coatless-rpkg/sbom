@@ -3,16 +3,27 @@
 #' Compare two SBOMs
 #'
 #' Lists the components that were added or removed between two SBOMs, and the
-#' components whose version, licence or source changed.
+#' components whose version, license or source changed.
 #'
 #' The two root components are paired with each other. Components of type
 #' `"file"`, embedded components and system components (ecosystems
 #' `"system"`, `"deb"` and `"rpm"`) are matched by `ref`, all other
 #' components by name. A `"license"` change compares the SPDX
-#' expression, then the licence as written. A `"source"` change compares the
-#' ecosystem, then the package URL without its version. R itself is compared
-#' like any other component, so a change of R version shows up. Base packages
-#' have no versions and appear only as added or removed.
+#' expression, then the license as written. A `"source"` change compares the
+#' package URLs without their versions, or the ecosystems when either
+#' component has no package URL. R itself is compared like any other
+#' component, so a change of R version shows up. Base packages have no
+#' versions and appear only as added or removed.
+#'
+#' Only what both SBOMs state is compared. A license that one of them does not
+#' state at all, the license as written when only one states it, and an
+#' ecosystem of `"unknown"` are not changes. Each format keeps a different
+#' part of what sbom knows (an SPDX document has no field for the license as
+#' written, and no format records sbom's own ecosystems, such as `"local"`),
+#' so an SBOM compared with itself written in another format and read back
+#' shows none. An SPDX expression on one side and only the license as written
+#' on the other are the same license when [license_spdx()] translates the
+#' one to the other.
 #'
 #' @param old,new `<sbom>` objects, as returned by [sbom_package()] or
 #'   [sbom_installed()].
@@ -88,24 +99,46 @@ diff_row <- function(comp, change, old = NA_character_, new = NA_character_) {
   )
 }
 
+# The old and new license when they differ in what both SBOMs state, else
+# NULL. A side with neither an SPDX expression nor the license as written
+# states no license, as a format without the field leaves it.
 license_change <- function(o, n) {
-  if (!identical(o$license_spdx, n$license_spdx)) {
-    return(c(o$license_spdx, n$license_spdx))
+  os <- o$license_spdx
+  ns <- n$license_spdx
+  ow <- o$license_as_written
+  nw <- n$license_as_written
+  if ((is.na(os) && is.na(ow)) || (is.na(ns) && is.na(nw))) {
+    return(NULL)
   }
-  if (!identical(o$license_as_written, n$license_as_written)) {
-    return(c(o$license_as_written, n$license_as_written))
+  if (!identical(os, ns)) {
+    if (!is.na(os) && !is.na(ns)) {
+      return(c(os, ns))
+    }
+    # One side has only the license as written: the same license when it
+    # translates to the other side's expression.
+    translated <- unname(license_spdx(if (is.na(os)) ow else nw))
+    if (!identical(translated, if (is.na(os)) ns else os)) {
+      return(c(os, ns))
+    }
+  }
+  if (!is.na(ow) && !is.na(nw) && !identical(ow, nw)) {
+    return(c(ow, nw))
   }
   NULL
 }
 
+# The old and new source when they differ, else NULL: the package URLs without
+# their versions when both have one, else the ecosystems when neither is
+# unknown.
 source_change <- function(o, n) {
-  if (!identical(o$ecosystem, n$ecosystem)) {
-    return(c(o$ecosystem, n$ecosystem))
-  }
   op <- sub("@[^?#]*", "", o$purl)
   np <- sub("@[^?#]*", "", n$purl)
-  if (!identical(op, np)) {
-    return(c(op, np))
+  if (!is.na(op) && !is.na(np)) {
+    return(if (!identical(op, np)) c(op, np))
+  }
+  known <- function(eco) !is.na(eco) && eco != "unknown"
+  if (known(o$ecosystem) && known(n$ecosystem) && !identical(o$ecosystem, n$ecosystem)) {
+    return(c(o$ecosystem, n$ecosystem))
   }
   NULL
 }

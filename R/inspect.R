@@ -1,13 +1,13 @@
 # Looking inside an SBOM: a summary and the dependency tree.
 
-#' Summarise an SBOM
+#' Summarize an SBOM
 #'
 #' Counts the components of an SBOM by ecosystem, type and evidence, tallies
-#' their licences, collects the drift issues, and counts the advisories.
+#' their licenses, collects the drift issues, and counts the advisories.
 #'
 #' Every component is counted, including the root, R, base packages and
 #' files. A component is unknown when its version is `NA` or its SPDX
-#' licence is `NA` (reported as `"NOASSERTION"`). Base packages have no
+#' license is `NA` (reported as `"NOASSERTION"`). Base packages have no
 #' version, so they are always unknown.
 #'
 #' @param object An `<sbom>` object, as returned by [sbom_package()] or
@@ -95,8 +95,8 @@ print.sbom_summary <- function(x, ...) {
       rows <- x$counts[x$counts$what == what, , drop = FALSE]
       cli::cli_text("{what}: {paste0(rows$value, ' (', rows$n, ')', collapse = ', ')}")
     }
-    cli::cli_text("Unknown version or licence: {x$unknowns}")
-    cli::cli_h2("Licences")
+    cli::cli_text("Unknown version or license: {x$unknowns}")
+    cli::cli_h2("Licenses")
     cli::cli_text("{paste0(x$licenses$license, ' (', x$licenses$n, ')', collapse = ', ')}")
     cli::cli_h2("Drift")
     if (nrow(x$drift) == 0L) {
@@ -111,18 +111,28 @@ print.sbom_summary <- function(x, ...) {
   invisible(x)
 }
 
+# A component's name and version; a minimum version, such as R's when R is
+# not the one running, is shown as `(>= x)`.
 node_label <- function(comp) {
-  if (is.na(comp$version)) comp$name else paste(comp$name, comp$version)
+  if (is.na(comp$version)) {
+    return(comp$name)
+  }
+  if (comp$version_is %in% "minimum") {
+    return(paste0(comp$name, " (>= ", comp$version, ")"))
+  }
+  paste(comp$name, comp$version)
 }
 
 #' Print the dependency tree of an SBOM
 #'
 #' Prints the dependencies of the root component as a tree. A component
 #' reached by several paths is expanded the first time it appears and marked
-#' `(see above)` afterwards. Components reached only through `Suggests` are
+#' `(see above)` afterwards. A version that is only a minimum, such as R's
+#' lowest stated version when R is not the one running, is shown as `(>= x)`.
+#' Components reached only through `Suggests` are
 #' marked `(suggested)`, and the code a package carries inside it (its
 #' `LinkingTo` packages, vendored C and C++ libraries and bundled JavaScript)
-#' is marked `(embedded)`. Files that the root contains are leaves labelled
+#' is marked `(embedded)`. Files that the root contains are leaves labeled
 #' with their path.
 #'
 #' @param x An `<sbom>` object, as returned by [sbom_package()] or

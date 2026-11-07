@@ -95,3 +95,72 @@ test_that("sbom_diff() pairs R packages by name and system components by ref", {
   expect_equal(ch$old, "2.0")
   expect_equal(ch$new, "2.1")
 })
+
+test_that("sbom_diff() finds no license or source change between an SBOM and itself read back from any format", {
+  x <- fixture_sbom()
+  dir <- withr::local_tempdir()
+  formats <- sbom_formats()
+  formats <- formats[formats$format != "csv", ]
+  for (i in seq_len(nrow(formats))) {
+    path <- file.path(dir, paste0("x", formats$extension[i]))
+    write_sbom(x, path, format = formats$format[i])
+    back <- suppressWarnings(read_sbom(path))
+    ch <- as.data.frame(sbom_diff(x, back))
+    expect_equal(ch$change[ch$change %in% c("license", "source")], character(), label = formats$format[i])
+  }
+})
+
+test_that("sbom_diff() compares a license only in the forms both SBOMs state", {
+  a <- fixture_sbom()
+  at <- a$components$name == "suggestpkg"
+  # The license as written on one side only, and a license one side does not
+  # state at all, as a format without the field leaves them, are no change.
+  b <- a
+  b$components$license_as_written[at] <- NA
+  b$components[b$components$name == "R", c("license_spdx", "license_as_written")] <- NA
+  expect_equal(nrow(as.data.frame(sbom_diff(a, b))), 0L)
+  expect_equal(nrow(as.data.frame(sbom_diff(b, a))), 0L)
+  # When both state the license as written, a change to it counts.
+  b <- a
+  b$components$license_as_written[at] <- "MIT"
+  ch <- as.data.frame(sbom_diff(a, b))
+  expect_equal(ch$change, "license")
+  expect_equal(c(ch$old, ch$new), c("MIT + file LICENSE", "MIT"))
+  # An expression on one side and only the license as written on the other
+  # are the same license when that translates to the expression.
+  a$components$license_as_written[at] <- NA
+  b <- a
+  b$components$license_spdx[at] <- NA
+  b$components$license_as_written[at] <- "MIT"
+  expect_equal(nrow(as.data.frame(sbom_diff(a, b))), 0L)
+  b$components$license_as_written[at] <- "file LICENSE"
+  ch <- as.data.frame(sbom_diff(a, b))
+  expect_equal(ch$change, "license")
+  expect_equal(c(ch$old, ch$new), c("MIT", NA))
+})
+
+test_that("sbom_diff() compares package URLs when both have one, and else known ecosystems", {
+  a <- fixture_sbom()
+  # A document leaves sbom's own ecosystems unknown, and gives a repository
+  # package the type of its package URL.
+  b <- a
+  b$components$ecosystem[b$components$ecosystem %in% c("r", "base-r", "local")] <- "unknown"
+  b$components$ecosystem[b$components$name == "suggestpkg"] <- "repository"
+  expect_equal(nrow(as.data.frame(sbom_diff(a, b))), 0L)
+  expect_equal(nrow(as.data.frame(sbom_diff(b, a))), 0L)
+  b <- a
+  b$components$ecosystem[b$components$name == "localpkg"] <- "git"
+  ch <- as.data.frame(sbom_diff(a, b))
+  expect_equal(ch$change, "source")
+  expect_equal(c(ch$old, ch$new), c("local", "git"))
+  # Without a package URL on one side, the ecosystems are compared.
+  b <- a
+  at <- b$components$name == "suggestpkg"
+  b$components$purl[at] <- NA
+  b$components$ecosystem[at] <- "local"
+  ch <- as.data.frame(sbom_diff(a, b))
+  expect_equal(ch$change, "source")
+  expect_equal(c(ch$old, ch$new), c("cran", "local"))
+  b$components$ecosystem[at] <- "unknown"
+  expect_equal(nrow(as.data.frame(sbom_diff(a, b))), 0L)
+})
