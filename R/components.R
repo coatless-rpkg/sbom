@@ -159,6 +159,17 @@ package_ecosystem <- function(desc) {
     repo <- f("RemoteRepo")
     if (is.na(user) || is.na(repo)) NA_character_ else paste0(site, "/", user, "/", repo)
   }
+  # A forge package's supplier is the account that owns its repository, a user
+  # or an organization, with its page on the forge; without an owner on
+  # record, the forge itself.
+  forge_supplier <- function(site, forge) {
+    owner <- f("RemoteUsername")
+    if (is.na(owner)) {
+      list(name = forge, url = NA_character_)
+    } else {
+      list(name = owner, url = paste0(site, "/", owner))
+    }
+  }
 
   if (identical(repository, "CRAN")) {
     return(result("cran", purl(name, version), "CRAN", "https://cran.r-project.org",
@@ -188,13 +199,14 @@ package_ecosystem <- function(desc) {
     url <- forge_url(site)
     id <- purl(f("RemoteRepo"), f("RemoteSha"), remote_type, f("RemoteUsername"),
       repository_url = if (is.na(host)) NULL else site)
-    supplier <- if (!is.na(host)) host else if (remote_type == "github") "GitHub" else "GitLab"
-    return(result(remote_type, id, supplier, url, url))
+    sup <- forge_supplier(site, if (!is.na(host)) host else if (remote_type == "github") "GitHub" else "GitLab")
+    return(result(remote_type, id, sup$name, sup$url, url, vcs_url = url))
   }
   if (identical(remote_type, "bitbucket")) {
     url <- forge_url("https://bitbucket.org")
     id <- purl(f("RemoteRepo"), f("RemoteSha"), "bitbucket", f("RemoteUsername"))
-    return(result("bitbucket", id, "Bitbucket", url, url))
+    sup <- forge_supplier("https://bitbucket.org", "Bitbucket")
+    return(result("bitbucket", id, sup$name, sup$url, url, vcs_url = url))
   }
   if (remote_type %in% c("git", "git2r", "xgit")) {
     return(result("git", NA_character_, vcs_url = remote_vcs_url(f("RemoteUrl"))))
@@ -220,7 +232,7 @@ package_ecosystem <- function(desc) {
 
 # Returns list(component = <1-row data.frame>, issues = <data.frame>).
 # `source_input` names where the record came from. A record from renv.lock or
-# manifest.json that lacks a licence or maintainer says that the file does
+# manifest.json that lacks a license or maintainer says that the file does
 # not record it, and, when `library_checked`, that no installed copy of that
 # version was found either.
 package_component <- function(desc, evidence, source_input, is_root = FALSE,
@@ -288,10 +300,10 @@ package_component <- function(desc, evidence, source_input, is_root = FALSE,
   }
   if (is.na(license)) {
     issues <- add_issue(issues, ref, "license", "license-missing",
-      if (is.null(recorded_in)) paste0(label, " declares no licence.") else unrecorded("licence"))
+      if (is.null(recorded_in)) paste0(label, " declares no license.") else unrecorded("license"))
   } else if (is.na(spdx)) {
     issues <- add_issue(issues, ref, "license", "license-no-spdx",
-      paste0("The licence of ", label, ", ", license_normalize(license),
+      paste0("The license of ", label, ", ", license_normalize(license),
         ", has no SPDX expression, so it is recorded as NOASSERTION."))
   }
   if (eco$ecosystem == "local") {
@@ -364,7 +376,7 @@ r_components <- function(version, version_is, stated_spec, base_used, evidence =
       version = if (exact) version else NA_character_,
       version_is = if (exact) "exact" else NA_character_,
       type = "library", ecosystem = "base-r", scope = "required",
-      parent_ref = "R", license_comment = "Part of R, under R's own licence.",
+      parent_ref = "R", license_comment = "Part of R, under R's own license.",
       description = "Part of R. It comes with R and has no file of its own.",
       evidence = if (exact) r_evidence else "inferred", source_input = "r"
     )

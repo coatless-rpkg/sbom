@@ -7,7 +7,9 @@ test_that("each ecosystem rule gives the pinned identity", {
   gh <- package_ecosystem(c(Package = "srcpkg", Version = "0.1.0", RemoteType = "github",
     RemoteUsername = "example", RemoteRepo = "srcpkg", RemoteSha = "abc123"))
   expect_equal(gh$purl, "pkg:github/example/srcpkg@abc123")
-  expect_equal(gh$supplier_url, "https://github.com/example/srcpkg")
+  expect_equal(gh$supplier_name, "example")
+  expect_equal(gh$supplier_url, "https://github.com/example")
+  expect_equal(gh$vcs_url, "https://github.com/example/srcpkg")
   ppm <- package_ecosystem(c(Package = "x", Version = "1.0", Repository = "RSPM",
     RemoteRepos = "https://ppm.example.org/cran/latest"))
   expect_equal(ppm$ecosystem, "repository")
@@ -64,15 +66,15 @@ test_that("a local package with file LICENSE raises two issues", {
   expect_true(is.na(out$component$license_spdx))
   expect_setequal(out$issues$code, c("license-no-spdx", "supplier-unknown"))
   expect_equal(out$issues$message[out$issues$code == "license-no-spdx"],
-    "The licence of localpkg 0.0.1, file LICENSE, has no SPDX expression, so it is recorded as NOASSERTION.")
+    "The license of localpkg 0.0.1, file LICENSE, has no SPDX expression, so it is recorded as NOASSERTION.")
   expect_true(all(out$issues$ref == "local/localpkg"))
 })
 
-test_that("missing and blank licence and maintainer raise issues", {
+test_that("missing and blank license and maintainer raise issues", {
   desc <- c(Package = "q", Version = "2.0", Repository = "CRAN", License = "  ")
   out <- package_component(desc, "observed", "library")
   expect_setequal(out$issues$code, c("license-missing", "maintainer-missing"))
-  expect_equal(out$issues$message[out$issues$code == "license-missing"], "q 2.0 declares no licence.")
+  expect_equal(out$issues$message[out$issues$code == "license-missing"], "q 2.0 declares no license.")
   expect_equal(out$issues$message[out$issues$code == "maintainer-missing"], "q 2.0 names no maintainer.")
   expect_true(is.na(out$component$license_comment))
   expect_equal(nrow(out$component$deps[[1]]), 0L)
@@ -86,7 +88,7 @@ test_that("r_components() uses R Observatory's sentences", {
   expect_equal(r$description[1], "The lowest R version stated, R (>= 4.1.0).")
   expect_equal(r$license_spdx[1], "GPL-2.0-only OR GPL-3.0-only")
   expect_equal(r$description[2], "Part of R. It comes with R and has no file of its own.")
-  expect_equal(r$license_comment[2], "Part of R, under R's own licence.")
+  expect_equal(r$license_comment[2], "Part of R, under R's own license.")
   expect_true(all(is.na(r$version[2:3])))
   expect_equal(r$evidence, c("declared", "inferred", "inferred"))
   expect_equal(r$parent_ref, c(NA, "R", "R"))
@@ -120,16 +122,17 @@ test_that("a GitHub Enterprise package points at its own host", {
   }
   for (host in c("https://github.acme.com/api/v3", "github.acme.com/api", "http://github.acme.com/")) {
     c1 <- package_component(gh(host), "observed", "library")$component
-    expect_equal(c1$supplier_name, "github.acme.com", label = host)
-    expect_equal(c1$supplier_url, "https://github.acme.com/team/g", label = host)
+    expect_equal(c1$supplier_name, "team", label = host)
+    expect_equal(c1$supplier_url, "https://github.acme.com/team", label = host)
     expect_equal(c1$homepage, "https://github.acme.com/team/g", label = host)
     expect_equal(c1$vcs_url, "https://github.acme.com/team/g", label = host)
     expect_equal(c1$purl, "pkg:github/team/g@abc123?repository_url=https://github.acme.com", label = host)
   }
   for (host in c("api.github.com", "https://api.github.com", "github.com", "https://github.com/api/v3")) {
     c1 <- package_component(gh(host), "observed", "library")$component
-    expect_equal(c1$supplier_name, "GitHub", label = host)
-    expect_equal(c1$supplier_url, "https://github.com/team/g", label = host)
+    expect_equal(c1$supplier_name, "team", label = host)
+    expect_equal(c1$supplier_url, "https://github.com/team", label = host)
+    expect_equal(c1$vcs_url, "https://github.com/team/g", label = host)
     expect_equal(c1$purl, "pkg:github/team/g@abc123", label = host)
   }
 })
@@ -158,10 +161,10 @@ test_that("a non-CRAN repository without a URL gives an inferred purl and an iss
   expect_false("purl-inferred" %in% package_component(cran, "observed", "library")$issues$code)
 })
 
-test_that("a package without a version is labelled by name, with an issue", {
+test_that("a package without a version is labeled by name, with an issue", {
   out <- package_component(c(Package = "myanalysis"), "declared", "package", is_root = TRUE)
   msgs <- out$issues$message
-  expect_true(all(c("myanalysis declares no licence.", "myanalysis names no maintainer.") %in% msgs))
+  expect_true(all(c("myanalysis declares no license.", "myanalysis names no maintainer.") %in% msgs))
   expect_false(any(grepl("\\bNA\\b", msgs)))
   v <- out$issues[out$issues$code == "version-missing", , drop = FALSE]
   expect_equal(nrow(v), 1L)
@@ -189,7 +192,7 @@ test_that("a component's dependencies are known unless a reader says otherwise",
   expect_true(unknown_component("foo")$deps_known)
 })
 
-test_that("GitLab, Bitbucket and git sources are recognised in an installed DESCRIPTION", {
+test_that("GitLab, Bitbucket and git sources are recognized in an installed DESCRIPTION", {
   desc <- function(...) {
     c(Package = "p", Version = "1.0", License = "MIT + file LICENSE", Maintainer = "A B <a@b.org>",
       RemoteUsername = "team", RemoteRepo = "p", RemoteSha = "abc123", ...)
@@ -197,18 +200,20 @@ test_that("GitLab, Bitbucket and git sources are recognised in an installed DESC
   gl <- package_component(desc(RemoteType = "gitlab", RemoteHost = "gitlab.com"), "observed", "library")
   expect_equal(gl$component$ecosystem, "gitlab")
   expect_equal(gl$component$purl, "pkg:gitlab/team/p@abc123")
-  expect_equal(gl$component$supplier_name, "GitLab")
-  expect_equal(gl$component$supplier_url, "https://gitlab.com/team/p")
+  expect_equal(gl$component$supplier_name, "team")
+  expect_equal(gl$component$supplier_url, "https://gitlab.com/team")
   expect_equal(gl$component$vcs_url, "https://gitlab.com/team/p")
   expect_equal(nrow(gl$issues), 0L)
   own <- package_component(desc(RemoteType = "gitlab", RemoteHost = "https://gitlab.acme.com/"), "observed", "library")
   expect_equal(own$component$purl, "pkg:gitlab/team/p@abc123?repository_url=https://gitlab.acme.com")
-  expect_equal(own$component$supplier_name, "gitlab.acme.com")
-  expect_equal(own$component$supplier_url, "https://gitlab.acme.com/team/p")
+  expect_equal(own$component$supplier_name, "team")
+  expect_equal(own$component$supplier_url, "https://gitlab.acme.com/team")
+  expect_equal(own$component$vcs_url, "https://gitlab.acme.com/team/p")
   bb <- package_component(desc(RemoteType = "bitbucket"), "observed", "library")
   expect_equal(bb$component$ecosystem, "bitbucket")
   expect_equal(bb$component$purl, "pkg:bitbucket/team/p@abc123")
-  expect_equal(bb$component$supplier_name, "Bitbucket")
+  expect_equal(bb$component$supplier_name, "team")
+  expect_equal(bb$component$supplier_url, "https://bitbucket.org/team")
   expect_equal(bb$component$vcs_url, "https://bitbucket.org/team/p")
   for (type in c("git2r", "xgit")) {
     g <- package_component(desc(RemoteType = type, RemoteUrl = "https://git.example.com/p.git"), "observed", "library")
@@ -253,4 +258,22 @@ test_that("a local git remote's path enters no document", {
   tf <- withr::local_tempfile(fileext = ".cdx.json")
   write_sbom(x, tf, format = "cyclonedx-json")
   expect_identical(schema_validate(tf, "cyclonedx-json")$status, "pass")
+})
+
+test_that("a forge package's supplier is the account that owns it, or the forge without one", {
+  owned <- package_ecosystem(c(Package = "p", Version = "1.0", RemoteType = "github",
+    RemoteUsername = "coatless-rpkg", RemoteRepo = "p", RemoteSha = "abc123"))
+  expect_equal(owned$supplier_name, "coatless-rpkg")
+  expect_equal(owned$supplier_url, "https://github.com/coatless-rpkg")
+  expect_equal(owned$vcs_url, "https://github.com/coatless-rpkg/p")
+  expect_equal(owned$homepage, "https://github.com/coatless-rpkg/p")
+  for (type in c("github", "gitlab", "bitbucket")) {
+    bare <- package_ecosystem(c(Package = "p", Version = "1.0", RemoteType = type, RemoteSha = "abc123"))
+    expect_equal(bare$supplier_name, c(github = "GitHub", gitlab = "GitLab", bitbucket = "Bitbucket")[[type]],
+                 label = type)
+    expect_true(is.na(bare$supplier_url), label = type)
+  }
+  enterprise <- package_ecosystem(c(Package = "p", Version = "1.0", RemoteType = "github",
+    RemoteHost = "https://github.acme.com/api/v3", RemoteSha = "abc123"))
+  expect_equal(enterprise$supplier_name, "github.acme.com")
 })

@@ -27,6 +27,14 @@ A data frame. \code{sbom_components()} has one row per component,
 \code{spec}, \code{evidence}), and \code{sbom_issues()} one row per recorded issue
 (\code{ref}, \code{field}, \code{severity}, \code{code}, \code{message}).
 
+A component's supplier (\code{supplier_name}, \code{supplier_url}) is the
+repository it came from, such as CRAN, Bioconductor or Posit Package
+Manager. For a package from GitHub, GitLab or Bitbucket, it is the
+account that owns the repository, a user or an organization, with that
+account's page as \code{supplier_url}, such as \verb{https://github.com/r-lib}; the
+repository itself is \code{vcs_url}. Without an owner on record, the supplier
+is the forge, with no URL.
+
 \code{print.sbom()} returns \code{x} invisibly.
 }
 \description{

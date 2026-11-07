@@ -246,6 +246,14 @@ timestamp_notes <- function(timestamp = NULL) {
 #'   `sbom_dependencies()` one row per relationship (`from`, `to`, `field`,
 #'   `spec`, `evidence`), and `sbom_issues()` one row per recorded issue
 #'   (`ref`, `field`, `severity`, `code`, `message`).
+#'
+#'   A component's supplier (`supplier_name`, `supplier_url`) is the
+#'   repository it came from, such as CRAN, Bioconductor or Posit Package
+#'   Manager. For a package from GitHub, GitLab or Bitbucket, it is the
+#'   account that owns the repository, a user or an organization, with that
+#'   account's page as `supplier_url`, such as `https://github.com/r-lib`; the
+#'   repository itself is `vcs_url`. Without an owner on record, the supplier
+#'   is the forge, with no URL.
 #' @examples
 #' x <- sbom_package(system.file("DESCRIPTION", package = "sbom"), system = FALSE)
 #' sbom_components(x)

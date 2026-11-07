@@ -22,7 +22,7 @@ test_that("sbom_renv() reads every source a lockfile can name", {
     rel$to == comps$ref[comps$name == "cli"] & rel$evidence == "declared"))
 })
 
-test_that("a legacy lockfile takes licences from a matching installed version only", {
+test_that("a legacy lockfile takes licenses from a matching installed version only", {
   lock <- test_path("fixtures/renv/legacy/renv.lock")
   locked <- jsonlite::read_json(lock)$Packages
   nm <- names(locked)
@@ -165,7 +165,7 @@ test_that("a non-ASCII maintainer is decoded as UTF-8 in a C locale", {
 })
 
 # The packages of a lockfile from renv before 0.15, which records no
-# dependencies, licences or maintainers.
+# dependencies, licenses or maintainers.
 pre_015 <- function() test_path("fixtures/renv/pre-0.15/renv.lock")
 
 test_that("a lockfile that records no dependencies claims none in CycloneDX", {
@@ -231,7 +231,7 @@ test_that("an installed copy at the locked version supplies the dependencies a l
   iss <- sbom_issues(x)
   expect_equal(
     iss$message[iss$code == "fields-from-library"],
-    paste0("The licence, maintainer and dependencies of cli 2.2.0 come from the ",
+    paste0("The license, maintainer and dependencies of cli 2.2.0 come from the ",
            "installed library, because renv.lock does not record them.")
   )
   expect_true("dependencies-not-recorded" %in% iss$code)
@@ -255,13 +255,13 @@ test_that("fields-from-library names only the fields it borrowed", {
   expect_equal(comps$maintainer[comps$name == "glue"], "J B")
 })
 
-test_that("a lockfile that omits a licence says so, rather than that the package declares none", {
+test_that("a lockfile that omits a license says so, rather than that the package declares none", {
   rec <- list(Package = "cli", Version = "3.6.6", Source = "Repository", Repository = "CRAN", Imports = "utils")
   lock <- local_renv_project(list(cli = rec))
   msg <- function(x, code) sbom_issues(x)$message[sbom_issues(x)$code == code]
   x <- sbom_renv(lock, library = local_fake_lib(list()))
   expect_equal(msg(x, "license-missing"), paste0(
-    "renv.lock does not record the licence of cli 3.6.6, and no installed copy ",
+    "renv.lock does not record the license of cli 3.6.6, and no installed copy ",
     "of that version was found."
   ))
   expect_equal(msg(x, "maintainer-missing"), paste0(
@@ -270,11 +270,11 @@ test_that("a lockfile that omits a licence says so, rather than that the package
   ))
   # An installed copy of that version that does not record them either.
   y <- sbom_renv(lock, library = local_fake_lib(list(cli = c(Version = "3.6.6"))))
-  expect_equal(msg(y, "license-missing"), "renv.lock does not record the licence of cli 3.6.6.")
+  expect_equal(msg(y, "license-missing"), "renv.lock does not record the license of cli 3.6.6.")
   # No library to look in.
   withr::local_envvar(RENV_PATHS_LIBRARY = NA, RENV_PATHS_LIBRARY_ROOT = NA)
   z <- sbom_renv(lock)
-  expect_equal(msg(z, "license-missing"), "renv.lock does not record the licence of cli 3.6.6.")
+  expect_equal(msg(z, "license-missing"), "renv.lock does not record the license of cli 3.6.6.")
   expect_equal(msg(z, "maintainer-missing"), "renv.lock does not record the maintainer of cli 3.6.6.")
 })
 
@@ -307,13 +307,14 @@ test_that("every source renv can record gets its own ecosystem", {
   expect_equal(row("Biobase")$supplier_name, "Bioconductor")
   expect_equal(row("glpkg")$ecosystem, "gitlab")
   expect_equal(row("glpkg")$purl, paste0("pkg:gitlab/me/glpkg@", sha))
-  expect_equal(row("glpkg")$supplier_name, "GitLab")
-  expect_equal(row("glpkg")$supplier_url, "https://gitlab.com/me/glpkg")
+  expect_equal(row("glpkg")$supplier_name, "me")
+  expect_equal(row("glpkg")$supplier_url, "https://gitlab.com/me")
   expect_equal(row("glpkg")$vcs_url, "https://gitlab.com/me/glpkg")
   expect_equal(row("glsrc")$purl, paste0("pkg:gitlab/me/glsrc@", sha))
   expect_equal(row("bbpkg")$ecosystem, "bitbucket")
   expect_equal(row("bbpkg")$purl, "pkg:bitbucket/me/bbpkg@0123456")
-  expect_equal(row("bbpkg")$supplier_name, "Bitbucket")
+  expect_equal(row("bbpkg")$supplier_name, "me")
+  expect_equal(row("bbpkg")$supplier_url, "https://bitbucket.org/me")
   expect_equal(row("gitpkg")$ecosystem, "git")
   expect_true(is.na(row("gitpkg")$purl))
   expect_true(is.na(row("gitpkg")$supplier_name))
@@ -407,7 +408,7 @@ test_that("a record without a Version says what is not recorded, without 'of tha
   iss <- sbom_issues(x)
   expect_equal(
     iss$message[iss$code == "license-missing"],
-    "renv.lock does not record the licence of cli, and no installed copy was found."
+    "renv.lock does not record the license of cli, and no installed copy was found."
   )
   expect_equal(
     iss$message[iss$code == "maintainer-missing"],
@@ -415,7 +416,7 @@ test_that("a record without a Version says what is not recorded, without 'of tha
   )
 })
 
-test_that("R's own library is listed once, as normalised, and a recommended package's drift names it", {
+test_that("R's own library is listed once, as normalized, and a recommended package's drift names it", {
   matrix <- tryCatch(read_description(file.path(.Library, "Matrix")), error = function(e) NULL)
   skip_if(is.null(matrix) || !identical(unname(matrix["Priority"]), "recommended"),
           "Matrix is not a recommended package in R's own library.")

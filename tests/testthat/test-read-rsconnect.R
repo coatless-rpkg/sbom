@@ -134,14 +134,16 @@ test_that("a manifest entry's Source and Repository stand in for a bare descript
                "pkg:cran/Biobase@2.62.0?repository_url=https://bioconductor.org/packages/3.18/bioc")
   expect_equal(row("Biobase")$bioc_release, "3.18")
   expect_equal(row("ghpkg")$ecosystem, "github")
+  # No owner on record, so the forge is the supplier.
   expect_equal(row("ghpkg")$supplier_name, "GitHub")
+  expect_true(is.na(row("ghpkg")$supplier_url))
   expect_equal(row("unk")$ecosystem, "unknown")
   iss <- sbom_issues(x)
   expect_equal(iss$message[iss$code == "source-unknown"], "manifest.json does not record where unk 1.0 came from.")
   expect_false(any(grepl("local source", iss$message)))
 })
 
-test_that("a manifest that omits a licence or dependencies says so", {
+test_that("a manifest that omits a license or dependencies says so", {
   x <- sbom_rsconnect(local_manifest(list(
     cli = list(Source = "CRAN", Repository = "https://cloud.r-project.org",
                description = list(Package = "cli", Version = "3.6.6")),
@@ -153,7 +155,7 @@ test_that("a manifest that omits a licence or dependencies says so", {
   # A full description without dependency fields has none.
   expect_true(comps$deps_known[comps$name == "praise"])
   iss <- sbom_issues(x)
-  expect_equal(iss$message[iss$code == "license-missing"], "manifest.json does not record the licence of cli 3.6.6.")
+  expect_equal(iss$message[iss$code == "license-missing"], "manifest.json does not record the license of cli 3.6.6.")
   expect_equal(iss$message[iss$code == "maintainer-missing"], "manifest.json does not record the maintainer of cli 3.6.6.")
   expect_false(comps$deps_known[comps$name == "cli"])
   expect_equal(
