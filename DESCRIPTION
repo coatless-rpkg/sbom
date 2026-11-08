@@ -38,10 +38,17 @@ Suggests:
     curl,
     htmltools,
     jsonvalidate,
+    knitr,
     pak,
+    quarto,
+    rmarkdown,
     testthat (>= 3.2.0),
     withr,
     yaml
+VignetteBuilder:
+    quarto
+SystemRequirements: Quarto command line tool
+    (<https://github.com/quarto-dev/quarto-cli>), for the vignettes
 Copyright: See file inst/COPYRIGHTS
 Config/testthat/edition: 3
 Config/roxygen2/version: 8.1.1
