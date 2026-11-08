@@ -1,0 +1,77 @@
+url: https://r-pkg.thecoatlessprofessor.com/sbom/
+destination: _site
+
+template:
+  bootstrap: 5
+  light-switch: true
+  # Code in warm tones, to sit with the wood of the logo.
+  theme: gruvbox-light
+  theme-dark: gruvbox-dark
+  # The palette of the crate logo: walnut, wood and cream paper. The -dark
+  # values are the dark mode that the light switch turns on.
+  bslib:
+    primary: "#8A5420"
+    body-bg: "#FBF7EF"
+    body-color: "#2B2116"
+    headings-color: "#3B2814"
+    link-color: "#8A5420"
+    link-hover-color: "#5C3712"
+    border-color: "#E6D8BE"
+    code-color: "#8A4610"
+    body-secondary-bg: "#F3EADB"
+    body-tertiary-bg: "#F7F0E4"
+    body-bg-dark: "#17120D"
+    body-color-dark: "#E9DFCB"
+    headings-color-dark: "#F2E4C6"
+    link-color-dark: "#DDB57E"
+    link-hover-color-dark: "#F0CD9A"
+    border-color-dark: "#3D2F22"
+    code-color-dark: "#EDB46C"
+    body-secondary-bg-dark: "#241B13"
+    body-tertiary-bg-dark: "#1E1710"
+    border-radius: 0.5rem
+    headings-font-weight: 600
+    base_font: {google: "Source Sans 3"}
+    heading_font: {google: "Barlow Condensed"}
+    code_font: {google: "JetBrains Mono"}
+
+reference:
+- title: Build an SBOM
+  contents:
+  - sbom
+  - sbom_package
+  - sbom_renv
+  - sbom_rsconnect
+  - sbom_shiny
+  - sbom_nix
+- title: Write, read and validate
+  contents:
+  - write_sbom
+  - read_sbom
+  - validate_sbom
+  - sbom_formats
+- title: Inspect and compare
+  contents:
+  - sbom_components
+  - summary.sbom
+  - sbom_tree
+  - sbom_advisories
+  - sbom_diff
+- title: Identifiers and licenses
+  contents:
+  - purl
+  - license_spdx
+- title: Examples
+  contents:
+  - sbom_example
+- title: Package
+  contents:
+  - sbom-package
+
+articles:
+- title: Guides
+  navbar: ~
+  contents:
+  - projects
+  - reading-and-validating
+  - compliance

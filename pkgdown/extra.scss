@@ -1,0 +1,64 @@
+// {sbom} site theme, from the crate logo: walnut, wood and cream paper.
+// _pkgdown.yml sets the palette for both modes. These rules add what Bootstrap
+// variables cannot: the navbar, headings and code blocks. Light rules come
+// first, and dark ones sit under [data-bs-theme="dark"], so pkgdown's light
+// switch keeps working.
+
+// The navbar is a crate slat: cream wood with a darker seam under it.
+.navbar {
+  background-color: #F3EADB !important;
+  border-bottom: 3px solid #CDA56C;
+}
+[data-bs-theme="dark"] .navbar {
+  background-color: #211912 !important;
+  border-bottom-color: #5A3F25;
+}
+.navbar-brand {
+  font-family: "Barlow Condensed", "DIN Condensed", "Arial Narrow", sans-serif;
+  font-weight: 700;
+  font-size: 1.45rem;
+  letter-spacing: 0.02em;
+}
+
+// Headings set condensed, like the stencil, with a seam under each section.
+h1, h2, h3, h4 {
+  letter-spacing: 0.01em;
+}
+main h2 {
+  margin-top: 2.5rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid var(--bs-border-color);
+}
+
+// JetBrains Mono would draw R's <- as an arrow. Show the characters people type.
+code, pre, kbd, samp {
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0;
+}
+
+// Code blocks on cream card stock.
+pre, div.sourceCode pre {
+  background-color: var(--bs-tertiary-bg);
+  border: 1px solid var(--bs-border-color);
+  border-radius: 0.5rem;
+}
+
+// Figures ship as light and dark pairs. The light switch sets
+// [data-bs-theme], which a media query inside an SVG cannot see, so CSS swaps
+// the two images. The vignettes carry these rules too, for the standalone
+// HTML that CRAN serves.
+.sb-fig {
+  display: block;
+  margin: 1.75rem auto;
+  max-width: 100%;
+  height: auto;
+}
+.sb-dark {
+  display: none;
+}
+[data-bs-theme="dark"] .sb-light {
+  display: none;
+}
+[data-bs-theme="dark"] .sb-dark {
+  display: block;
+}

@@ -1,0 +1,38 @@
+/* Images that follow the site's light switch.
+ *
+ * The README uses <picture> with a (prefers-color-scheme: dark) source, the
+ * only mechanism GitHub and CRAN honor. On the pkgdown site the light switch
+ * sets [data-bs-theme] instead, which can disagree with the operating system,
+ * so `content` on the <img> lets the site's own theme decide. Paths are
+ * relative to this file, which pkgdown copies to the site root. */
+
+/* The animated crate logo in the README's header, the only place the site
+ * shows it. */
+[data-bs-theme="light"] img.sb-logo {
+  content: url("reference/figures/sbom-logo-animated-light.svg");
+}
+[data-bs-theme="dark"] img.sb-logo {
+  content: url("reference/figures/sbom-logo-animated-dark.svg");
+}
+
+/* The README hero. */
+[data-bs-theme="light"] img.sb-hero {
+  content: url("reference/figures/hero-light.svg");
+}
+[data-bs-theme="dark"] img.sb-hero {
+  content: url("reference/figures/hero-dark.svg");
+}
+
+/* Bootstrap gives every img height: auto, which overrides the README's
+ * height="139", so size the logo here, as pkgdown sizes its own. */
+img.sb-logo {
+  float: right;
+  width: 120px;
+  height: auto;
+  margin: 0 0 1rem 1.5rem;
+}
+@media (max-width: 575.98px) {
+  img.sb-logo {
+    width: 80px;
+  }
+}

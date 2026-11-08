@@ -2,3 +2,9 @@
 .Rhistory
 *.tar.gz
 sbom.Rcheck/
+/doc/
+/Meta/
+vignettes/.quarto/
+vignettes/*_files/
+vignettes/*.html
+_site/

@@ -5,3 +5,9 @@
 ^README\.Rmd$
 ^\.gitattributes$
 ^cran-comments\.md$
+^_pkgdown\.yml$
+^pkgdown$
+^\.github$
+^vignettes/\.quarto$
+^vignettes/.*_files$
+^_site$
