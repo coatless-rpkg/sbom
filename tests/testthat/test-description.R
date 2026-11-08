@@ -8,7 +8,7 @@ test_that("parse_dep_field() splits a dependency field as written", {
   expect_equal(nrow(parse_dep_field("", "Suggests")), 0L)
 })
 
-test_that("parse_dep_field() normalises whitespace and drops empty entries", {
+test_that("parse_dep_field() normalizes whitespace and drops empty entries", {
   d <- parse_dep_field("a (>=\n   1.0),\n", "Depends")
   expect_equal(d$spec, "a (>= 1.0)")
   expect_equal(d$constraint, ">= 1.0")
@@ -155,4 +155,33 @@ test_that("enc2utf8_bytes() relabels only unmarked UTF-8 and converts marked tex
 
 test_that("enc2utf8_bytes() takes an empty vector", {
   expect_identical(enc2utf8_bytes(character()), character())
+})
+
+test_that("DESCRIPTION text is decoded by its bytes when read.dcf() reads every file as UTF-8", {
+  # From R 4.7.0, read.dcf() reads DCF files as UTF-8 and escapes any other
+  # byte as <xx>, so a latin1 byte never reaches sbom's decoding through it.
+  real <- base::read.dcf
+  local_mocked_bindings(read.dcf = function(file, fields = NULL, all = FALSE, keep.white = NULL) {
+    out <- real(file, fields = fields, all = all, keep.white = keep.white)
+    out[] <- iconv(out, "UTF-8", "UTF-8", sub = "byte")
+    Encoding(out) <- "UTF-8"
+    out
+  }, .package = "base")
+  for (path in list(local_latin1_pkg(), local_latin1_pkg(declare = FALSE))) {
+    d <- read_description(path)
+    expect_equal(d[["Maintainer"]], "Gábor Csárdi <g@example.org>")
+    expect_equal(Encoding(d[["Maintainer"]]), "UTF-8")
+  }
+})
+
+test_that("reading a DESCRIPTION from a tarball leaves no extracted copy behind", {
+  src <- withr::local_tempdir()
+  pkg <- file.path(src, "tarpkg")
+  dir.create(pkg)
+  write_description_bytes(pkg, c("Package: tarpkg", "Version: 1.0"))
+  tarball <- file.path(src, "tarpkg_1.0.tar.gz")
+  withr::with_dir(src, utils::tar(tarball, "tarpkg", compression = "gzip"))
+  before <- list.files(tempdir(), pattern = "^sbom-desc-")
+  expect_equal(read_description(tarball)[["Package"]], "tarpkg")
+  expect_setequal(list.files(tempdir(), pattern = "^sbom-desc-"), before)
 })

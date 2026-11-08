@@ -5,14 +5,26 @@ dep_fields <- c("Depends", "Imports", "LinkingTo", "Suggests", "Enhances")
 # source tarball. Returns a named character vector in UTF-8. Fields that are
 # missing stay absent; the caller decides what that means.
 #
-# read.dcf() returns the file's bytes marked as native, whatever they are, so
-# the text is decoded from those bytes and never through the locale: a
-# declared Encoding is converted from, and otherwise valid UTF-8 is marked as
-# such and anything else is read as latin1.
+# The text is decoded from the file's bytes, never through the locale, before
+# read.dcf() parses it: a declared Encoding is converted from, and otherwise
+# valid UTF-8 is kept and any other line is read as latin1. Up to R 4.6,
+# read.dcf() returns the bytes as they are; from R 4.7.0 it reads every file as
+# UTF-8 and escapes other bytes as <xx>, so it must only ever see UTF-8.
 read_description <- function(path) {
-  file <- description_file(path)
+  # A DESCRIPTION extracted from a tarball goes once it is read.
+  exdir <- tempfile("sbom-desc-")
+  on.exit(unlink(exdir, recursive = TRUE), add = TRUE)
+  file <- description_file(path, exdir)
+  text <- tryCatch(
+    decode_dcf(readBin(file, "raw", n = file.size(file))),
+    error = function(e) {
+      cli::cli_abort("Can't read a {.file DESCRIPTION} from {.file {path}}.", parent = e)
+    }
+  )
+  con <- rawConnection(charToRaw(text))
+  on.exit(close(con), add = TRUE)
   dcf <- tryCatch(
-    read.dcf(file, keep.white = dep_fields),
+    read.dcf(con, keep.white = dep_fields),
     error = function(e) {
       cli::cli_abort("Can't read a {.file DESCRIPTION} from {.file {path}}.", parent = e)
     }
@@ -21,27 +33,42 @@ read_description <- function(path) {
     cli::cli_abort("{.file {path}} holds no {.file DESCRIPTION} fields.")
   }
   out <- dcf[1L, ]
-  encoding <- if ("Encoding" %in% names(out)) trimws(out[["Encoding"]]) else NA_character_
+  Encoding(out) <- "UTF-8"
+  out
+}
+
+# The bytes of a DCF file as one UTF-8 string, lines joined by "\n".
+decode_dcf <- function(bytes) {
+  lines <- strsplit(rawToChar(bytes), "\r?\n", useBytes = TRUE)[[1L]]
+  field <- grep("^Encoding:", lines, value = TRUE, useBytes = TRUE)
+  encoding <- if (length(field) > 0L) {
+    trimws(sub("^Encoding:", "", field[[1L]], useBytes = TRUE))
+  } else {
+    NA_character_
+  }
   converted <- NULL
   if (!is.na(encoding) && !toupper(encoding) %in% c("UTF-8", "UTF8", "")) {
     converted <- tryCatch(
-      iconv(out, from = encoding, to = "UTF-8", sub = "byte"),
+      iconv(lines, from = encoding, to = "UTF-8", sub = "byte"),
       error = function(e) NULL
     )
   }
   if (is.null(converted)) {
     # UTF-8, no Encoding or an unsupported one: keep valid UTF-8, read the
     # rest as latin1.
-    bad <- !validUTF8(out)
-    converted <- out
-    converted[bad] <- iconv(out[bad], from = "latin1", to = "UTF-8")
+    bad <- !validUTF8(lines)
+    converted <- lines
+    converted[bad] <- iconv(lines[bad], from = "latin1", to = "UTF-8")
   }
+  # Every line is UTF-8 now; mark it so, or paste() would translate the
+  # unmarked ones from the native encoding, which in a C locale is ASCII.
   Encoding(converted) <- "UTF-8"
-  out[] <- converted
+  out <- paste(converted, collapse = "\n")
+  Encoding(out) <- "UTF-8"
   out
 }
 
-description_file <- function(path) {
+description_file <- function(path, exdir) {
   if (!is.character(path) || length(path) != 1L || is.na(path) || !file.exists(path)) {
     cli::cli_abort("{.file {path}} does not exist.")
   }
@@ -63,7 +90,6 @@ description_file <- function(path) {
     if (length(member) < 1L) {
       cli::cli_abort("{.file {path}} holds no {.file DESCRIPTION}.")
     }
-    exdir <- tempfile("sbom-desc-")
     dir.create(exdir)
     utils::untar(path, files = member[[1L]], exdir = exdir)
     return(file.path(exdir, member[[1L]]))
