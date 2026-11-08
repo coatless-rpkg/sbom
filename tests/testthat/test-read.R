@@ -134,7 +134,7 @@ test_that("every third-party SBOM reads, and the examples write valid documents 
   }
 })
 
-test_that("the SPDX 2.3 example maps its packages, licences, relationships and creators", {
+test_that("the SPDX 2.3 example maps its packages, licenses, relationships and creators", {
   x <- read_sbom(tp("spdx-2.3", "SPDXJSONExample-v2.3.spdx.json"))
   comps <- x$components
   expect_identical(
@@ -255,7 +255,7 @@ test_that("an SBOM from another ecosystem reads and writes valid documents", {
   expect_identical(comps$version_is, c(NA, "exact", "exact", "exact"))
   expect_identical(comps$scope, c("required", "required", "required", "optional"))
   expect_identical(comps$license_spdx, c(NA, "Apache-2.0", NA, NA))
-  # One valid licence is also the licence as written, as the writer leaves it.
+  # One valid license is also the license as written, as the writer leaves it.
   expect_identical(comps$license_as_written, c(NA, "Apache-2.0", NA, "Apache License 2.0"))
   expect_identical(comps$deps_known, c(FALSE, TRUE, TRUE, FALSE))
   expect_identical(x$metadata$timestamp, as.POSIXct("2026-11-06 08:11:12", tz = "UTC"))
@@ -263,7 +263,7 @@ test_that("an SBOM from another ecosystem reads and writes valid documents", {
   expect_valid_in_every_format(x, "another ecosystem")
 })
 
-test_that("CycloneDX licences, references and properties map to their columns", {
+test_that("CycloneDX licenses, references and properties map to their columns", {
   x <- read_text(paste0(
     '{"bomFormat":"CycloneDX","specVersion":"1.6","version":1,',
     '"metadata":{"timestamp":"2026-01-02T03:04:05Z","manufacture":{"name":"Maker Ltd"},',
@@ -1027,6 +1027,7 @@ test_that("an SBOM read from a document with control characters prints cleanly a
 })
 
 test_that("a read error shows the control characters of the file name as spaces", {
+  skip_on_os("windows") # Windows file names cannot hold control characters.
   dir <- withr::local_tempdir()
   path <- file.path(dir, "no\u001b[2Jte\u0007.json")
   write_text('{"name": "not-an-sbom"}\n', path)
@@ -1112,7 +1113,7 @@ test_that("a qualifier of a purl loses its credentials, and one that is a local 
   expect_false(any(grepl("secret|token|/home/me", readLines(written))))
 })
 
-test_that("a licence of another SPDX document is kept as written only", {
+test_that("a license of another SPDX document is kept as written only", {
   spdx <- paste0(
     '{"spdxVersion":"SPDX-2.3","SPDXID":"SPDXRef-DOCUMENT","name":"d","creationInfo":{"created":"2026-01-01T00:00:00Z",',
     '"creators":["Tool: t-1"]},"documentDescribes":["SPDXRef-a"],"packages":[{"SPDXID":"SPDXRef-a","name":"a",',

@@ -512,7 +512,14 @@ test_that("the XSD check lists at most 1,000 errors, each quoting a value briefl
     paste0(head, strrep("q", 79), ellipsis, "' is not an element of the set {'application', "),
     fixed = TRUE
   )
-  expect_identical(res$findings$message[2], paste0(head, strrep("z", 79), ellipsis))
+  # Some libxml2 builds, as on Windows, shorten the value in their own message
+  # before sbom sees it; sbom's own shortening applies when the value is whole.
+  msg2 <- res$findings$message[2]
+  if (grepl(strrep("z", 79), msg2, fixed = TRUE)) {
+    expect_identical(msg2, paste0(head, strrep("z", 79), ellipsis))
+  } else {
+    expect_true(startsWith(msg2, paste0(head, "z")))
+  }
   expect_lt(max(nchar(res$findings$message)), 2000L)
 })
 
@@ -528,6 +535,7 @@ test_that("one error more than the XSD check lists is named in the singular", {
 })
 
 test_that("an XML file whose name holds < or > is checked from its bytes", {
+  skip_on_os("windows") # Windows file names cannot hold < or >.
   dir <- withr::local_tempdir()
   path <- file.path(dir, "report<v2>.cdx.xml")
   file.copy(test_path("fixtures", "third-party", "cyclonedx", "valid-bom-1.6.xml"), path)
@@ -623,7 +631,13 @@ local_no_network <- function(env = parent.frame()) {
   ), probe)
   xml2::xml_validate(xml2::read_xml("<r/>"), xml2::read_xml(probe, options = c("NOBLANKS", "NONET")))
   expect_error(xml2::read_xml("http://example.invalid/tripwire.xml"), "sbom must not use the network.", fixed = TRUE)
-  expect_identical(hits$urls, c("http://example.invalid/tripwire.xsd", "http://example.invalid/tripwire.xml"))
+  # libxml2 on Windows loads a schema's import itself, failing offline, so
+  # the tripwire sees only the read_xml() route there.
+  expected <- c(
+    if (.Platform$OS.type != "windows") "http://example.invalid/tripwire.xsd",
+    "http://example.invalid/tripwire.xml"
+  )
+  expect_identical(hits$urls, expected)
   hits$urls <- character()
   hits
 }
@@ -678,7 +692,7 @@ test_that("COPYRIGHTS names every file under inst/, with the W3C notices in full
   }
 })
 
-test_that("COPYRIGHTS gives the xmldsig schema the licence its header states", {
+test_that("COPYRIGHTS gives the xmldsig schema the license its header states", {
   xsd <- readLines(system.file("schemas", "swid", "xmldsig-core-schema.xsd", package = "sbom"), warn = FALSE)
   expect_true(any(grepl("copyright-software-19980720", xsd, fixed = TRUE)))
   lines <- readLines(system.file("COPYRIGHTS", package = "sbom"), warn = FALSE, encoding = "UTF-8")
@@ -836,7 +850,7 @@ test_that("the option's file is read once, and the copy holds the bytes that wer
   expect_identical(copy$text, sub('"http://www.w3.org/2001/xml.xsd"', '"xml.xsd"', expected, fixed = TRUE))
 })
 
-test_that("the ISO schema is accepted with its line endings as published, or normalised to LF", {
+test_that("the ISO schema is accepted with its line endings as published, or normalized to LF", {
   expect_identical(swid_iso_sha256_lf, "faec3b2d670c3051455a6c7c5e561fd840cf47e772b32c0771b72f42e9df8c74")
   hits <- local_no_network()
   # A stand-in for ISO's file, with its CRLF line endings and no newline at
@@ -970,13 +984,13 @@ test_that("with the option naming the ISO schema, a tag is checked fully and off
   # validate_sbom() gets no schema note.
   v <- validate_sbom(swid_tag_path(), profile = "none")
   expect_false("schema" %in% v$findings$check)
-  # ISO's file with its line endings normalised to LF, as git or an editor
+  # ISO's file with its line endings normalized to LF, as git or an editor
   # may leave it, is ISO's file too.
   bytes <- readBin(xsd, "raw", file.size(xsd))
-  normalised <- withr::local_tempfile(fileext = ".xsd")
-  writeBin(bytes[!(bytes == as.raw(13L) & c(bytes[-1L], as.raw(0L)) == as.raw(10L))], normalised)
-  expect_identical(cli::hash_file_sha256(normalised), swid_iso_sha256_lf)
-  withr::local_options(sbom.swid_xsd = normalised)
+  normalized <- withr::local_tempfile(fileext = ".xsd")
+  writeBin(bytes[!(bytes == as.raw(13L) & c(bytes[-1L], as.raw(0L)) == as.raw(10L))], normalized)
+  expect_identical(cli::hash_file_sha256(normalized), swid_iso_sha256_lf)
+  withr::local_options(sbom.swid_xsd = normalized)
   expect_identical(schema_validate(swid_tag_path(), "swid"), list(status = "pass", findings = empty_findings()))
   expect_identical(schema_validate(swid_text_path(orphan), "swid")$status, "fail")
   # The ISO schema with one import changed is not the ISO schema.

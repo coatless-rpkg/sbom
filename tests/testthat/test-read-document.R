@@ -210,7 +210,9 @@ test_that("an external entity in CycloneDX XML or SWID is never expanded", {
   secret <- withr::local_tempfile(fileext = ".txt")
   write_text("sbom-secret-marker\n", secret)
   doctype <- function(root) {
-    sprintf('<!DOCTYPE %s [<!ENTITY x SYSTEM "file://%s">]>\n', root, normalizePath(secret, winslash = "/"))
+    # file:///C:/... on Windows, file:///tmp/... elsewhere.
+    url <- paste0("file:///", sub("^/", "", normalizePath(secret, winslash = "/")))
+    sprintf('<!DOCTYPE %s [<!ENTITY x SYSTEM "%s">]>\n', root, url)
   }
   cdx <- withr::local_tempfile(fileext = ".cdx.xml")
   write_text(paste0(
@@ -326,7 +328,7 @@ test_that("a warning from the YAML parser is a read error, and never escapes", {
 
 test_that("a version must be numbers separated by dots", {
   tf <- withr::local_tempfile(fileext = ".json")
-  bad <- function(name) paste0(basename(tf), " is not valid ", name, ": its version is not one sbom recognises.")
+  bad <- function(name) paste0(basename(tf), " is not valid ", name, ": its version is not one sbom recognizes.")
   cases <- list(
     list('{"bomFormat":"CycloneDX","specVersion":"abc def"}', "CycloneDX JSON"),
     list('{"bomFormat":"CycloneDX","specVersion":"1.6 "}', "CycloneDX JSON"),
@@ -399,7 +401,7 @@ test_that("an escaped NUL in JSON is refused, which jsonlite would cut the strin
   expect_identical(read_document(tf)$doc$metadata$component$name, "a\u0001b")
 })
 
-test_that("a version longer than 20 characters is not one sbom recognises", {
+test_that("a version longer than 20 characters is not one sbom recognizes", {
   tf <- withr::local_tempfile(fileext = ".cdx.json")
   file <- basename(tf)
   cdx <- function(version) {
@@ -407,7 +409,7 @@ test_that("a version longer than 20 characters is not one sbom recognises", {
   }
   write_text(cdx(paste0("1.", strrep("6", 1e6))), tf)
   msg <- read_error(tf)
-  expect_identical(msg, paste0(file, " is not valid CycloneDX JSON: its version is not one sbom recognises."))
+  expect_identical(msg, paste0(file, " is not valid CycloneDX JSON: its version is not one sbom recognizes."))
   v <- validate_sbom(tf)
   expect_identical(v$findings$message, msg)
   expect_lt(sum(nchar(utils::capture.output(print(v)))), 1000L)
@@ -418,6 +420,6 @@ test_that("a version longer than 20 characters is not one sbom recognises", {
   spdx <- withr::local_tempfile(fileext = ".spdx.json")
   write_text(paste0('{"spdxVersion":"SPDX-2.', strrep("3", 1e6), '","SPDXID":"SPDXRef-DOCUMENT"}'), spdx)
   expect_identical(
-    read_error(spdx), paste0(basename(spdx), " is not valid SPDX JSON: its version is not one sbom recognises.")
+    read_error(spdx), paste0(basename(spdx), " is not valid SPDX JSON: its version is not one sbom recognizes.")
   )
 })

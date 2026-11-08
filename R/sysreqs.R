@@ -401,10 +401,17 @@ is_absolute_path <- function(path) {
 }
 
 # Whether the folder of each path is one of `dirs` or inside one, comparing
-# the paths as given and normalised, so that a symlinked folder (R.framework's
+# the paths as given and normalized, so that a symlinked folder (R.framework's
 # "Resources", macOS's /var) still counts.
 inside_any <- function(paths, dirs) {
-  forms <- function(x) unique(c(x, normalizePath(x, winslash = "/", mustWork = FALSE)))
+  # Each path as given and resolved, with forward slashes; on Windows, where
+  # a folder can also appear by its short name and paths ignore case, in
+  # lower case too.
+  forms <- function(x) {
+    x <- gsub("\\", "/", c(x, normalizePath(x, winslash = "/", mustWork = FALSE)), fixed = TRUE)
+    if (.Platform$OS.type == "windows") x <- tolower(x)
+    unique(x)
+  }
   dirs <- as.character(dirs)
   dirs <- dirs[!is.na(dirs) & nzchar(dirs)]
   roots <- if (length(dirs) > 0L) paste0(sub("[/\\\\]+$", "", forms(dirs)), "/") else character()

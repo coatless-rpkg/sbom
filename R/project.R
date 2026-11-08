@@ -33,7 +33,8 @@
 #'    In a package folder, so are test fixtures and snapshots,
 #'    `inst/extdata` and the files `.Rbuildignore` excludes. The root is the
 #'    folder, an application named after it, with its git commit as the
-#'    version. This is the weakest evidence, and a note says so.
+#'    version. This is the weakest evidence, and a note states that the
+#'    packages come from a scan of the code, at their installed versions.
 #'
 #' A folder that is a Shiny app (see [sbom_shiny()]) is described by
 #' [sbom_shiny()], which `sbom()` calls for it. That includes a folder with
@@ -53,8 +54,9 @@
 #' Posit Connect manifest, is an issue, not an error. So is a hand-written
 #' `default.nix` that sbom cannot read, even when it is the strongest source:
 #' one on a machine without Nix, or, under the default `nix = NA`, one that
-#' Nix fails to evaluate or whose environment has not been built. A warning
-#' says so, and the SBOM is built from the next source. Any other failure to
+#' Nix fails to evaluate or whose environment has not been built. The SBOM is
+#' built from the next source, and a `cross-check-failed` issue of severity
+#' `warning` gives the reason and names that source. Any other failure to
 #' read the strongest source, such as `nix = TRUE` on a machine without Nix,
 #' is an error. A cross-check reads `default.nix` with `nix` as given (by
 #' default, Nix is used when it is installed, and `nix = FALSE` never calls
@@ -399,7 +401,7 @@ cross_check_read <- function(src, args) {
 # of `root_desc`, each looked up through `lookup` as the full reader looks it
 # up (resolve_dependencies()), but not followed. A package found is the
 # component the full reader would list, with its ref, name, version and
-# ecosystem and no more (no licence, maintainer or anything inside it), and
+# ecosystem and no more (no license, maintainer or anything inside it), and
 # one not found the same unknown component. R and the base packages, which
 # are never drift, are left out. `root` is the root's component row and
 # `inputs` the full reader's.
@@ -527,8 +529,8 @@ description_deps <- function(file) {
 }
 
 # The reason in an error for an issue sentence: the first line of the
-# innermost cause's message, without colour, wrapping or a final full stop,
-# and with the folder's path, quoted or not, as given or normalised, made
+# innermost cause's message, without color, wrapping or a final full stop,
+# and with the folder's path, quoted or not, as given or normalized, made
 # relative to it, so that no machine path reaches the SBOM.
 condition_reason <- function(e, path) {
   while (inherits(e$parent, "condition")) {
@@ -724,11 +726,13 @@ read_git_commit <- function(dir) {
 # without one. The home folder's own .git is not looked at.
 git_root <- function(dir) {
   d <- normalizePath(dir, winslash = "/", mustWork = FALSE)
-  home <- normalizePath("~", winslash = "/", mustWork = FALSE)
+  home <- home_folder()
+  windows <- .Platform$OS.type == "windows"
+  same <- function(a, b) if (windows) identical(tolower(a), tolower(b)) else identical(a, b)
   repeat {
     # A repository at the home folder is a dotfiles repository, not the
     # project's.
-    if (identical(d, home)) {
+    if (same(d, home)) {
       return(NA_character_)
     }
     if (file.exists(file.path(d, ".git"))) {
@@ -740,6 +744,19 @@ git_root <- function(dir) {
     }
     d <- parent
   }
+}
+
+# The home folder as git finds it: HOME when it is set, also on Windows,
+# where R's "~" is the Documents folder; else USERPROFILE on Windows; else "~".
+home_folder <- function() {
+  home <- Sys.getenv("HOME")
+  if (!nzchar(home) && .Platform$OS.type == "windows") {
+    home <- Sys.getenv("USERPROFILE")
+  }
+  if (!nzchar(home)) {
+    home <- path.expand("~")
+  }
+  normalizePath(home, winslash = "/", mustWork = FALSE)
 }
 
 git_dir <- function(dir) {
