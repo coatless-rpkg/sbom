@@ -1,6 +1,6 @@
 Package: sbom
 Title: Create, Read and Validate Software Bills of Materials
-Version: 0.1.0
+Version: 0.1.1
 Authors@R: 
     person("James Joseph", "Balamuta", , "james.balamuta@gmail.com", role = c("aut", "cre", "cph"))
 Description: Create software bills of materials for 'R' packages, projects

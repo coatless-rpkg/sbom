@@ -22,10 +22,10 @@ release_rd <- function() {
 
 rd_tags <- function(rd) vapply(rd, function(section) attr(section, "Rd_tag"), "")
 
-test_that("the version is 0.1.0, and NEWS opens with it", {
-  expect_identical(release_description()[["Version"]], "0.1.0")
+test_that("the version is 0.1.1, and NEWS opens with it", {
+  expect_identical(release_description()[["Version"]], "0.1.1")
   news <- readLines(release_file("NEWS.md"), warn = FALSE, encoding = "UTF-8")
-  expect_identical(grep("^# ", news, value = TRUE)[[1L]], "# sbom 0.1.0")
+  expect_identical(grep("^# ", news, value = TRUE)[[1L]], "# sbom 0.1.1")
 })
 
 test_that("the Title is short, in title case, and names no redundant phrase", {

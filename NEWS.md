@@ -1,3 +1,15 @@
+# sbom 0.1.1
+
+* `checksums = TRUE` records the SHA-256 and MD5 of each R package's source
+  tarball, with its download location, from the repository metadata that
+  `{pak}` keeps. It reads that metadata over the network when `{pak}`'s copy
+  is out of date, and names in one issue the packages whose versions the
+  repository no longer offers.
+
+* Each R package's `description` is now the Title of its `DESCRIPTION`, which
+  CycloneDX writes as the component's description and SPDX as the package's
+  summary.
+
 # sbom 0.1.0
 
 * Initial CRAN submission.
