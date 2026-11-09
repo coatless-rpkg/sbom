@@ -3,21 +3,21 @@
     Code
       writeLines(digests)
     Output
-      fixture cyclonedx-json 1.4 ba43dc2fe4d1839681b6630ded6582ee455ca2d70599c355d347ab32176c37ad
-      fixture cyclonedx-json 1.5 3470222b26ba99c6a138c721d1b30dad90f4ee6afce5a3dde2ce14de53bea5e3
-      fixture cyclonedx-json 1.6 885978bc19d5f81baedd1e9a18305f1dbb71d215fd42195b36a1920b2f646a7e
-      fixture cyclonedx-json 1.7 f3f113ac9d1e4c65a59d2357ec9bb25a442ecf0ef4ad2e895714e2adca279941
-      fixture cyclonedx-xml 1.4 91344bc924cb5992edb184dc4d8d9a764492c611a8839824eef7d7fd9d35d4ab
-      fixture cyclonedx-xml 1.5 3b60ee49084e6205defa0fbd06498dbae4d8786ceb6461c3aff57c5ce0129d19
-      fixture cyclonedx-xml 1.6 eb200563c974431e1859e876c3e2ea0007285eb5fcefac6ebb2a4b5eb9f1ad9f
-      fixture cyclonedx-xml 1.7 c3acf500b52678f1406c3329def0e72a61bdddfad4be21662e807ea2f79988ad
-      fixture spdx-json 2.2 cb18bdf49c4963d28a9a4957b5c158c3ce2fff4e49007101669e0fdf9cb50e89
-      fixture spdx-json 2.3 c140189e0addf7d24166c325b1f1c404edec246db146c4766a4195763accf60c
-      fixture spdx-yaml 2.2 cdda0e6cc6cbbf0b5c27ccbe3d2905d13d905b487ee8ae601d96e47b12dc36e5
-      fixture spdx-yaml 2.3 3402fa1af53b63b83e384d07404ea77ad683d20ad276eb80d609e80a1f682dec
-      fixture spdx-tv 2.2 7d5b5b4d38c8c1fa281eb44ec49ec075c2b240d9c93d1b69002bb984096a0a3f
-      fixture spdx-tv 2.3 184d7c9c8e5d0c196aa0763e7aa6b42c553e526e72cdea285008393493e5350e
-      fixture spdx3-jsonld 3.0.1 655ad952e3f423dee3549d7be356e3282a2021d6702271dd488d3609d0a70e24
+      fixture cyclonedx-json 1.4 c116b5b491adc11d4249eec8482599c1798b59715a5a41e63ed5438c610d8b9f
+      fixture cyclonedx-json 1.5 dbc3013b047d5903bc450d6af534ba21363c67de75e05c3adc332d67caf27dac
+      fixture cyclonedx-json 1.6 bd8b64551d8ee33f154038c74018af16cb3e3714d25045090e22ca055f29fd4f
+      fixture cyclonedx-json 1.7 46be6c0adcdefc258dfcfe29333db38e6e6e1971f85eb58ddf119a80865e8038
+      fixture cyclonedx-xml 1.4 ab91ffe226f1bf69b7efd22685da85cc8449c1db4000804725adf349d5a0e138
+      fixture cyclonedx-xml 1.5 507af1f85e9b48bcd7020a6fe3244a37884d688ec989798c67ec409484d6ff98
+      fixture cyclonedx-xml 1.6 6717fcfb5120ed1a1109f9f888c9392942f1cbd10824541be54ae5a64e538655
+      fixture cyclonedx-xml 1.7 d472f7807337eec7bba978b4a8edd048e5475c89452ee411c1ece6d042d52f94
+      fixture spdx-json 2.2 e291c88933466937464da7ff8e8e1ed533d978195eadfb77534770a45fca78f3
+      fixture spdx-json 2.3 53a347e0153f202340df7679ad90a6d81bf8c95acaaac797150e7bc556a85c58
+      fixture spdx-yaml 2.2 1d8d2a4edc909e85cdec1783793f87d2bfd0ac71e2fcfc35cdede6a716ecf5bc
+      fixture spdx-yaml 2.3 a1e753680d26a8a91225f1d6d62bc78b08e396b3f2f3695d0b8f5b66a2766bbe
+      fixture spdx-tv 2.2 db4b0d7149dfc9945e23baa1a38f404a36f79f5ec29c13a5cd9a34a3c69420b6
+      fixture spdx-tv 2.3 87d0ef044e206107f5c7e917973c007111cabb7569dcc57345fed9b8bf5cc2e2
+      fixture spdx3-jsonld 3.0.1 2d499ac5ee24ab159d4881d60fbbe64e1216104fc1408ce78e73534a3f86c5dc
       minimal cyclonedx-json 1.4 593c8ab4ece5dcfa5524990fbc9efeb2f5881c134a9ab3cb53d9a7d2e64a77f4
       minimal cyclonedx-json 1.5 c986fc97deb73e74f29faf8af0a481a02d59cd5705236ba7e7094f71898a5514
       minimal cyclonedx-json 1.6 8c90ad93f63bb8c2ad831ca4fab387cb19b061689414e9cfe8128dc941cd6d7e

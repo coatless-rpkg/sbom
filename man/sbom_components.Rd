@@ -35,6 +35,10 @@ account's page as \code{supplier_url}, such as \verb{https://github.com/r-lib}; 
 repository itself is \code{vcs_url}. Without an owner on record, the supplier
 is the forge, with no URL.
 
+An R package's \code{description} is the Title of its DESCRIPTION. CycloneDX
+writes it as the component's description, and SPDX as the package's
+summary.
+
 \code{print.sbom()} returns \code{x} invisibly.
 }
 \description{

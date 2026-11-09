@@ -61,6 +61,7 @@ spdx3_package <- function(row, id, supplier, person) {
   )
   p$suppliedBy <- supplier
   if (!is.null(person)) p$originatedBy <- list(person)
+  p$summary <- spdx_package_summary(row)
   p$comment <- spdx3_package_comment(row)
 
   hashes <- row$hashes[[1]]
