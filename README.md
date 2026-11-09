@@ -59,12 +59,15 @@ auditor asked for. They rarely want all eight.
 | A Posit Connect `manifest.json` | `sbom_rsconnect()` |
 | A Shiny app folder | `sbom_shiny()` |
 | A `default.nix` written by `{rix}` (experimental) | `sbom_nix()` |
+| Several projects, apps or packages in one document | `sbom(c(path1, path2), name = "suite")` or `combine_sbom()` |
 
 `sbom()` picks the strongest source in the folder: `renv.lock`, then
 `manifest.json`, then `default.nix`, then `DESCRIPTION`, and only as a last
 resort a scan of your R code. It then cross-checks that source against the
 others. If the lockfile pins one version and the library holds another,
-`{sbom}` records an issue that names both.
+`{sbom}` records an issue that names both. Given a single file instead, such
+as a `DESCRIPTION` or an `renv.lock`, `sbom()` hands it to the matching
+reader.
 
 ## Record every ingredient
 

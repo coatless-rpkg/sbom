@@ -436,7 +436,8 @@ test_that("sbom() passes on only the arguments its reader takes", {
   expect_error(sbom(dir, "x"), "named", class = "rlang_error")
   expect_error(sbom(dir, lib = file.path(dir, "nope")), "nope", class = "rlang_error")
   expect_error(sbom(file.path(dir, "nope")), "does not exist", class = "rlang_error")
-  expect_error(sbom(file.path(dir, "renv.lock")), "renv.lock.* is not a folder", class = "rlang_error")
+  write_text("not an R file", file.path(dir, "notes.txt"))
+  expect_error(sbom(file.path(dir, "notes.txt")), "cannot build an SBOM from", class = "rlang_error")
   # The SBOM's own source must be readable.
   write_text("{ not json", file.path(dir, "renv.lock"))
   expect_error(sbom(dir), "renv.lock.*not valid JSON", class = "rlang_error")

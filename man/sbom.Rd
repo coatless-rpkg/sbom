@@ -4,10 +4,10 @@
 \alias{sbom}
 \title{Build an SBOM for a project folder}
 \usage{
-sbom(path = ".", ...)
+sbom(path = ".", ..., name = NULL, version = NULL)
 }
 \arguments{
-\item{path}{A project folder.}
+\item{path}{A project folder, a file (see Details), or several of either.}
 
 \item{...}{Named arguments for the reader that \code{sbom()} picks: any
 argument of \code{\link[=sbom_renv]{sbom_renv()}}, \code{\link[=sbom_rsconnect]{sbom_rsconnect()}}, \code{\link[=sbom_nix]{sbom_nix()}} (such as
@@ -23,6 +23,10 @@ take, except that the cross-checks of \code{DESCRIPTION} and the code also
 use \code{lib}. Overrides, given or from \code{sbom-overrides.csv}, apply to the
 SBOM after the cross-checks, which compare what the sources say, and
 advisories are matched after the overrides.}
+
+\item{name, version}{The name and version of the combined SBOM's root,
+when \code{path} holds more than one path. \code{name} is required then, and
+both must be left out otherwise. See \code{\link[=combine_sbom]{combine_sbom()}}.}
 }
 \value{
 An \verb{<sbom>} object. See \code{\link[=sbom_components]{sbom_components()}} to read it.
@@ -105,9 +109,34 @@ components are added). The cross-checks never read advisory data. See
 \code{\link[=sbom_package]{sbom_package()}} for what is matched and what is sent.
 
 The \code{inputs} element of the SBOM's metadata lists every source read.
+
+\code{path} can also be a single file, which is read by itself, with no
+cross-checks: a \code{DESCRIPTION} file or a source package (\code{.tar.gz}) by
+\code{\link[=sbom_package]{sbom_package()}}, a lockfile (\code{.lock}, such as \code{renv.lock}) by
+\code{\link[=sbom_renv]{sbom_renv()}}, a Posit Connect manifest (\code{.json}) by \code{\link[=sbom_rsconnect]{sbom_rsconnect()}}
+and a Nix file (\code{.nix}) by \code{\link[=sbom_nix]{sbom_nix()}}. An argument that reader does not
+take is an error. Use \code{\link[=read_sbom]{read_sbom()}} to read an SBOM that a tool wrote.
+
+Several paths, folders or files, make one SBOM: \code{sbom()} builds an SBOM
+for each, with the arguments in \code{...} that its reader takes, and combines
+them with \code{\link[=combine_sbom]{combine_sbom()}} under a new root called \code{name}. \code{author},
+\code{organization}, \code{regid}, \code{overrides}, \code{advisories} and
+\code{advisories_on_error} apply once, to the combined SBOM; \code{timestamp}
+applies to each SBOM and to the combined one. A folder's own
+\code{sbom-overrides.csv} still applies to that folder's SBOM.
 }
 \examples{
 x <- sbom(sbom_example("connect-app"), system = FALSE)
 x
 sbom_issues(x)
+
+# One file, read by itself
+sbom(file.path(sbom_example("analysis"), "renv.lock"), system = FALSE)
+
+# Two projects in one SBOM
+y <- sbom(
+  c(sbom_example("study", copy = TRUE), sbom_example("shiny-app", copy = TRUE)),
+  name = "research", system = FALSE
+)
+sbom_tree(y, max_depth = 1)
 }

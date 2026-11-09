@@ -1,38 +1,34 @@
 ## R CMD check results
 
-0 errors | 0 warnings | 0 notes
+0 errors | 0 warnings | 1 note
 
-`R CMD check --as-cran` on macOS 27.2 (aarch64-apple-darwin23) with R 4.6.2,
-without the remote incoming checks.
+* This is a new submission.
 
-* This is a new submission. CRAN's incoming checks will note that, and may
-  list "lockfiles" and "NTIA" as possibly misspelled words in DESCRIPTION.
-  Both are correct: a lockfile is the file in which 'renv' records package
-  versions, and NTIA is the acronym of the National Telecommunications and
-  Information Administration, spelled out where it appears.
+## Test environments
+
+* Local: macOS 27.2 (aarch64), R 4.6.2, `R CMD check --as-cran`.
+* GitHub Actions: macOS (R release), Windows (R release), and Ubuntu (R devel,
+  release and oldrel-1).
 
 ## Network use and system commands
 
-* sbom uses the network only when the user asks it to: with
-  `advisories = TRUE`, which downloads the Open Source Vulnerabilities (OSV)
-  export of CRAN advisories and looks up the ratings of the public advisory
-  ids it names, and with `snapshot` in `sbom_nix()`, which looks package
-  versions up in a CRAN snapshot. The tests and examples never use the
-  network: the two examples that would are in `\dontrun{}`, and the tests mock
-  every function that could reach it.
+* The package uses the network only when asked to: `advisories = TRUE`
+  downloads the Open Source Vulnerabilities (OSV) export of CRAN advisories
+  and looks up the ratings of the advisory ids it names, and a `snapshot`
+  given as a URL looks package versions up in a CRAN snapshot. The two
+  examples that would use the network are in `\dontrun{}`, and the tests mock
+  every call that could reach it.
 * System commands (`otool`, `ldd`, `dpkg`, `rpm`, `nix-instantiate`,
   `nix-store`, and a child R process for `sbom_shiny(evaluate_ui = TRUE)`) run
-  only through wrapper functions, which the tests mock in
-  `tests/testthat/setup-sysreqs.R`. The few tests that call a real one are
-  skipped on CRAN. The examples set `system = FALSE` or `nix = FALSE`, so they
-  run none.
+  only through wrapper functions, which the tests mock. The few tests that call
+  a real one are skipped on CRAN, and the examples run none.
 
 ## Bundled files
 
 The package bundles the CycloneDX, SPDX 2 and SPDX 3 schemas, the two W3C
 schemas that the SWID schema imports, and the identifiers of the SPDX License
-List. `inst/COPYRIGHTS` lists every bundled file with its source, copyright,
-license and changes.
+List. `inst/COPYRIGHTS` lists each file with its source, copyright, license
+and changes.
 
 ## Method references
 

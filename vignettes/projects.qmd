@@ -199,6 +199,27 @@ With no arguments, `sbom_installed()` lists every package in `.libPaths()`,
 which on a machine with many packages installed runs to hundreds of
 components.
 
+## Combine projects into one SBOM
+
+Some reviews want one document for a whole system: the analysis, the
+dashboard that shows its results and the in-house package both use. Give
+`sbom()` several paths and a `name` for the whole. It builds an SBOM for each
+path, folders and single files alike, and puts them under one new root:
+
+```{r}
+suite <- sbom(
+  c(proj, app, file.path(sbom_example("study"), "renv.lock")),
+  name = "research", version = "2026.1",
+  system = FALSE, timestamp = ts, lib = character()
+)
+sbom_tree(suite, max_depth = 2)
+```
+
+A package that two projects share is listed once, and a package locked at
+two versions is listed at both. `combine_sbom()` does the same for SBOMs you
+already have, including ones read with `read_sbom()`. The author,
+overrides and advisories you pass apply to the combined SBOM as a whole.
+
 ## Find system libraries
 
 Many R packages need system libraries: `{xml2}` needs libxml2, `{curl}` needs

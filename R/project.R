@@ -1,5 +1,6 @@
 # sbom(), the front door: it finds a folder's sources, builds the SBOM from
-# the strongest and cross-checks it against the rest. The code scan is in
+# the strongest and cross-checks it against the rest, reads a single file
+# with its reader, and combines several paths. The code scan is in
 # code-scan.R and the git commit of a folder in git.R.
 
 #' Build an SBOM for a project folder
@@ -80,7 +81,25 @@
 #'
 #' The `inputs` element of the SBOM's metadata lists every source read.
 #'
-#' @param path A project folder.
+#' `path` can also be a single file, which is read by itself, with no
+#' cross-checks: a `DESCRIPTION` file or a source package (`.tar.gz`) by
+#' [sbom_package()], a lockfile (`.lock`, such as `renv.lock`) by
+#' [sbom_renv()], a Posit Connect manifest (`.json`) by [sbom_rsconnect()]
+#' and a Nix file (`.nix`) by [sbom_nix()]. An argument that reader does not
+#' take is an error. Use [read_sbom()] to read an SBOM that a tool wrote.
+#'
+#' Several paths, folders or files, make one SBOM: `sbom()` builds an SBOM
+#' for each, with the arguments in `...` that its reader takes, and combines
+#' them with [combine_sbom()] under a new root called `name`. `author`,
+#' `organization`, `regid`, `overrides`, `advisories` and
+#' `advisories_on_error` apply once, to the combined SBOM; `timestamp`
+#' applies to each SBOM and to the combined one. A folder's own
+#' `sbom-overrides.csv` still applies to that folder's SBOM.
+#'
+#' @param path A project folder, a file (see Details), or several of either.
+#' @param name,version The name and version of the combined SBOM's root,
+#'   when `path` holds more than one path. `name` is required then, and
+#'   both must be left out otherwise. See [combine_sbom()].
 #' @param ... Named arguments for the reader that `sbom()` picks: any
 #'   argument of [sbom_renv()], [sbom_rsconnect()], [sbom_nix()] (such as
 #'   `nix` and `snapshot`) or [sbom_package()] other
@@ -100,14 +119,119 @@
 #' x <- sbom(sbom_example("connect-app"), system = FALSE)
 #' x
 #' sbom_issues(x)
+#'
+#' # One file, read by itself
+#' sbom(file.path(sbom_example("analysis"), "renv.lock"), system = FALSE)
+#'
+#' # Two projects in one SBOM
+#' y <- sbom(
+#'   c(sbom_example("study", copy = TRUE), sbom_example("shiny-app", copy = TRUE)),
+#'   name = "research", system = FALSE
+#' )
+#' sbom_tree(y, max_depth = 1)
 #' @export
-sbom <- function(path = ".", ...) {
+sbom <- function(path = ".", ..., name = NULL, version = NULL) {
+  if (!is.character(path) || length(path) == 0L || anyNA(path)) {
+    cli::cli_abort(
+      "{.arg path} must be the paths of folders or files, not {.obj_type_friendly {path}}."
+    )
+  }
+  if (length(path) > 1L) {
+    return(sbom_paths(path, list(...), name, version))
+  }
+  if (!is.null(name) || !is.null(version)) {
+    cli::cli_abort(
+      "{.arg name} and {.arg version} name a combined SBOM, so they need more than one path."
+    )
+  }
+  if (file.exists(path) && !dir.exists(path)) {
+    return(sbom_file(path, check_sbom_dots(list(...))))
+  }
   args <- check_project_args(path, list(...))
   layout <- shiny_layout(path)
   if (!is.na(layout)) {
     return(do.call(sbom_shiny, c(list(path = path), args)))
   }
   sbom_project(path, args)
+}
+
+# The reader of the file `path`, as a list: `fn`, the function, `label`, its
+# name, `arg`, its argument for the file, and `takes`, the arguments of
+# sbom() it takes.
+file_reader <- function(path, call = parent.frame()) {
+  base <- basename(path)
+  takes <- reader_args()
+  if (base == "DESCRIPTION" || grepl("[.](tar[.]gz|tgz)$", base)) {
+    list(fn = sbom_package, label = "sbom_package", arg = "path", takes = takes$package)
+  } else if (grepl("[.]lock$", base)) {
+    list(fn = sbom_renv, label = "sbom_renv", arg = "lockfile", takes = takes$renv)
+  } else if (grepl("[.]json$", base)) {
+    if (!is_connect_manifest(path)) {
+      cli::cli_abort(c(
+        "{.file {path}} is not a Posit Connect manifest.",
+        "i" = "To read an SBOM that a tool wrote, use {.fn read_sbom}."
+      ), call = call)
+    }
+    list(fn = sbom_rsconnect, label = "sbom_rsconnect", arg = "manifest", takes = takes$manifest)
+  } else if (grepl("[.]nix$", base)) {
+    list(fn = sbom_nix, label = "sbom_nix", arg = "path", takes = takes$nix)
+  } else {
+    cli::cli_abort(c(
+      "{.fn sbom} cannot build an SBOM from {.file {path}}.",
+      "i" = paste(
+        "Give it a folder, a {.file DESCRIPTION} file, a source package ({.file .tar.gz}),",
+        "a lockfile ({.file renv.lock}), a Posit Connect {.file manifest.json} or a {.file .nix} file."
+      )
+    ), call = call)
+  }
+}
+
+# The SBOM of the file `path`, from its reader alone. `args` are sbom()'s,
+# checked; one that the reader does not take is an error, unless `strict` is
+# FALSE, when it is left out.
+sbom_file <- function(path, args, strict = TRUE, call = parent.frame()) {
+  reader <- file_reader(path, call = call)
+  extra <- setdiff(names(args), reader$takes)
+  if (strict && length(extra) > 0L) {
+    cli::cli_abort(c(
+      "{.fn {reader$label}} has no argument{?s} {.arg {extra}}.",
+      "i" = "{.fn sbom} reads {.file {basename(path)}} with {.fn {reader$label}}."
+    ), call = call)
+  }
+  args <- args[setdiff(names(args), extra)]
+  do.call(reader$fn, c(stats::setNames(list(path), reader$arg), args))
+}
+
+# The combined SBOM of several paths: one SBOM for each, then
+# combine_sbom(). The arguments about the document as a whole go to
+# combine_sbom() alone; `timestamp` goes to both.
+sbom_paths <- function(paths, dots, name, version, call = parent.frame()) {
+  args <- check_sbom_dots(dots, call = call)
+  if (is.null(name)) {
+    cli::cli_abort("Several paths make one combined SBOM, so give it a {.arg name}.", call = call)
+  }
+  absent <- paths[!file.exists(paths)]
+  if (length(absent) > 0L) {
+    cli::cli_abort("{.file {absent}} {cli::qty(length(absent))}do{?es/} not exist.", call = call)
+  }
+  full <- normalizePath(paths, mustWork = TRUE)
+  twice <- unique(paths[duplicated(full)])
+  if (length(twice) > 0L) {
+    cli::cli_abort("{.arg path} holds {.file {twice}} more than once.", call = call)
+  }
+  whole <- c("author", "organization", "regid", "overrides", "advisories", "advisories_on_error")
+  each <- args[setdiff(names(args), whole)]
+  xs <- lapply(paths, function(p) {
+    if (dir.exists(p)) {
+      do.call(sbom, c(list(path = p), each))
+    } else {
+      sbom_file(p, each, strict = FALSE, call = call)
+    }
+  })
+  do.call(combine_sbom, c(
+    list(xs, name = name, version = version),
+    args[intersect(names(args), c(whole, "timestamp"))]
+  ))
 }
 
 # The checks that every front door makes: `...` is named and known, the path

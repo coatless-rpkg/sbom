@@ -167,8 +167,9 @@ people with spreadsheets, described in the [compliance guide](compliance.html).
 
 The [projects guide](projects.html) builds SBOMs for analyses and apps rather
 than packages: from a folder, an `{renv}` lockfile, a Posit Connect manifest, a
-Shiny app, a Nix file written by `{rix}` or a whole library. It also covers system
-libraries and when the network is used.
+Shiny app, a Nix file written by `{rix}` or a whole library, and combines
+several of them into one SBOM. It also covers system libraries and when the
+network is used.
 
 The [reading and validating guide](reading-and-validating.html) reads SBOMs
 that `{sbom}` or any other tool wrote, checks them against their schema and the

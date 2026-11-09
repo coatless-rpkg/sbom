@@ -45,7 +45,7 @@ test_that("the Description opens well, quotes software names and expands every a
   expect_gte(sentences, 3L)
   expect_lte(sentences, 5L)
   # Each name is quoted wherever it appears.
-  for (name in c("R", "CycloneDX", "SPDX", "SWID", "OSV", "YAML", "JSON", "XML", "JavaScript", "renv", "Posit Connect", "Nix", "rix", "Shiny")) {
+  for (name in c("R", "CycloneDX", "SPDX", "SWID", "OSV", "renv", "Posit Connect", "Nix", "rix", "Shiny")) {
     unquoted <- gsub(paste0("'", name, "'"), "", desc, fixed = TRUE)
     expect_false(grepl(paste0("\\b", name, "\\b"), unquoted), label = name)
     expect_true(grepl(paste0("'", name, "'"), desc, fixed = TRUE), label = name)
@@ -55,8 +55,6 @@ test_that("the Description opens well, quotes software names and expands every a
     c("SPDX", "Software Package Data Exchange ('"),
     c("SWID", "Software Identification ('"),
     c("CSV", "comma-separated values ("),
-    c("JSON", "'JavaScript' Object Notation ('"),
-    c("XML", "Extensible Markup Language ('"),
     c("OSV", "Open Source Vulnerabilities ('"),
     c("NTIA", "National Telecommunications and Information Administration (")
   )) {
@@ -65,23 +63,18 @@ test_that("the Description opens well, quotes software names and expands every a
     expect_true(endsWith(substr(desc, 1L, first - 1L), acronym[[2L]]), label = acronym[[1L]])
   }
   # No other acronym goes unexplained.
-  expect_false(grepl("\\b(SBOMs?|URL|purl|API|SHACL|ISO|US)\\b", desc))
+  expect_false(grepl("\\b(SBOMs?|URL|purl|API|SHACL|ISO|US|JSON|XML|YAML)\\b", desc))
 })
 
 test_that("the Description says what each format is checked against, as validate_sbom() does", {
   desc <- gsub("\\s+", " ", release_description()[["Description"]])
-  # A bundled schema of their own only for CycloneDX, and for SPDX 2 in JSON
-  # or YAML; SPDX 2 in XML or tag-value is converted to the JSON model first.
+  # The schema each specification publishes (SPDX 2's is for JSON, which XML
+  # and tag-value are converted to), or structural rules for SWID, whose ISO
+  # schema is not bundled.
   expect_match(desc, paste(
-    "'CycloneDX' documents and 'SPDX' 2 documents in 'JavaScript' Object Notation ('JSON') or 'YAML'",
-    "are checked against the bundled schema of their format"
+    "Check each document against the schema that its specification publishes,",
+    "or structural rules where that schema is not bundled, against integrity rules,"
   ), fixed = TRUE)
-  expect_match(desc, paste(
-    "'SPDX' 2 documents in Extensible Markup Language ('XML') or tag-value form are converted to the",
-    "'SPDX' 'JSON' model and checked against its schema"
-  ), fixed = TRUE)
-  expect_match(desc, "'SPDX' 3 documents are checked against their 'JSON' schema, without its Shapes Constraint Language rules", fixed = TRUE)
-  expect_match(desc, "'SWID' tags against structural rules or, when the user supplies it, the standard's official schema", fixed = TRUE)
   # No claim of one bundled schema for every format.
   expect_false(grepl("'SPDX' documents are checked against the bundled schema|schema of each format|every format", desc))
 

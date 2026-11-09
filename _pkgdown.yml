@@ -44,6 +44,7 @@ reference:
   - sbom_rsconnect
   - sbom_shiny
   - sbom_nix
+  - combine_sbom
 - title: Write, read and validate
   contents:
   - write_sbom
