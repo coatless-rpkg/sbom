@@ -115,6 +115,7 @@ test_that("unknown_component() builds the placeholder row", {
 })
 
 test_that("a GitHub Enterprise package points at its own host", {
+  skip_on_cran()
   gh <- function(host) {
     c(Package = "g", Version = "1.0", RemoteType = "github", RemoteHost = host,
       RemoteUsername = "team", RemoteRepo = "g", RemoteSha = "abc123",
@@ -244,6 +245,7 @@ test_that("a git remote's URL is kept only as a URL, without credentials", {
 })
 
 test_that("a local git remote's path enters no document", {
+  skip_on_cran()
   lib <- local_fake_lib(list(gitpkg = c(
     Version = "1.0", License = "MIT", Maintainer = "A B <a@b.org>",
     RemoteType = "git", RemoteUrl = "/Users/me/my repo"

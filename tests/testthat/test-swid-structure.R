@@ -31,6 +31,7 @@ findings_of <- function(location, message) {
 }
 
 test_that("sbom's own tags break no structural rule, and are partial", {
+  skip_on_cran()
   withr::local_options(sbom.swid_xsd = NULL)
   lib <- local_fake_lib(list())
   tags <- list(

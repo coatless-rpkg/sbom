@@ -97,6 +97,7 @@ test_that("sbom_diff() pairs R packages by name and system components by ref", {
 })
 
 test_that("sbom_diff() finds no license or source change between an SBOM and itself read back from any format", {
+  skip_on_cran()
   x <- fixture_sbom()
   dir <- withr::local_tempdir()
   formats <- sbom_formats()

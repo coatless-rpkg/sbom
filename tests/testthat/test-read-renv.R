@@ -128,6 +128,7 @@ test_that("a requirement that is not locked is reported as such, not as drift", 
 })
 
 test_that("code that cannot be parsed is reported, and the rest is still scanned", {
+  skip_on_cran()
   lock <- local_renv_project(
     list(cli = cli_rec(), glue = modifyList(cli_rec(), list(Package = "glue", Version = "1.8.1"))),
     list(bad.R = "library(glue", ok.R = "library(cli)\n")
@@ -279,6 +280,7 @@ test_that("a lockfile that omits a license says so, rather than that the package
 })
 
 test_that("every source renv can record gets its own ecosystem", {
+  skip_on_cran()
   dir <- withr::local_tempdir()
   sha <- "0123456789abcdef0123456789abcdef01234567"
   pkgs <- list(

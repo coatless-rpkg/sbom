@@ -87,6 +87,7 @@ local_cdx_file <- function(text, env = parent.frame()) {
 # Files ------------------------------------------------------------------------
 
 test_that("sbom's own files, fully described, pass as their formats allow, and SWID lacks a timestamp", {
+  skip_on_cran()
   skip_if_not_installed("jsonvalidate")
   skip_if_not_installed("yaml")
   x <- described_sbom()
@@ -250,6 +251,7 @@ test_that("a document too large for V8 skips the schema, and the content is stil
 })
 
 test_that("checks = \"content\" leaves out the schema, and profile = \"none\" the NTIA checks", {
+  skip_on_cran()
   skip_if_not_installed("jsonvalidate")
   path <- write_format(described_sbom(), "spdx-xml")
   expect_identical(validate_sbom(path)$status, "partial")
@@ -281,6 +283,7 @@ test_that("the arguments are checked", {
 # Objects ----------------------------------------------------------------------
 
 test_that("an <sbom> object gets the content checks only", {
+  skip_on_cran()
   x <- fixture_sbom()
   v <- validate_sbom(x)
   expect_s3_class(v, "sbom_validation")
@@ -500,6 +503,7 @@ test_that("braces from the file print as they are, in print() and in the error_o
 })
 
 test_that("a 1 MB name, id, purl or license expression gives short messages, and print() stays small", {
+  skip_on_cran()
   local_plain_cli()
   big <- strrep("x", 1e6)
   doc <- jsonlite::fromJSON(cdx_text(name = big), simplifyVector = FALSE)
@@ -552,6 +556,7 @@ test_that("a license expression with thousands of unknown ids names at most 20 o
 })
 
 test_that("validate_sbom() parses an SPDX YAML, XML or tag-value file once", {
+  skip_on_cran()
   skip_if_not_installed("jsonvalidate")
   skip_if_not_installed("yaml")
   x <- described_sbom()

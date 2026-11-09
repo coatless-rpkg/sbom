@@ -524,6 +524,7 @@ test_that("osv_match() gives empty tables when there is no candidate", {
 })
 
 test_that("a range's events are taken in version order, as OSV evaluates them", {
+  skip_on_cran()
   # A second introduced inside an interval changes nothing.
   osv <- osv_tables(evpkg_range('[{"introduced": "1.0"}, {"introduced": "2.0"}, {"fixed": "2.3"}]'))
   expect_identical(range_rows(osv), intervals("1.0", "2.3"))

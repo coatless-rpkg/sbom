@@ -31,6 +31,7 @@ test_that("a broken XML document fails with findings", {
 })
 
 test_that("validation does not depend on the working directory", {
+  skip_on_cran()
   skip_if_not_installed("jsonvalidate")
   path <- normalizePath(fx("dplyr-1.2.1.cdx.json"))
   xml_path <- normalizePath(fx("dplyr-1.2.1.cdx.xml"))
@@ -41,6 +42,7 @@ test_that("validation does not depend on the working directory", {
 })
 
 test_that("schemas referenced by a sibling file are enforced", {
+  skip_on_cran()
   skip_if_not_installed("jsonvalidate")
   # The license id enum lives in spdx.schema.json, reached through a $ref.
   doc <- jsonlite::read_json(fx("dplyr-1.2.1.cdx.json"))
@@ -135,6 +137,7 @@ test_that("a validator that errors gives skipped, not a parse failure", {
 })
 
 test_that("a CycloneDX URL that is not an IRI reference fails", {
+  skip_on_cran()
   skip_if_not_installed("jsonvalidate")
   doc <- jsonlite::read_json(fx("dplyr-1.2.1.cdx.json"))
   doc$components[[1]]$externalReferences <- list(list(type = "website", url = "https://exa mple.org"))
@@ -198,6 +201,7 @@ test_that("every IRI-reference key is checked, in strings and arrays of strings"
 })
 
 test_that("the official SPDX examples validate", {
+  skip_on_cran()
   skip_if_not_installed("jsonvalidate")
   skip_if_not_installed("yaml")
   for (v in c("2.3", "2.2")) {
@@ -213,6 +217,7 @@ test_that("the official SPDX examples validate", {
 })
 
 test_that("the CycloneDX test files validate as upstream says", {
+  skip_on_cran()
   skip_if_not_installed("jsonvalidate")
   dir <- test_path("fixtures", "third-party", "cyclonedx")
   files <- list.files(dir, pattern = "^valid-.*\\.(json|xml)$")
@@ -231,6 +236,7 @@ test_that("the CycloneDX test files validate as upstream says", {
 })
 
 test_that("our own output validates in every format", {
+  skip_on_cran()
   skip_if_not_installed("jsonvalidate")
   skip_if_not_installed("yaml")
   expect_valid_in_every_format(fixture_sbom(), "fixture")
@@ -320,6 +326,7 @@ test_that("empty objects and arrays survive the JSON handed to the schema", {
 })
 
 test_that("the schema is given JSON written from the parsed document, never the file", {
+  skip_on_cran()
   seen <- new.env()
   local_mocked_bindings(
     has_jsonvalidate = function() TRUE,
@@ -427,6 +434,7 @@ test_that("the validator returns each error's path and message only", {
 # Each root-level error used to carry the whole root schema (about 260 KB) and
 # the whole document, so 3,000 stray keys in a 26 KB file aborted R.
 test_that("thousands of errors are listed briefly and never abort R", {
+  skip_on_cran()
   skip_if_not_installed("jsonvalidate")
   tf <- withr::local_tempfile(fileext = ".json")
   write_text(paste0(
@@ -489,6 +497,7 @@ test_that("the size limit for V8 is 32 MB", {
 })
 
 test_that("the XSD check lists at most 1,000 errors, each quoting a value briefly", {
+  skip_on_cran()
   tf <- withr::local_tempfile(fileext = ".cdx.xml")
   write_text(paste0(
     '<?xml version="1.0"?><bom xmlns="http://cyclonedx.org/schema/bom/1.6" version="1"><components>',
@@ -705,6 +714,7 @@ test_that("COPYRIGHTS gives the xmldsig schema the license its header states", {
 })
 
 test_that("the option names the ISO schema only by its SHA-256 as ISO publishes it", {
+  skip_on_cran()
   expect_identical(swid_iso_sha256, "6af9d0554932102ace5c696f723c1dc4a4b1a9846908cddec67ccc0518c0e5d4")
   hits <- local_no_network()
   good <- swid_tag_path()
@@ -730,6 +740,7 @@ test_that("the option names the ISO schema only by its SHA-256 as ISO publishes 
 })
 
 test_that("validate_sbom() reports the option's note on a failing tag as a note, not an error", {
+  skip_on_cran()
   broken <- swid_text_path(sub('tagVersion="[0-9]+"', 'tagVersion="x"', swid_tag(fixture_sbom())))
   other <- withr::local_tempfile(fileext = ".xsd")
   write_text('<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"/>\n', other)
@@ -913,6 +924,7 @@ test_that("a file over 1 MB is not the ISO schema, and is never read", {
 })
 
 test_that("a missing bundled W3C schema gives the structural rules, and nothing is compiled", {
+  skip_on_cran()
   hits <- local_no_network()
   local_stand_in_xsd()
   compiled <- new.env(parent = emptyenv())
@@ -1008,6 +1020,7 @@ test_that("with the option naming the ISO schema, a tag is checked fully and off
 })
 
 test_that("CycloneDX XSD validation never reaches the network", {
+  skip_on_cran()
   hits <- local_no_network()
   for (v in c("1.4", "1.5", "1.6", "1.7")) {
     tf <- withr::local_tempfile(fileext = ".cdx.xml")

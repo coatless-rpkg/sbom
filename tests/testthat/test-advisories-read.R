@@ -80,6 +80,7 @@ cdx_with_vulnerabilities <- function(vulns) {
 }
 
 test_that("read_sbom() brings advisories back from CycloneDX, SPDX 2 and SPDX 3", {
+  skip_on_cran()
   x <- two_advisory_sbom()
   want <- sbom_advisories(x)
   expect_identical(want$id, c("RSEC-9000-1", "RSEC-9000-2"))
@@ -102,6 +103,7 @@ test_that("read_sbom() brings advisories back from CycloneDX, SPDX 2 and SPDX 3"
 })
 
 test_that("CycloneDX gives back the ratings, without their upstream records", {
+  skip_on_cran()
   x <- two_advisory_sbom()
   rating <- data.frame(
     upstream = NA_character_, method = "CVSSv3", vector = cvss_vector, score = 8.8, severity = "high",
@@ -119,6 +121,7 @@ test_that("CycloneDX gives back the ratings, without their upstream records", {
 })
 
 test_that("every version and serialization gives the advisories back", {
+  skip_on_cran()
   x <- two_advisory_sbom()
   want <- sbom_advisories(x)[c("id", "name", "version")]
   reg <- format_registry()
@@ -134,6 +137,7 @@ test_that("every version and serialization gives the advisories back", {
 })
 
 test_that("SPDX 2 references give the fix, or that there is none, in both forms of the comment", {
+  skip_on_cran()
   x <- two_advisory_sbom()
   back <- reread(x, "spdx-json")
   affects <- back$advisories$affects
@@ -176,6 +180,7 @@ test_that("SPDX 2 references give the fix, or that there is none, in both forms 
 })
 
 test_that("sbom's SPDX 2.2 and 2.3 references round-trip in every serialization", {
+  skip_on_cran()
   x <- two_advisory_sbom()
   # A summary that holds a line break and a sentence in sbom's words about
   # another package: the comment's last sentence is the one read.
@@ -192,6 +197,7 @@ test_that("sbom's SPDX 2.2 and 2.3 references round-trip in every serialization"
 })
 
 test_that("an SPDX 2 osv.dev reference is read only when its comment names its package at its version", {
+  skip_on_cran()
   dropped <- function(back) back$issues$message[back$issues$code == "read-advisories-dropped"]
   not_listing <- "1 vulnerability entry in the document is not an OSV advisory listing, so it was not read."
   doc <- jsonlite::parse_json(spdx_json(two_advisory_sbom()))
@@ -331,6 +337,7 @@ test_that("an SPDX 2 advisory reference is read only with an osv.dev locator", {
 })
 
 test_that("SPDX 2.2 OTHER and SPDX 2.3 SECURITY advisory references are both read", {
+  skip_on_cran()
   x <- two_advisory_sbom()
   # The SPDX 2 JSON `txt` with each advisory reference given `category` and
   # `type`.
@@ -401,6 +408,7 @@ test_that("a SWID tag reads back with no advisories", {
 })
 
 test_that("a read SBOM is listed when its document lists advisories or says they are listed", {
+  skip_on_cran()
   x <- two_advisory_sbom()
   back <- reread(x, "cyclonedx-json")
   expect_identical(advisory_messages(back), character())
@@ -433,6 +441,7 @@ test_that("a read SBOM is listed when its document lists advisories or says they
 })
 
 test_that("a read SBOM written again keeps its advisories, and each note once", {
+  skip_on_cran()
   x <- two_advisory_sbom()
   # With the Bioconductor note too, after the note that they are listed.
   x$metadata$notes <- append(x$metadata$notes, advisory_notes$bioc, after = match(listed_note, x$metadata$notes))
@@ -524,6 +533,7 @@ test_that("CycloneDX vulnerabilities are ids, and their affects relationships", 
 })
 
 test_that("an affects naming an element the document lacks is a dangling relationship", {
+  skip_on_cran()
   x <- two_advisory_sbom()
   dangling <- function(location) {
     data.frame(
@@ -556,6 +566,7 @@ test_that("an affects naming an element the document lacks is a dangling relatio
 })
 
 test_that("CycloneDX XML vulnerabilities read to the model of their JSON twin", {
+  skip_on_cran()
   x <- two_advisory_sbom()
   x$advisories$ratings[[2]] <- data.frame(
     upstream = "CVE-2099-0002", method = "CVSSv3", vector = NA_character_, score = 5, severity = "medium",
@@ -755,6 +766,7 @@ test_that("only OSV's listings are read from SPDX 3, linked by hasAssociatedVuln
 })
 
 test_that("a CycloneDX affects target is a listing only when it says the component's version is affected", {
+  skip_on_cran()
   dropped <- function(back) back$issues$message[back$issues$code == "read-advisories-dropped"]
   not_listing <- "1 vulnerability entry in the document is not an OSV advisory listing, so it was not read."
   target <- function(ref, versions) paste0('{"ref": "', ref, '", "versions": [', versions, "]}")
@@ -874,6 +886,7 @@ test_that("an SPDX 3 association beside a VEX relationship for the same componen
 })
 
 test_that("a BOM-Link to another BOM is not a dangling relationship", {
+  skip_on_cran()
   link <- "urn:cdx:3e671687-395b-41f5-a30f-a58921a69b79/1#pkg:cran/a@1.0"
   txt <- paste0(
     '{"bomFormat": "CycloneDX", "specVersion": "1.6", "version": 1,',

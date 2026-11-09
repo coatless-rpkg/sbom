@@ -89,6 +89,7 @@ test_that("tag-value text is UTF-8 and literal in a C locale", {
 })
 
 test_that("tag-value matches R Observatory's dplyr 1.2.1 sample", {
+  skip_on_cran()
   expect_equal(
     normalize_spdx(spdx_tv_read(tv_file(spdx_tv(parity_sbom())))),
     normalize_spdx(spdx_tv_read(test_path("fixtures/r-observatory/dplyr-1.2.1.spdx")))
@@ -138,6 +139,7 @@ test_that("a plain value that opens a <text> block is written as text", {
 })
 
 test_that("a version and a homepage that start with <text> swallow no line, and read back", {
+  skip_on_cran()
   x <- fixture_sbom()
   at <- x$components$name == "localpkg"
   x$components$homepage[at] <- "<text>https://example.org/localpkg"

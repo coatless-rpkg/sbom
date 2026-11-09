@@ -187,6 +187,7 @@ test_that("a library with no packages is recorded as an issue", {
 })
 
 test_that("SOURCE_DATE_EPOCH is used without a timestamp argument, and a note says so", {
+  skip_on_cran()
   note <- "The timestamp comes from the SOURCE_DATE_EPOCH environment variable."
   withr::local_envvar(SOURCE_DATE_EPOCH = "1700000000")
   x <- sbom_package(test_path("fixtures/pkgs/srcpkg"), lib = fixture_lib(), system = FALSE)
@@ -207,6 +208,7 @@ test_that("an explicit timestamp wins over SOURCE_DATE_EPOCH, with no note about
 })
 
 test_that("Nix's 1980 placeholder is used, with a note saying what it is", {
+  skip_on_cran()
   note <- paste0(
     "The timestamp is 1980-01-01T00:00:00Z, the placeholder that Nix sets in ",
     "SOURCE_DATE_EPOCH, not the time this SBOM was made."
@@ -221,6 +223,7 @@ test_that("Nix's 1980 placeholder is used, with a note saying what it is", {
 })
 
 test_that("a source tarball root records that its bundled code was not listed", {
+  skip_on_cran()
   tmp <- withr::local_tempdir()
   tarball <- file.path(tmp, "srcpkg_0.1.0.tar.gz")
   withr::with_dir(test_path("fixtures/pkgs"), utils::tar(tarball, "srcpkg", compression = "gzip"))
@@ -262,6 +265,7 @@ test_that("a tarball root records the tarball's own file name", {
 })
 
 test_that("author takes several people and drops NA and empty ones", {
+  skip_on_cran()
   build <- function(author, organization = NULL) {
     sbom_package(test_path("fixtures/pkgs/srcpkg"), lib = fixture_lib(),
                  author = author, organization = organization)
@@ -302,6 +306,7 @@ test_that("a maintainer taken from Authors@R survives a C locale", {
 })
 
 test_that("base packages carry R's version when R's version is exact", {
+  skip_on_cran()
   x <- sbom_installed(lib = fixture_lib(), r_version = "4.4.0", timestamp = 0, system = FALSE)
   comps <- x$components
   r <- comps[comps$ref == "R", , drop = FALSE]

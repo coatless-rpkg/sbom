@@ -10,6 +10,7 @@ test_that("each Shiny layout is recognized, and other folders are not", {
 })
 
 test_that("an app's root is an application, and its own JavaScript is nested under it", {
+  skip_on_cran()
   x <- sbom_shiny(shiny_fixture("app-r"), system = FALSE)
   comps <- sbom_components(x)
   root <- comps[comps$is_root, ]
@@ -23,12 +24,14 @@ test_that("an app's root is an application, and its own JavaScript is nested und
 })
 
 test_that("a ui.R and server.R app is an app, whose root is its folder", {
+  skip_on_cran()
   x <- sbom_shiny(shiny_fixture("ui-server"), system = FALSE)
   root <- sbom_components(x)[sbom_components(x)$is_root, ]
   expect_equal(c(root$ref, root$type), c("project/ui-server", "application"))
 })
 
 test_that("a golem app takes its name and version from DESCRIPTION", {
+  skip_on_cran()
   x <- sbom_shiny(shiny_fixture("golem"), system = FALSE)
   comps <- sbom_components(x)
   root <- comps[comps$is_root, ]
@@ -52,6 +55,7 @@ test_that("a golem app takes its name and version from DESCRIPTION", {
 })
 
 test_that("the root rewrite also reaches an app built from the code scan or a lockfile", {
+  skip_on_cran()
   x <- sbom_shiny(shiny_fixture("app-r"), system = FALSE)
   expect_equal(x$metadata$root, "project/app-r")
   expect_true(all(x$relationships$from %in% sbom_components(x)$ref))
@@ -67,6 +71,7 @@ test_that("the root rewrite also reaches an app built from the code scan or a lo
 })
 
 test_that("replace_root() rewrites every ref that is, or is under, the old root", {
+  skip_on_cran()
   x <- sbom_package(test_path("fixtures", "golem", "myapp"), system = FALSE)
   old <- x$metadata$root
   new <- component_row(ref = "project/other", name = "other", type = "application",
@@ -93,6 +98,7 @@ test_that("no fixture holds a hidden file, which R CMD check would note", {
 })
 
 test_that("rhino's npm files are an issue, and a folder that is not an app is an error", {
+  skip_on_cran()
   dir <- local_fixture_copy(file.path("fixtures", "shiny", "rhino"))
   expect_false("npm-not-covered" %in% sbom_issues(sbom_shiny(dir, system = FALSE))$code)
   dir.create(file.path(dir, ".rhino"))
@@ -110,6 +116,7 @@ test_that("rhino's npm files are an issue, and a folder that is not an app is an
 })
 
 test_that("sbom() sends an app folder to sbom_shiny()", {
+  skip_on_cran()
   a <- sbom(shiny_fixture("app-r"), system = FALSE, timestamp = 0)
   b <- sbom_shiny(shiny_fixture("app-r"), system = FALSE, timestamp = 0)
   expect_identical(sbom_components(a), sbom_components(b))
@@ -165,6 +172,7 @@ test_that("a www/ folder with a symlink loop, non-library files and a deep tree 
 })
 
 test_that("no issue about the root is repeated, in any layout or source", {
+  skip_on_cran()
   lib <- local_fake_lib(list())
   for (layout in c("app-r", "ui-server", "golem", "rhino")) {
     for (lock in c(FALSE, TRUE)) {
@@ -205,10 +213,12 @@ test_that("a folder with renv.lock, a Connect manifest and app.R keeps its drift
 })
 
 test_that("sbom() accepts evaluate_ui = FALSE for an app", {
+  skip_on_cran()
   expect_no_error(sbom(shiny_fixture("app-r"), evaluate_ui = FALSE, system = FALSE))
 })
 
 test_that("evaluated UI dependencies are observed and nested under the package that ships them", {
+  skip_on_cran()
   local_mocked_bindings(sys_ui_dependencies = function(dir, layout, ...) data.frame(
     name = c("jquery", "bootstrap", "appjs"), version = c("3.7.1", "3.4.1", "1.0"),
     package = c("shiny", "shiny", NA), src = c("file", "file", "file")))
@@ -222,6 +232,7 @@ test_that("evaluated UI dependencies are observed and nested under the package t
 })
 
 test_that("an evaluated dependency matching a static one raises its evidence, and a known name gets an npm purl", {
+  skip_on_cran()
   local_mocked_bindings(sys_ui_dependencies = function(dir, layout, ...) data.frame(
     name = "jquery", version = "3.5.1", package = NA_character_, src = "file"))
   x <- sbom_shiny(test_path("fixtures", "shiny", "app-r"), evaluate_ui = TRUE, system = FALSE)
@@ -236,6 +247,7 @@ test_that("an evaluated dependency matching a static one raises its evidence, an
 })
 
 test_that("a UI that cannot be evaluated gives one issue and the static result", {
+  skip_on_cran()
   local_mocked_bindings(sys_ui_dependencies = function(dir, layout, ...) structure(list(), reason = "the UI code failed"))
   x <- sbom_shiny(test_path("fixtures", "shiny", "app-r"), evaluate_ui = TRUE, system = FALSE)
   iss <- sbom_issues(x)
@@ -249,6 +261,7 @@ test_that("a UI that cannot be evaluated gives one issue and the static result",
 })
 
 test_that("the lib the build uses reaches the wrapper", {
+  skip_on_cran()
   seen <- new.env()
   local_mocked_bindings(sys_ui_dependencies = function(dir, layout, lib, ...) {
     seen$lib <- lib
@@ -262,6 +275,7 @@ test_that("the lib the build uses reaches the wrapper", {
 })
 
 test_that("golem apps are not evaluated", {
+  skip_on_cran()
   x <- sbom_shiny(test_path("fixtures", "shiny", "golem"), evaluate_ui = TRUE, system = FALSE)
   iss <- sbom_issues(x)
   expect_equal(sum(iss$code == "evaluate-ui-unsupported"), 1L)
@@ -384,6 +398,7 @@ test_that("a golem root keeps its DESCRIPTION's license and maintainer when a lo
 })
 
 test_that("evaluated dependencies whose text sbom does not accept are left out and counted", {
+  skip_on_cran()
   local_mocked_bindings(sys_ui_dependencies = function(dir, layout, ...) data.frame(
     name = c("jquery", "bad name", "x<script>", "okname", "", "pkgdep"),
     version = c("3.7.1", "1.0", "1.0", "1.0 beta", "1.0", "2.0"),

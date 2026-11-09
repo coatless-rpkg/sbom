@@ -52,6 +52,7 @@ test_that("SPDX YAML passes the SPDX schema for 2.2 and 2.3", {
 })
 
 test_that("SPDX YAML matches R Observatory's dplyr 1.2.1 sample", {
+  skip_on_cran()
   skip_if_not_installed("yaml")
   tf <- withr::local_tempfile(fileext = ".spdx.yaml"); write_text(spdx_yaml(parity_sbom()), tf)
   expect_equal(normalize_spdx(spdx_yaml_read(tf)),

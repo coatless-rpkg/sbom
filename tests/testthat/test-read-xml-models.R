@@ -77,6 +77,7 @@ test_that("CycloneDX XML reads to the model of its JSON twin", {
 })
 
 test_that("our own CycloneDX XML reads to the model of our own CycloneDX JSON", {
+  skip_on_cran()
   x <- fixture_sbom()
   for (version in format_registry()[["cyclonedx-xml"]]$versions) {
     json <- withr::local_tempfile(fileext = ".cdx.json")
@@ -475,6 +476,7 @@ xsd_declarations <- function(paths) {
 }
 
 test_that("the CycloneDX declared-attribute tables are those of the bundled XSDs", {
+  skip_on_cran()
   versions <- format_registry()[["cyclonedx-xml"]]$versions
   cdx <- xsd_declarations(vapply(versions, function(v) schema_file("cyclonedx-xml", v), ""))
   expect_identical(cdx_xml_declared_attrs, cdx$attrs)

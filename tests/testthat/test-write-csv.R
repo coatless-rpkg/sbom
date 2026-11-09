@@ -19,6 +19,7 @@ test_that("commas, quotes and non-ASCII survive", {
 })
 
 test_that("format = 'all' leaves the inventory out, and .csv writes it", {
+  skip_on_cran()
   x <- fixture_sbom(); dir <- withr::local_tempdir()
   write_sbom(x, dir, format = "all")
   expect_false(any(grepl("\\.csv$", list.files(dir))))
@@ -58,6 +59,7 @@ test_that("the sha256 and asserted columns are filled from the component tables"
 })
 
 test_that("free-text cells that a spreadsheet would evaluate get a leading apostrophe", {
+  skip_on_cran()
   payloads <- c("=cmd|' /C calc'!A0", "+1", "-2+3", "@SUM(A1)", "\tx")
   for (p in payloads) {
     x <- fixture_sbom()
@@ -72,6 +74,7 @@ test_that("free-text cells that a spreadsheet would evaluate get a leading apost
 })
 
 test_that("a value a spreadsheet would evaluate gets a leading apostrophe in any column", {
+  skip_on_cran()
   fields <- c(
     ref = "ref", name = "name", version = "version", version_is = "version_is",
     type = "type", ecosystem = "ecosystem", scope = "scope", purl = "purl",

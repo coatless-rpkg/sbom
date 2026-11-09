@@ -1,4 +1,5 @@
 test_that("CycloneDX output matches R Observatory's dplyr 1.2.1 sample", {
+  skip_on_cran()
   ours <- jsonlite::fromJSON(cdx_json(parity_sbom()), simplifyVector = FALSE)
   theirs <- normalize_cdx(jsonlite::read_json(test_path("fixtures/r-observatory/dplyr-1.2.1.cdx.json")))
   # The normalizers must leave something to compare.
@@ -8,6 +9,7 @@ test_that("CycloneDX output matches R Observatory's dplyr 1.2.1 sample", {
 })
 
 test_that("SPDX output matches R Observatory's dplyr 1.2.1 sample", {
+  skip_on_cran()
   ours <- jsonlite::fromJSON(spdx_json(parity_sbom()), simplifyVector = FALSE)
   theirs <- normalize_spdx(jsonlite::read_json(test_path("fixtures/r-observatory/dplyr-1.2.1.spdx.json")))
   expect_gte(length(theirs$packages), 20)
@@ -16,6 +18,7 @@ test_that("SPDX output matches R Observatory's dplyr 1.2.1 sample", {
 })
 
 test_that("parity holds when the locale's native encoding is not UTF-8", {
+  skip_on_cran()
   local_c_ctype()
   x <- parity_sbom()
   ours <- jsonlite::fromJSON(cdx_json(x), simplifyVector = FALSE)

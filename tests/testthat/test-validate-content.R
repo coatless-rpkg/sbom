@@ -196,6 +196,7 @@ test_that("dangling-relationship: a relationship to an id the document does not 
 })
 
 test_that("dangling-relationship: other documents' elements, NONE, a service and an empty dependsOn are not dangling", {
+  skip_on_cran()
   # A service's bom-ref is an id of the document; an empty dependsOn has no
   # target.
   doc <- cdx()
@@ -687,6 +688,7 @@ test_that("every check has a one-sentence fix hint", {
 # sbom's own output ------------------------------------------------------------
 
 test_that("sbom's own output, fully described, has no errors but SWID's timestamp", {
+  skip_on_cran()
   skip_if_not_installed("yaml")
   r_supplier <- "The R Foundation"
   ov <- data.frame(
@@ -802,6 +804,7 @@ test_that("a SWID tag sbom writes without an author names only the tool", {
 })
 
 test_that("a LicenseRef override is defined in every SPDX 2.3 serialization, which still validates", {
+  skip_on_cran()
   skip_if_not_installed("jsonvalidate")
   skip_if_not_installed("yaml")
   ov <- data.frame(

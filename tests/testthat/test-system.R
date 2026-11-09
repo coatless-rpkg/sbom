@@ -295,6 +295,7 @@ test_that("@rpath entries anchored at the loader or R's bin resolve when the tar
 })
 
 test_that("a library SBOM with embedded and system components validates in every format and is byte-identical", {
+  skip_on_cran()
   skip_if_not_installed("jsonvalidate"); skip_if_not_installed("yaml")
   withr::local_envvar(SOURCE_DATE_EPOCH = "1700000000")
   lib <- local_fake_lib(list(

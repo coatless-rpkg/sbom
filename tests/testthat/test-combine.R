@@ -20,6 +20,7 @@ example_as <- function(name, as, env = parent.frame()) {
 }
 
 test_that("combine_sbom() puts the SBOMs under one new root", {
+  skip_on_cran()
   p <- two_projects()
   x <- combine_sbom(p$study, p$analysis, name = "suite", timestamp = ts)
   comps <- sbom_components(x)
@@ -37,6 +38,7 @@ test_that("combine_sbom() puts the SBOMs under one new root", {
 })
 
 test_that("combine_sbom() takes a list as well as separate SBOMs", {
+  skip_on_cran()
   p <- two_projects()
   expect_equal(
     combine_sbom(p, name = "suite", timestamp = ts),
@@ -103,6 +105,7 @@ test_that("nested refs follow their renamed parent", {
 })
 
 test_that("the combined SBOM states its own author, timestamp and version", {
+  skip_on_cran()
   p <- two_projects()
   x <- combine_sbom(p, name = "suite", version = "1.2.0", author = "Jo Reviewer", timestamp = ts)
   expect_equal(x$metadata$author, "Jo Reviewer")
@@ -142,6 +145,7 @@ test_that("overrides apply to the combined SBOM", {
 })
 
 test_that("advisories that every SBOM lists from the same data are kept", {
+  skip_on_cran()
   osv <- sbom_example("osv-all.zip")
   a <- sbom(sbom_example("study", copy = TRUE), system = FALSE, timestamp = ts, advisories = osv)
   b <- sbom(sbom_example("analysis", copy = TRUE), system = FALSE, timestamp = ts, advisories = osv)
@@ -152,6 +156,7 @@ test_that("advisories that every SBOM lists from the same data are kept", {
 })
 
 test_that("advisories that only some SBOMs list are dropped, with an issue", {
+  skip_on_cran()
   osv <- sbom_example("osv-all.zip")
   a <- sbom(sbom_example("study", copy = TRUE), system = FALSE, timestamp = ts, advisories = osv)
   b <- sbom(sbom_example("analysis", copy = TRUE), system = FALSE, timestamp = ts)
@@ -173,6 +178,7 @@ test_that("advisories asked of combine_sbom() are looked up for every component"
 })
 
 test_that("a combined SBOM writes valid documents and reads back the same", {
+  skip_on_cran()
   p <- two_projects()
   x <- combine_sbom(p, name = "suite", version = "1.0.0", author = "Jo Reviewer", timestamp = ts)
   for (ext in c(".cdx.json", ".spdx.json", ".cdx.xml")) {
@@ -185,6 +191,7 @@ test_that("a combined SBOM writes valid documents and reads back the same", {
 })
 
 test_that("an SBOM read from a file combines with one built here", {
+  skip_on_cran()
   p <- two_projects()
   d <- read_sbom(sbom_example("dashboard.cdx.json"))
   x <- combine_sbom(p$study, d, name = "estate", timestamp = ts)
@@ -194,6 +201,7 @@ test_that("an SBOM read from a file combines with one built here", {
 })
 
 test_that("combine_sbom() checks its arguments", {
+  skip_on_cran()
   p <- two_projects()
   expect_error(combine_sbom(name = "suite"), "at least one")
   expect_error(combine_sbom(p$study, "analysis", name = "suite"), "<sbom>")
@@ -204,6 +212,7 @@ test_that("combine_sbom() checks its arguments", {
 })
 
 test_that("sbom() combines several paths into one SBOM", {
+  skip_on_cran()
   study <- sbom_example("study", copy = TRUE)
   analysis <- sbom_example("analysis", copy = TRUE)
   x <- sbom(c(study, analysis), name = "suite", system = FALSE, timestamp = ts)
@@ -216,6 +225,7 @@ test_that("sbom() combines several paths into one SBOM", {
 })
 
 test_that("sbom() with several paths applies author and advisories once, to the result", {
+  skip_on_cran()
   study <- sbom_example("study", copy = TRUE)
   analysis <- sbom_example("analysis", copy = TRUE)
   x <- sbom(c(study, analysis), name = "suite", system = FALSE, timestamp = ts,
@@ -237,6 +247,7 @@ test_that("sbom() with several paths needs a name, and each path once", {
 })
 
 test_that("sbom() reads a DESCRIPTION, lockfile, manifest or Nix file", {
+  skip_on_cran()
   pkg <- withr::local_tempdir()
   file.copy(list.files(test_path("fixtures/pkgs/srcpkg"), full.names = TRUE), pkg, recursive = TRUE)
   expect_equal(

@@ -36,6 +36,7 @@ test_that("version-specific metadata", {
 })
 
 test_that("every supported version passes its schema", {
+  skip_on_cran()
   skip_if_not_installed("jsonvalidate")
   x <- fixture_sbom()
   for (v in c("1.4", "1.5", "1.6", "1.7")) {

@@ -93,12 +93,14 @@ test_that("an app with renv.lock, manifest.json and default.nix has one root and
 })
 
 test_that("the Shiny and Nix SBOMs validate in every format", {
+  skip_on_cran()
   expect_valid_in_every_format(app_sbom(local_app_with_all_sources(), empty_lib()), "app")
   local_nix_store(test_path("fixtures", "nix", "store"))
   expect_valid_in_every_format(nix_mode_sbom(), "nix")
 })
 
 test_that("the Shiny and Nix SBOMs are byte-identical across runs and locales", {
+  skip_on_cran()
   dir <- local_app_with_all_sources()
   lib <- empty_lib()
   local_nix_store(test_path("fixtures", "nix", "store"))

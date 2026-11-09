@@ -61,6 +61,7 @@ as_kinds <- function(x) {
 }
 
 test_that("an SBOM written in every format at every version reads back", {
+  skip_on_cran()
   skip_if_not_installed("yaml")
   x <- round_trip_sbom()
   ext <- stats::setNames(sbom_formats()$extension, sbom_formats()$format)
@@ -117,6 +118,7 @@ test_that("an SBOM written in every format at every version reads back", {
 })
 
 test_that("every third-party SBOM reads, and the examples write valid documents in every format", {
+  skip_on_cran()
   skip_if_not_installed("yaml")
   files <- list.files(tp(), recursive = TRUE, full.names = TRUE)
   files <- files[!basename(files) %in% c("SOURCES.md", "invalid-component-type-1.6.json")]
@@ -217,6 +219,7 @@ test_that("our own CycloneDX file gives the tool version, and inputs name the fi
 })
 
 test_that("no written document from a read SBOM holds the reading machine's temporary folder", {
+  skip_on_cran()
   skip_if_not_installed("yaml")
   path <- withr::local_tempfile(fileext = ".spdx.json")
   write_sbom(fixture_sbom(), path)
@@ -264,6 +267,7 @@ test_that("an SBOM from another ecosystem reads and writes valid documents", {
 })
 
 test_that("CycloneDX licenses, references and properties map to their columns", {
+  skip_on_cran()
   x <- read_text(paste0(
     '{"bomFormat":"CycloneDX","specVersion":"1.6","version":1,',
     '"metadata":{"timestamp":"2026-01-02T03:04:05Z","manufacture":{"name":"Maker Ltd"},',
@@ -391,6 +395,7 @@ test_that("the dropped values' kinds are listed so that the sentence reads with 
 })
 
 test_that("SPDX relationship types map to fields, and swapped ones point from the dependent", {
+  skip_on_cran()
   pkg <- function(id, name) {
     sprintf(
       '{"SPDXID":"%s","name":"%s","versionInfo":"1","downloadLocation":"NOASSERTION","filesAnalyzed":false}',
@@ -500,6 +505,7 @@ test_that("lists taken from the document name at most 20 items, and one type is 
 })
 
 test_that("SPDX 3 packages map their values, agents and relationships", {
+  skip_on_cran()
   x <- read_text(paste0(
     '{"@context":"https://spdx.org/rdf/3.0.1/spdx-context.jsonld","@graph":[',
     '{"type":"CreationInfo","@id":"_:ci","specVersion":"3.0.1","created":"2026-03-04T05:06:07Z",',
@@ -626,6 +632,7 @@ test_that("a SWID tag maps its entities, links and Meta", {
 })
 
 test_that("a SWID tag written from a read tag reads back with the same refs", {
+  skip_on_cran()
   for (regid in list(NULL, "https://example.org")) {
     x <- fixture_sbom()
     x$metadata$regid <- if (is.null(regid)) NA_character_ else regid
@@ -703,6 +710,7 @@ test_that("an optional dependency stays optional through SPDX 2 and SPDX 3", {
 })
 
 test_that("a read SBOM keeps every dependency when written as CycloneDX", {
+  skip_on_cran()
   # The library root contains every package, so each has it as its parent.
   x <- sbom_installed(c("cranpkg", "localpkg", "suggestpkg"), lib = fixture_lib(), author = "A")
   edges <- function(x) name_edges(as_kinds(x), "field")

@@ -12,6 +12,7 @@ read_error <- function(path, ...) {
 }
 
 test_that("our own formats and versions are detected from the content, whatever the extension", {
+  skip_on_cran()
   skip_if_not_installed("yaml")
   x <- fixture_sbom()
   formats <- sbom_formats()
@@ -83,6 +84,7 @@ test_that("a format that is given must be the file's format", {
 })
 
 test_that("files that are not SBOMs are read errors", {
+  skip_on_cran()
   dir <- withr::local_tempdir()
   empty <- file.path(dir, "empty.json")
   write_text("", empty)
@@ -281,6 +283,7 @@ test_that("a read error keeps its whole sentence however narrow the console", {
 })
 
 test_that("parser messages give way to a fixed phrase, with no line taken from their text", {
+  skip_on_cran()
   dir <- withr::local_tempdir()
   cases <- c(
     enc.xml = '<?xml version="1.0" encoding="sbom-secret-marker"?>\n<bom/>\n',
@@ -402,6 +405,7 @@ test_that("an escaped NUL in JSON is refused, which jsonlite would cut the strin
 })
 
 test_that("a version longer than 20 characters is not one sbom recognizes", {
+  skip_on_cran()
   tf <- withr::local_tempfile(fileext = ".cdx.json")
   file <- basename(tf)
   cdx <- function(version) {

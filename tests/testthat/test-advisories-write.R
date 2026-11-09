@@ -61,6 +61,7 @@ advisory_elements <- function(graph) {
 }
 
 test_that("an SBOM with two advisories is valid in every format and version", {
+  skip_on_cran()
   skip_if_not_installed("jsonvalidate")
   x <- two_advisory_sbom()
   expect_identical(x$advisories$id, c("RSEC-9000-1", "RSEC-9000-2"))
@@ -125,6 +126,7 @@ test_that("CycloneDX lists each advisory with R Observatory's fields, in JSON an
 })
 
 test_that("CycloneDX keeps rated scores only, and names a method each version knows", {
+  skip_on_cran()
   skip_if_not_installed("jsonvalidate")
   x <- two_advisory_sbom()
   x$advisories$ratings[[2]] <- data.frame(
@@ -229,6 +231,7 @@ test_that("an SPDX 2 advisory comment leaves out what OSV does not say", {
 })
 
 test_that("SPDX 3 holds a vulnerability per advisory and a relationship per affected package", {
+  skip_on_cran()
   x <- two_advisory_sbom()
   d <- spdx3_document(x)
   g <- d[["@graph"]]
@@ -295,6 +298,7 @@ test_that("SPDX 3 holds a vulnerability per advisory and a relationship per affe
 })
 
 test_that("SPDX 3 advisory ids are the OSV ids, made unique only when they collide", {
+  skip_on_cran()
   x <- widgetframe_sbom()
   second <- x$advisories
   second$id <- "RSEC:2026-0"
@@ -391,6 +395,7 @@ test_that("SWID says it has no place for advisories instead of the notes that li
 })
 
 test_that("every document that says advisories are listed lists every advisory", {
+  skip_on_cran()
   x <- two_advisory_sbom()
   ids <- x$advisories$id
   for (fv in every_format_version()) {
@@ -409,6 +414,7 @@ test_that("every document that says advisories are listed lists every advisory",
 })
 
 test_that("advisories are written in id order, each package in ref order", {
+  skip_on_cran()
   x <- two_advisory_sbom()
   shuffled <- x
   shuffled$advisories <- x$advisories[2:1, ]
@@ -448,6 +454,7 @@ test_that("advisories match R Observatory's RSEC-2026-0 on widgetframe 0.3.1", {
 })
 
 test_that("an SBOM without advisories writes no advisory fields", {
+  skip_on_cran()
   # As before advisories existed: no table and no status.
   for (x in list(fixture_sbom(), minimal_sbom())) {
     before <- x
@@ -493,6 +500,7 @@ test_that("a source URL that cannot be an IRI reference is left out", {
 })
 
 test_that("a publication date that is not a calendar date is left out of every format", {
+  skip_on_cran()
   skip_if_not_installed("jsonvalidate")
   # As OSV's export could give them: a record whose published time is not a
   # real date.

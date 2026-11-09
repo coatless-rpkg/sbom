@@ -67,6 +67,7 @@ test_that("the Description opens well, quotes software names and expands every a
 })
 
 test_that("the Description says what each format is checked against, as validate_sbom() does", {
+  skip_on_cran()
   desc <- gsub("\\s+", " ", release_description()[["Description"]])
   # The schema each specification publishes (SPDX 2's is for JSON, which XML
   # and tag-value are converted to), or structural rules for SWID, whose ISO
@@ -92,6 +93,7 @@ test_that("the Description says what each format is checked against, as validate
 })
 
 test_that("every exported function's Rd page has a value and runnable examples", {
+  skip_on_cran()
   rd <- release_rd()
   exports <- getNamespaceExports("sbom")
   documented <- character()
@@ -161,6 +163,7 @@ calls_in <- function(x) {
 lhs_name <- function(x) if (is.name(x)) as.character(x) else lhs_name(x[[2L]])
 
 test_that("every absolute timing assertion waits for skip_unless_timing(), and nothing else does", {
+  skip_on_cran()
   files <- list.files(test_path(), pattern = "^test-.*[.]R$", full.names = TRUE)
   timed <- 0L
   for (file in files) {

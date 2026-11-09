@@ -37,6 +37,7 @@ test_that("a regid given as an option reaches the tag and clears the issue", {
 })
 
 test_that("regid-missing is an info issue on the root, and only with an organization", {
+  skip_on_cran()
   x <- fixture_sbom()
   iss <- sbom_issues(x)
   i <- iss[iss$code == "regid-missing", ]
@@ -57,6 +58,7 @@ test_that("regid-missing is an info issue on the root, and only with an organiza
 })
 
 test_that("with a regid, tagId and requires targets start with its authority", {
+  skip_on_cran()
   for (regid in c("https://example.org", "https://example.org/", "example.org")) {
     x <- sbom_package(test_path("fixtures/pkgs/srcpkg"), lib = fixture_lib(),
                       organization = "Org", regid = regid)
@@ -84,6 +86,7 @@ test_that("tagVersion is the timestamp's UTC date as YYYYMMDD", {
 })
 
 test_that("regid must be a single string, and a blank one means none", {
+  skip_on_cran()
   build <- function(regid) {
     sbom_package(test_path("fixtures/pkgs/srcpkg"), lib = fixture_lib(),
                  organization = "Org", regid = regid)
@@ -119,6 +122,7 @@ test_that("SWID escapes &, < and quotes in names", {
 })
 
 test_that("Meta carries the generator, product, notes, purl and license", {
+  skip_on_cran()
   x <- fixture_sbom()
   doc <- xml2::read_xml(swid_tag(x))
   meta <- xml2::xml_find_first(doc, "//s:Meta", swid_ns)
@@ -192,6 +196,7 @@ test_that("a tag that breaks a SWID structural rule fails", {
 })
 
 test_that("SWID is in the registry", {
+  skip_on_cran()
   f <- sbom_formats()
   r <- f[f$format == "swid", ]
   expect_equal(r$name, "SWID tag")
@@ -207,6 +212,7 @@ test_that("SWID is in the registry", {
 })
 
 test_that("SWID matches R Observatory's dplyr 1.2.1 sample", {
+  skip_on_cran()
   ours <- xml2::read_xml(swid_tag(parity_sbom()))
   theirs <- xml2::read_xml(test_path("fixtures/r-observatory/dplyr-1.2.1.swidtag"))
   expect_equal(normalize_swid(ours), normalize_swid(theirs))
@@ -218,6 +224,7 @@ test_that("R Observatory's own sample breaks no SWID structural rule", {
 })
 
 test_that("a padded regid is trimmed before use", {
+  skip_on_cran()
   build <- function(regid) {
     sbom_package(test_path("fixtures/pkgs/srcpkg"), lib = fixture_lib(), organization = "Org",
                  regid = regid, timestamp = 0)
@@ -237,6 +244,7 @@ test_that("a padded regid is trimmed before use", {
 })
 
 test_that("the SWID reader and the validator trim a padded regid", {
+  skip_on_cran()
   tag <- function(regid) {
     x <- sbom_package(test_path("fixtures/pkgs/srcpkg"), lib = fixture_lib(), organization = "Org",
                       regid = regid, timestamp = 0)

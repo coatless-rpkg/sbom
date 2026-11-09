@@ -73,6 +73,7 @@ test_that("a LinkingTo copy in an renv SBOM names the lockfile as its version's 
 })
 
 test_that("embedded components nest in CycloneDX and validate everywhere", {
+  skip_on_cran()
   skip_if_not_installed("jsonvalidate"); skip_if_not_installed("yaml")
   x <- fixture_sbom()
   d <- cdx_document(x)
@@ -158,6 +159,7 @@ test_that("sbom_diff() matches embedded components by ref", {
 })
 
 test_that("vendored libraries are found in src/, COPYRIGHTS and cph entries", {
+  skip_on_cran()
   x <- sbom_package(test_path("fixtures/pkgs/vendorpkg"), lib = local_fake_lib(list()))
   comps <- sbom_components(x)
   s <- comps[comps$name == "sqlite", ]
@@ -333,6 +335,7 @@ test_that("several packages with compiled code share one issue, labels in radix 
 })
 
 test_that("bundled JavaScript is found in htmlwidgets YAML and by header", {
+  skip_on_cran()
   skip_if_not_installed("yaml")
   x <- sbom_package(test_path("fixtures/pkgs/widgetpkg"), lib = local_fake_lib(list()))
   comps <- sbom_components(x)
@@ -462,6 +465,7 @@ test_that("YAML versions stay text, and a broken YAML file is noted", {
 })
 
 test_that("a declared and a header version that disagree are reported", {
+  skip_on_cran()
   skip_if_not_installed("yaml")
   dir <- withr::local_tempdir()
   dir.create(file.path(dir, "inst", "htmlwidgets"), recursive = TRUE)

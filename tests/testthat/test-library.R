@@ -1,4 +1,5 @@
 test_that("base_packages() matches this R installation", {
+  skip_on_cran()
   expect_setequal(base_packages(), rownames(installed.packages(priority = "base")))
 })
 
@@ -98,6 +99,7 @@ test_that("a package both suggested and required keeps its dependencies", {
 })
 
 test_that("a build reads only the DESCRIPTION files it reaches", {
+  skip_on_cran()
   pkgs <- c(list(a = c(Version = "1", Imports = "b"), b = c(Version = "1")),
             stats::setNames(rep(list(c(Version = "1")), 300), sprintf("unused%03d", 1:300)))
   lib <- local_fake_lib(pkgs)

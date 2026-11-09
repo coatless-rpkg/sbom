@@ -42,6 +42,7 @@ test_that("format = 'all' writes the eight files of the dplyr set", {
 })
 
 test_that("every format is byte-identical across runs, also in a C locale", {
+  skip_on_cran()
   withr::local_envvar(SOURCE_DATE_EPOCH = "1700000000")
   test_env <- environment()
   d1 <- withr::local_tempdir(); d2 <- withr::local_tempdir()
@@ -63,6 +64,7 @@ test_that("every format is byte-identical across runs, also in a C locale", {
 })
 
 test_that("a library SBOM, and an SBOM with overrides and a latin1 maintainer, validate in every format", {
+  skip_on_cran()
   skip_if_not_installed("jsonvalidate"); skip_if_not_installed("yaml")
   local_c_ctype()
   ov <- data.frame(component = c("localpkg", "srcpkg"), field = c("license_spdx", "supplier_name"),
@@ -116,6 +118,7 @@ test_that("a failing writer leaves existing files untouched and writes nothing",
 })
 
 test_that("version applies to every format that lists it", {
+  skip_on_cran()
   x <- fixture_sbom(); dir <- withr::local_tempdir()
   write_sbom(x, dir, format = "all", version = "2.2")
   expect_match(paste(readLines(file.path(dir, "srcpkg-0.1.0.spdx.json")), collapse = ""), "SPDX-2.2")
@@ -125,6 +128,7 @@ test_that("version applies to every format that lists it", {
 })
 
 test_that("text typed in a UTF-8 script is written as UTF-8 in a C locale", {
+  skip_on_cran()
   # "Cafe A" with an acute e and a ring A: the bytes a UTF-8 script passes in,
   # marked "unknown".
   bytes <- as.raw(c(0x43, 0x61, 0x66, 0xc3, 0xa9, 0x20, 0xc3, 0x85))

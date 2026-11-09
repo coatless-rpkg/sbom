@@ -25,6 +25,7 @@ test_that("sbom_example() lists the examples, sorted, and gives the path of each
 })
 
 test_that("sbom_example() refuses anything but the name of an example", {
+  skip_on_cran()
   expect_error(sbom_example("nope"), "There is no example called \"nope\"", class = "rlang_error")
   expect_error(sbom_example("nope"), "study-overrides.csv", class = "rlang_error")
   expect_error(sbom_example("../DESCRIPTION"), "no example called", class = "rlang_error")
@@ -67,6 +68,7 @@ test_that("a copy keeps its name and contents, and changing it leaves the exampl
 
 # The guides rely on these.
 test_that("the analysis lockfile misses a package the script uses, and its manifest drifts", {
+  skip_on_cran()
   proj <- local_example("analysis")
   x <- sbom(proj, system = FALSE)
   comps <- sbom_components(x)
@@ -84,6 +86,7 @@ test_that("the analysis lockfile misses a package the script uses, and its manif
 })
 
 test_that("the study's overrides answer what sbom could not determine", {
+  skip_on_cran()
   study <- local_example("study")
   x <- sbom(study, system = FALSE)
   expect_setequal(sbom_components(x)$name[!sbom_components(x)$is_root %in% TRUE &

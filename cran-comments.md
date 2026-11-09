@@ -1,3 +1,10 @@
+## Resubmission
+
+This is a resubmission. The first submission's check took 12 minutes on
+r-devel-windows-x86_64, over the 10-minute limit. In this version, 204 of the
+slower tests skip on CRAN with `skip_on_cran()`, which cuts the test time by
+about 60%. They still run on GitHub Actions, which sets `NOT_CRAN`.
+
 ## R CMD check results
 
 0 errors | 0 warnings | 1 note

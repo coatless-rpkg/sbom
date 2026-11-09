@@ -73,6 +73,7 @@ test_that("a static Nix SBOM records declared names, unknown versions and one is
 })
 
 test_that("the static SBOM describes R, git and archive packages, system packages and TeX Live", {
+  skip_on_cran()
   x <- sbom_nix(test_path("fixtures", "nix", "rix-date.nix"), nix = FALSE, system = FALSE, embedded = FALSE)
   comps <- sbom_components(x)
   rels <- sbom_dependencies(x)
@@ -122,6 +123,7 @@ test_that("system packages and TeX Live are recorded whatever system is", {
 })
 
 test_that("the issues, notes and inputs say where the packages come from", {
+  skip_on_cran()
   path <- test_path("fixtures", "nix", "rix-date.nix")
   x <- sbom_nix(path, nix = FALSE, system = FALSE, embedded = FALSE)
   issues <- sbom_issues(x)
@@ -189,6 +191,7 @@ test_that("sys_nix_available needs both nix-instantiate and nix-store", {
 })
 
 test_that("the static Nix SBOM is valid in every format", {
+  skip_on_cran()
   x <- sbom_nix(test_path("fixtures", "nix", "rix-date.nix"), nix = FALSE, author = "A", timestamp = 0)
   expect_valid_in_every_format(x, "rix-date")
   y <- sbom_nix(test_path("fixtures", "nix", "rix-commit.nix"), nix = FALSE, author = "A", timestamp = 0)
@@ -221,6 +224,7 @@ test_that("a rix file with no R packages is valid", {
 })
 
 test_that("a block that starts and is not closed is one warning", {
+  skip_on_cran()
   path <- edited_nix("rix-date.nix", function(text) {
     substr(text, 1L, regexpr("      propagatedBuildInputs", text, fixed = TRUE)[[1L]] + 40L)
   })
@@ -269,6 +273,7 @@ test_that("a package in rpkgs and in a git package's inputs is one component", {
 })
 
 test_that("a git package's revision and an archive's URL reach SPDX", {
+  skip_on_cran()
   path <- edited_nix("rix-date.nix", function(text) {
     gsub("https://github.com/rap4all/housing/", "https://gitlab.com/rap4all/housing", text, fixed = TRUE)
   })
@@ -303,6 +308,7 @@ test_that("a git package's revision and an archive's URL reach SPDX", {
 })
 
 test_that("git and archive URLs lose their credentials, query and fragment", {
+  skip_on_cran()
   path <- edited_nix("rix-date.nix", function(text) {
     text <- gsub(
       "https://github.com/rap4all/housing/", "https://user:tok@gitlab.example/x/y?private_token=abc",
@@ -347,6 +353,7 @@ snapshot_nix <- function(snapshot = "ppm", file = "rix-date.nix") {
 }
 
 test_that("a PACKAGES snapshot fills versions and the dependency graph as inferred", {
+  skip_on_cran()
   local_mocked_bindings(read_packages_file = function(location, ...) snapshot_frame())
   x <- snapshot_nix()
   comps <- sbom_components(x)
@@ -432,6 +439,7 @@ test_that("snapshot = ppm asks for the PACKAGES file of the nixpkgs date", {
 })
 
 test_that("a URL snapshot is named by its URL and a local one by its file", {
+  skip_on_cran()
   seen <- new.env()
   local_mocked_bindings(read_packages_file = function(location, ...) {
     assign("location", location, envir = seen)
@@ -525,6 +533,7 @@ test_that("nix-not-in-snapshot is singular for one package", {
 })
 
 test_that("nix-not-in-snapshot says which versions an override asserts, and goes once none is unknown", {
+  skip_on_cran()
   local_mocked_bindings(read_packages_file = function(location, ...) {
     out <- snapshot_frame()
     out[out$Package != "janitor" & out$Package != "data.table", ]
@@ -603,6 +612,7 @@ test_that("nix-not-in-snapshot says which versions an override asserts, and goes
 })
 
 test_that("git packages without a version get one aggregated warning with a snapshot", {
+  skip_on_cran()
   local_mocked_bindings(read_packages_file = function(location, ...) snapshot_frame())
   x <- snapshot_nix()
   issues <- sbom_issues(x)
@@ -629,6 +639,7 @@ test_that("plural git packages are listed in radix order", {
 })
 
 test_that("the download-locations note names the snapshot when one was used", {
+  skip_on_cran()
   local_mocked_bindings(read_packages_file = function(location, ...) snapshot_frame())
   old <- "Download locations are not recorded, since sbom did not look up any package repository."
   x <- snapshot_nix()
@@ -658,6 +669,7 @@ test_that("a git or archive package takes its dependencies from the Nix file, no
 })
 
 test_that("a snapshot location is shown without credentials, query or fragment", {
+  skip_on_cran()
   local_mocked_bindings(read_packages_file = function(location, ...) snapshot_frame())
   x <- snapshot_nix("https://user:secret@example.org/cran/PACKAGES?token=abc#frag")
   expect_equal(x$metadata$inputs$path[x$metadata$inputs$kind == "snapshot"], "https://example.org/cran/PACKAGES")
@@ -697,6 +709,7 @@ test_that("duplicate Package rows in a snapshot pick the highest version", {
 })
 
 test_that("packages without a license or maintainer are one warning, and a library fill takes them off", {
+  skip_on_cran()
   path <- test_path("fixtures", "nix", "rix-date.nix")
   x <- sbom_nix(path, nix = FALSE, system = FALSE, embedded = FALSE)
   issues <- sbom_issues(x)
@@ -729,6 +742,7 @@ test_that("packages without a license or maintainer are one warning, and a libra
 })
 
 test_that("nix-licenses-unknown is singular for one package and shows at most 20 names", {
+  skip_on_cran()
   one <- edited_nix("rix-commit.nix", function(text) sub("dplyr\\s+tidyr;", "dplyr;", text))
   expect_equal(parse_rix(read_nix_file(one))$packages, "dplyr")
   x <- sbom_nix(one, nix = FALSE, system = FALSE, embedded = FALSE)
@@ -755,6 +769,7 @@ bioc_nix <- function(env = parent.frame()) {
 }
 
 test_that("a name from rPackages is assumed to be from CRAN, with an inferred package URL and no supplier", {
+  skip_on_cran()
   x <- sbom_nix(bioc_nix(), nix = FALSE, system = FALSE, embedded = FALSE)
   comps <- sbom_components(x)
   deseq <- comps[comps$name == "DESeq2", ]
@@ -849,6 +864,7 @@ test_that("Nix mode reads exact versions from the store", {
 })
 
 test_that("a package that rix builds from git or the CRAN archive is an R package described as in the file", {
+  skip_on_cran()
   local_nix_store(store_dir())
   x <- nix_sbom()
   comps <- sbom_components(x)
@@ -883,6 +899,7 @@ test_that("a package that rix builds from git or the CRAN archive is an R packag
 })
 
 test_that("a store package with no repository on record is assumed to be from CRAN, and an issue says so", {
+  skip_on_cran()
   local_nix_store(store_dir())
   x <- nix_sbom()
   comps <- sbom_components(x)
@@ -922,6 +939,7 @@ test_that("a package that rix fetches from git never takes CRAN from its DESCRIP
 })
 
 test_that("store paths without a version are one info issue, which R packages without one join", {
+  skip_on_cran()
   local_nix_store(store_dir())
   inner <- sys_nix_query
   source <- "sj9xaxzlyijyr97qbzmb5zip4n2kpizh-source"
@@ -1058,6 +1076,7 @@ test_that("an unbuilt environment falls back to the file, with one issue", {
 })
 
 test_that("the fallback applies the snapshot, and Nix mode does not use it", {
+  skip_on_cran()
   packages <- data.frame(
     Package = c("dplyr", "data.table", "ggplot2", "janitor"), Version = c("1.1.4", "1.15.4", "3.5.1", "2.2.0"),
     Depends = NA_character_, Imports = NA_character_, LinkingTo = NA_character_
@@ -1073,6 +1092,7 @@ test_that("the fallback applies the snapshot, and Nix mode does not use it", {
 })
 
 test_that("nix = NA reads the store when Nix is installed, and nix = FALSE never does", {
+  skip_on_cran()
   local_nix_store(store_dir())
   file <- test_path("fixtures", "nix", "rix-date.nix")
   x <- sbom_nix(file, system = FALSE, embedded = FALSE)
@@ -1091,6 +1111,7 @@ test_that("a hand-written file is read from the store with Nix, and unbuilt it i
 })
 
 test_that("a Nix failure falls back to the file for nix = NA and is an error for nix = TRUE", {
+  skip_on_cran()
   local_nix_store(store_dir())
   local_mocked_bindings(sys_nix_instantiate = function(file) NULL)
   file <- test_path("fixtures", "nix", "rix-date.nix")
@@ -1100,6 +1121,7 @@ test_that("a Nix failure falls back to the file for nix = NA and is an error for
 })
 
 test_that("the Nix SBOM is valid in every format", {
+  skip_on_cran()
   local_nix_store(store_dir())
   x <- sbom_nix(test_path("fixtures", "nix", "rix-date.nix"), nix = TRUE, author = "A", timestamp = 0)
   expect_valid_in_every_format(x, "nix-store")
@@ -1171,6 +1193,7 @@ test_that("a package with no output in the store makes the environment unbuilt",
 })
 
 test_that("the order of Nix's answers does not change the SBOM", {
+  skip_on_cran()
   local_nix_store(store_dir())
   base <- nix_sbom()
   files <- c("references.txt", "outputs.txt", "requisites.txt", "graph.dot")

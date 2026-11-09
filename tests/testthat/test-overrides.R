@@ -28,11 +28,13 @@ test_that("an override that contradicts found data is recorded", {
 })
 
 test_that("bad overrides fail loudly", {
+  skip_on_cran()
   expect_error(build_with(ov_row(component = "nope", field = "version", value = "1")), "nope")
   expect_error(build_with(ov_row(field = "color")), "color")
 })
 
 test_that("errors name the data row, and missing columns are reported", {
+  skip_on_cran()
   ov <- rbind(ov_row(), ov_row(component = "nope"))
   expect_error(build_with(ov), "row 2")
   expect_error(build_with(ov_row(field = "color")), "row 1")
@@ -43,6 +45,7 @@ test_that("errors name the data row, and missing columns are reported", {
 })
 
 test_that("a component matches by ref, and an ambiguous name is an error", {
+  skip_on_cran()
   x <- build_with(ov_row(component = "pkg:cran/cranpkg@1.2.0", field = "supplier_name",
                          value = "Acme"))
   comps <- sbom_components(x)
@@ -166,6 +169,7 @@ all_refs <- function(x) {
 }
 
 test_that("a version override moves the purl, the ref and every reference to the ref", {
+  skip_on_cran()
   before <- identity_sbom()
   expect_true("pkg:cran/midpkg@1.0#embedded/hdrpkg" %in% before$components$ref)
   x <- identity_sbom(ov_row(component = "midpkg", field = "version", value = "2.1"))
@@ -206,6 +210,7 @@ test_that("a version override moves the purl, the ref and every reference to the
 })
 
 test_that("a version override on the root moves metadata$root", {
+  skip_on_cran()
   x <- identity_sbom(ov_row(component = "rootpkg", field = "version", value = "0.2.0"))
   expect_identical(x$metadata$root, "pkg:cran/rootpkg@0.2.0")
   expect_false(any(grepl("rootpkg@0.1.0", all_refs(x), fixed = TRUE)))
@@ -289,6 +294,7 @@ test_that("a version override never rewrites a purl that a purl row asserts, and
 })
 
 test_that("a purl ref given a version and an explicit purl moves to that purl, with every reference", {
+  skip_on_cran()
   rows <- list(
     ov_row(component = "midpkg", field = "version", value = "2.1"),
     ov_row(component = "midpkg", field = "purl", value = "pkg:cran/midpkg@2.1?repository_url=https://cran.example.org")
@@ -523,6 +529,7 @@ test_that("the issues that a dependency is not locked or not recorded are reword
 })
 
 test_that("a version override drops the hashes of the version found", {
+  skip_on_cran()
   tmp <- withr::local_tempdir()
   tarball <- file.path(tmp, "srcpkg_0.1.0.tar.gz")
   withr::with_dir(test_path("fixtures/pkgs"), utils::tar(tarball, "srcpkg", compression = "gzip"))
@@ -635,6 +642,7 @@ test_that("the issue on LinkingTo packages that are not installed says which ver
 })
 
 test_that("the issue that a static Nix SBOM has no versions goes once every version is asserted", {
+  skip_on_cran()
   x <- sbom_nix(test_path("fixtures", "nix", "rix-date.nix"), nix = FALSE, system = FALSE, embedded = FALSE)
   comps <- x$components
   counted <- comps$name[!comps$is_root & comps$source_input %in% "default.nix" &

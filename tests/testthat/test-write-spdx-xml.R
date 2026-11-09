@@ -73,6 +73,7 @@ test_that("SPDX XML keeps non-ASCII text under a C locale", {
 })
 
 test_that("SPDX XML matches R Observatory's dplyr 1.2.1 sample", {
+  skip_on_cran()
   tf <- withr::local_tempfile(fileext = ".spdx.xml"); write_text(spdx_xml(parity_sbom()), tf)
   expect_equal(normalize_spdx(spdx_xml_read(tf)),
                normalize_spdx(spdx_xml_read(test_path("fixtures/r-observatory/dplyr-1.2.1.spdx.xml"))))

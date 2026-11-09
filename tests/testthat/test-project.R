@@ -92,6 +92,7 @@ test_that("the code scan lists the packages it finds that are not installed as u
 })
 
 test_that("code the scan cannot parse is reported as an incomplete scan", {
+  skip_on_cran()
   dir <- withr::local_tempdir()
   write_text("library(cli)\n", file.path(dir, "ok.R"))
   write_text("library(glue", file.path(dir, "bad.R"))
@@ -102,6 +103,7 @@ test_that("code the scan cannot parse is reported as an incomplete scan", {
 })
 
 test_that("the lockfile wins over the manifest, and every disagreement is reported", {
+  skip_on_cran()
   dir <- withr::local_tempdir()
   file.copy(test_path("fixtures/renv/modern/renv.lock"), dir)
   file.copy(test_path("fixtures/rsconnect/manifest.json"), dir)
@@ -137,6 +139,7 @@ test_that("a hand-written default.nix without Nix is an issue, not an error", {
 })
 
 test_that("sbom() lists a snapshot under inputs and names it, without its credentials", {
+  skip_on_cran()
   dir <- withr::local_tempdir()
   file.copy(test_path("fixtures", "nix", "rix-date.nix"), file.path(dir, "default.nix"))
   seen <- new.env()
@@ -179,6 +182,7 @@ test_that("sbom() checks nix and snapshot before reading, and only an unreadable
 })
 
 test_that("a Nix evaluation that fails on a hand-written default.nix is soft under nix = NA", {
+  skip_on_cran()
   dir <- withr::local_tempdir()
   file.copy(test_path("fixtures", "nix", "hand.nix"), file.path(dir, "default.nix"))
   write_text("library(jsonlite)\n", file.path(dir, "analysis.R"))
@@ -207,6 +211,7 @@ test_that("a Nix evaluation that fails on a hand-written default.nix is soft und
 })
 
 test_that("nix = TRUE makes a default.nix cross-check that Nix cannot read an error", {
+  skip_on_cran()
   dir <- withr::local_tempdir()
   file.copy(test_path("fixtures", "nix", "rix-date.nix"), file.path(dir, "default.nix"))
   file.copy(test_path("fixtures/renv/modern/renv.lock"), dir)
@@ -240,6 +245,7 @@ test_that("a hand-written default.nix is also an issue as a cross-check source",
 })
 
 test_that("nix = FALSE keeps the default.nix cross-check away from Nix", {
+  skip_on_cran()
   dir <- withr::local_tempdir()
   file.copy(test_path("fixtures", "nix", "rix-date.nix"), file.path(dir, "default.nix"))
   file.copy(test_path("fixtures/renv/modern/renv.lock"), dir)
@@ -256,6 +262,7 @@ test_that("nix = FALSE keeps the default.nix cross-check away from Nix", {
 })
 
 test_that("a default.nix cross-check that Nix could not read says so in the SBOM", {
+  skip_on_cran()
   dir <- withr::local_tempdir()
   file.copy(test_path("fixtures", "nix", "rix-date.nix"), file.path(dir, "default.nix"))
   file.copy(test_path("fixtures/renv/modern/renv.lock"), dir)
@@ -280,6 +287,7 @@ test_that("a default.nix cross-check that Nix could not read says so in the SBOM
 })
 
 test_that("default.nix is read by sbom() with its records resolved after the build", {
+  skip_on_cran()
   dir <- withr::local_tempdir()
   file.copy(test_path("fixtures", "nix", "rix-date.nix"), file.path(dir, "default.nix"))
   x <- sbom(dir, system = FALSE, nix = FALSE)
@@ -314,6 +322,7 @@ local_lock_and_manifest <- function(env = parent.frame()) {
 }
 
 test_that("a cross-check adds the drift it finds and nothing else", {
+  skip_on_cran()
   dir <- local_lock_and_manifest()
   lib <- local_fake_lib(list())
   x <- sbom(dir, library = lib, lib = lib)
@@ -338,6 +347,7 @@ test_that("a cross-check adds the drift it finds and nothing else", {
 })
 
 test_that("DESCRIPTION and the code report only what they use that the SBOM lacks", {
+  skip_on_cran()
   dir <- withr::local_tempdir()
   file.copy(test_path("fixtures/renv/modern/renv.lock"), dir)
   write_text("Package: mypkg\nVersion: 1.0\nImports: cli, yyy\nSuggests: sss\n",
@@ -362,6 +372,7 @@ test_that("DESCRIPTION and the code report only what they use that the SBOM lack
 })
 
 test_that("a source that cannot be read is reported and not cross-checked", {
+  skip_on_cran()
   dir <- withr::local_tempdir()
   file.copy(test_path("fixtures/renv/modern/renv.lock"), dir)
   write_text("{ not json", file.path(dir, "manifest.json"))
@@ -404,6 +415,7 @@ test_that("a source that cannot be read is reported and not cross-checked", {
 })
 
 test_that("a source's read failure names no path, even for a relative folder", {
+  skip_on_cran()
   dir <- withr::local_tempdir()
   file.copy(test_path("fixtures/renv/modern/renv.lock"), dir)
   write_text("{ not json", file.path(dir, "manifest.json"))
@@ -431,6 +443,7 @@ test_that("a manifest outranks DESCRIPTION, and DESCRIPTION outranks the code", 
 })
 
 test_that("sbom() passes on only the arguments its reader takes", {
+  skip_on_cran()
   dir <- local_lock_and_manifest()
   expect_error(sbom(dir, libary = "x", foo = 1), "libary.*foo", class = "rlang_error")
   expect_error(sbom(dir, "x"), "named", class = "rlang_error")
@@ -466,6 +479,7 @@ test_that("sbom() forwards every argument the reader it picks takes", {
 })
 
 test_that("the code scan ignores the renv that renv infers from its own lockfile", {
+  skip_on_cran()
   dir <- withr::local_tempdir()
   file.copy(test_path("fixtures/renv/modern/renv.lock"), dir)
   write_text("library(cli)\n", file.path(dir, "analysis.R"))
@@ -535,6 +549,7 @@ test_that("a package's code scan skips data and files R CMD build leaves out", {
 })
 
 test_that("sbom() finds no drift between this package's DESCRIPTION and its code", {
+  skip_on_cran()
   root <- test_path("../..")
   desc <- file.path(root, "DESCRIPTION")
   skip_if_not(file.exists(desc) && identical(read_description(desc)[["Package"]], "sbom"),
@@ -543,6 +558,7 @@ test_that("sbom() finds no drift between this package's DESCRIPTION and its code
 })
 
 test_that("every reader's SBOM validates in every format and is byte-identical across runs", {
+  skip_on_cran()
   skip_if_not_installed("jsonvalidate"); skip_if_not_installed("yaml")
   withr::local_envvar(SOURCE_DATE_EPOCH = "1700000000")
   build <- list(
@@ -567,6 +583,7 @@ test_that("every reader's SBOM validates in every format and is byte-identical a
 })
 
 test_that("a golem app's own locked package and its project root keep separate refs", {
+  skip_on_cran()
   dir <- local_fixture_copy("fixtures/golem/myapp")
   lib <- local_fake_lib(list())
   x <- sbom(dir, library = lib, lib = lib)
@@ -603,6 +620,7 @@ test_that("a project inside a git repository takes the repository's commit", {
 })
 
 test_that("a DESCRIPTION without a Package field is used only for the dependencies it declares", {
+  skip_on_cran()
   dir <- withr::local_tempdir()
   write_text("Type: project\nTitle: My analysis\nImports: cli, yyy\nSuggests: sss\n", file.path(dir, "DESCRIPTION"))
   write_text("library(cli)\n", file.path(dir, "a.R"))
@@ -626,6 +644,7 @@ test_that("a DESCRIPTION without a Package field is used only for the dependenci
 })
 
 test_that("a nested project's code is not scanned as the parent's", {
+  skip_on_cran()
   dir <- withr::local_tempdir()
   files <- c(
     "analysis.R" = "library(cli)\n",
@@ -660,6 +679,7 @@ test_that("a nested project's code is not scanned as the parent's", {
 })
 
 test_that("sbom() applies sbom-overrides.csv from the folder unless overrides are given", {
+  skip_on_cran()
   dir <- local_lock_and_manifest()
   csv <- file.path(dir, "sbom-overrides.csv")
   write_text("component,field,value,asserted_by,reason\nglue,license_spdx,Apache-2.0,A Person,Checked by hand.\n", csv)

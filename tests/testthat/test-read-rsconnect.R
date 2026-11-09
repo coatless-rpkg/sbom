@@ -46,6 +46,7 @@ test_that("a manifest without an appmode is still described", {
 })
 
 test_that("an unparseable app file is reported as an incomplete scan", {
+  skip_on_cran()
   dir <- withr::local_tempdir()
   file.copy(test_path("fixtures/rsconnect/manifest.json"), dir)
   write_text("library(glue", file.path(dir, "bad.R"))
@@ -54,6 +55,7 @@ test_that("an unparseable app file is reported as an incomplete scan", {
 })
 
 test_that("a manifest SBOM validates in every format", {
+  skip_on_cran()
   skip_if_not_installed("jsonvalidate"); skip_if_not_installed("yaml")
   x <- sbom_rsconnect(test_path("fixtures/rsconnect/manifest.json"))
   ext <- stats::setNames(sbom_formats()$extension, sbom_formats()$format)
@@ -169,6 +171,7 @@ test_that("a manifest that omits a license or dependencies says so", {
 })
 
 test_that("a manifest of the wrong shape is a clear error, and not a Posit Connect manifest", {
+  skip_on_cran()
   dir <- withr::local_tempdir()
   f <- file.path(dir, "manifest.json")
   shapes <- list(

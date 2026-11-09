@@ -120,6 +120,7 @@ advisory_text <- function(x) {
 }
 
 test_that("a local advisory file lists the advisories of exact versions without the network", {
+  skip_on_cran()
   local_mocked_bindings(
     osv_download = function(...) stop("osv_download() must not run for a local file."),
     osv_lookup = function(...) stop("osv_lookup() must not run for a local file.")
@@ -161,6 +162,7 @@ test_that("a local advisory file lists the advisories of exact versions without 
 })
 
 test_that("advisories = TRUE downloads OSV's export and looks up each upstream id once", {
+  skip_on_cran()
   downloads <- local_osv_download()
   lookups <- local_osv_lookup()
   x <- fakepkg_sbom(advisories = TRUE)
@@ -256,6 +258,7 @@ test_that("a damaged local file under 'continue' names it by its basename", {
 })
 
 test_that("a zip of records sbom cannot read, or without a CRAN record, is an error or with 'continue' a warning", {
+  skip_on_cran()
   reasons <- c(
     `not-cran.zip` = "it holds no CRAN records",
     `affected-object.zip` = "the record RSEC-9000-96.json is not an OSV record",
@@ -348,6 +351,7 @@ test_that("the lookups stop after one fails at the connection, and the rest coun
 })
 
 test_that("the lookups together take no longer than the cap, 120 seconds", {
+  skip_on_cran()
   expect_identical(osv_lookup_seconds(), 120)
   local_osv_download()
   calls <- new.env()
@@ -398,6 +402,7 @@ test_that("a download larger than the cap is an advisories error", {
 })
 
 test_that("without advisories, the note is in every format and sbom_advisories() says why it is empty", {
+  skip_on_cran()
   x <- fixture_sbom()
   expect_identical(x$metadata$advisories$status, "not-requested")
   expect_false(x$metadata$advisories$requested)
@@ -518,6 +523,7 @@ not_cran_one <- function(name) {
 }
 
 test_that("a dependency given a version and a CRAN package URL by overrides is matched", {
+  skip_on_cran()
   p <- local_root_project("fakepkg (>= 0.1)")
   overrides <- data.frame(
     component = "fakepkg", field = c("version", "purl"), value = c("1.0.0", "pkg:cran/fakepkg@1.0.0"),
@@ -562,6 +568,7 @@ test_that("a package installed from a local source is named, not matched", {
 })
 
 test_that("a code scan without a library names the packages it found", {
+  skip_on_cran()
   p <- local_root_project("fakepkg")
   proj <- file.path(p$dir, "proj")
   dir.create(proj)
@@ -652,6 +659,7 @@ local_count_reads <- function(env = parent.frame()) {
 }
 
 test_that("sbom() matches advisories once, after the overrides, and never in a cross-check", {
+  skip_on_cran()
   dir <- local_lock_project()
   # A package DESCRIPTION, read by sbom_package() to cross-check renv.lock.
   write_text("Package: lockproj\nVersion: 0.1.0\nLicense: MIT\nImports: fakepkg\n", file.path(dir, "DESCRIPTION"))
@@ -702,6 +710,7 @@ test_that("sbom_shiny() matches advisories once, after the app layout", {
 })
 
 test_that("every builder takes advisories", {
+  skip_on_cran()
   p <- local_fakepkg_project()
   lock <- file.path(local_lock_project(), "renv.lock")
   nix <- withr::local_tempfile(fileext = ".nix")
@@ -739,6 +748,7 @@ test_that("every builder takes advisories", {
 })
 
 test_that("the advisory arguments are checked before anything is read", {
+  skip_on_cran()
   missing <- file.path(withr::local_tempdir(), "missing.zip")
   folder <- withr::local_tempdir()
   nowhere <- file.path(withr::local_tempdir(), "nowhere")
@@ -770,6 +780,7 @@ test_that("the advisory arguments are checked before anything is read", {
 })
 
 test_that("print() and summary() show the advisory count without safety wording", {
+  skip_on_cran()
   x <- fakepkg_sbom(advisories = osv_zip())
   line <- "Advisories: 1 listed by OSV for these exact versions."
   expect_true(line %in% utils::capture.output(print(x)))
@@ -825,6 +836,7 @@ test_that("the advisories are part of a document's id, and an empty table leaves
 })
 
 test_that("sbom_advisories() tells a version with no fix from one whose fix is not known", {
+  skip_on_cran()
   # RSEC-9000-1 is fixed for fakepkg 1.0.0 in 1.1.0; RSEC-9000-2 has no fix
   # for openpkg 2.0; listpkg 2.0.1 is only listed by RSEC-9000-4.
   x <- apply_advisories(
@@ -866,6 +878,7 @@ test_that("new_sbom() checks the advisories table", {
 })
 
 test_that("no advisory sentence, message or doc states or implies that a package is safe", {
+  skip_on_cran()
   local_osv_download()
   sha <- strrep("a1", 20)
   warned <- new.env()

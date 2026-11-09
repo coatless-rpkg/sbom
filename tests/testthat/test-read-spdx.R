@@ -461,6 +461,7 @@ test_that("YAML alias files are refused at once, without being expanded", {
 # Nesting depth of YAML, before it is parsed -------------------------------------
 
 test_that("YAML that nests more than 200 levels is refused before it is parsed", {
+  skip_on_cran()
   skip_if_not_installed("yaml")
   dir <- withr::local_tempdir()
   deep <- c(
@@ -635,6 +636,7 @@ test_that("a tag-value file of 100,000 repeated lines reads in linear time", {
 })
 
 test_that("SPDX YAML that holds more than one document is refused before it is parsed", {
+  skip_on_cran()
   skip_if_not_installed("yaml")
   dir <- withr::local_tempdir()
   nest <- paste0(strrep("[", 1000), strrep("]", 1000))

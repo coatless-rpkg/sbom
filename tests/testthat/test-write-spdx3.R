@@ -45,6 +45,7 @@ test_that("SPDX 3 passes its JSON schema, which is a partial check", {
 })
 
 test_that("SPDX 3 matches R Observatory's dplyr 1.2.1 sample", {
+  skip_on_cran()
   ours <- jsonlite::fromJSON(spdx3_jsonld(parity_sbom()), simplifyVector = FALSE)
   theirs <- jsonlite::read_json(test_path("fixtures/r-observatory/dplyr-1.2.1.spdx3.jsonld"))
   expect_equal(normalize_spdx3(ours), normalize_spdx3(theirs))
@@ -173,6 +174,7 @@ test_that("the schema accepts R Observatory's sample and rejects a broken elemen
 })
 
 test_that("SPDX 3 text is UTF-8 and literal in a C locale", {
+  skip_on_cran()
   local_c_ctype()
   dir <- local_latin1_pkg()
   x <- sbom_package(dir, lib = dirname(dir))

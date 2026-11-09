@@ -106,6 +106,7 @@ test_that("each LicenseRef a package uses is defined once, in hasExtractedLicens
 })
 
 test_that("R and base packages carry a supplier only when an override asserts it", {
+  skip_on_cran()
   ov <- data.frame(
     component = c("R", "methods"), field = "supplier_name", value = "The R Foundation",
     asserted_by = "Test", reason = "Fixture"
