@@ -1,15 +1,13 @@
-## Resubmission
+## Submission
 
-This is a resubmission. The first submission's check took 12 minutes on
-r-devel-windows-x86_64, over the 10-minute limit. In this version, 204 of the
-slower tests skip on CRAN with `skip_on_cran()`, which cuts the test time by
-about 60%. They still run on GitHub Actions, which sets `NOT_CRAN`.
+This is an update to sbom 0.1.0. It adds two features, both listed in
+NEWS.md: `checksums = TRUE` records the SHA-256 and MD5 of each CRAN or
+Bioconductor package's source tarball, and each R package's DESCRIPTION Title
+is now written as its description.
 
 ## R CMD check results
 
-0 errors | 0 warnings | 1 note
-
-* This is a new submission.
+0 errors | 0 warnings | 0 notes
 
 ## Test environments
 
@@ -21,10 +19,11 @@ about 60%. They still run on GitHub Actions, which sets `NOT_CRAN`.
 
 * The package uses the network only when asked to: `advisories = TRUE`
   downloads the Open Source Vulnerabilities (OSV) export of CRAN advisories
-  and looks up the ratings of the advisory ids it names, and a `snapshot`
-  given as a URL looks package versions up in a CRAN snapshot. The two
-  examples that would use the network are in `\dontrun{}`, and the tests mock
-  every call that could reach it.
+  and looks up the ratings of the advisory ids it names, a `snapshot` given as
+  a URL looks package versions up in a CRAN snapshot, and `checksums = TRUE`
+  reads repository metadata with 'pak', which downloads it when its copy is
+  out of date. The two examples that would use the network are in
+  `\dontrun{}`, and the tests mock every call that could reach it.
 * System commands (`otool`, `ldd`, `dpkg`, `rpm`, `nix-instantiate`,
   `nix-store`, and a child R process for `sbom_shiny(evaluate_ui = TRUE)`) run
   only through wrapper functions, which the tests mock. The few tests that call
