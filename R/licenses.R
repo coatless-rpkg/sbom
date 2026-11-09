@@ -20,10 +20,12 @@ license_spdx <- function(x) {
   license_lookup(x)$spdx
 }
 
+# `x` as text with surrounding space trimmed and inner runs of space collapsed.
 license_normalize <- function(x) {
   gsub("\\s+", " ", trimws(as.character(x)))
 }
 
+# The table of R license specifications and their SPDX expressions, read once.
 license_table <- function() {
   if (is.null(the$license_table)) {
     path <- system.file("extdata", "licenses.csv", package = "sbom")
@@ -32,6 +34,8 @@ license_table <- function() {
   the$license_table
 }
 
+# A data frame of `spec`, `spdx` and `known` for each license in `x`; `spdx` is
+# NA and `known` FALSE when the table has no row for it.
 license_lookup <- function(x) {
   spec <- license_normalize(x)
   tbl <- license_table()
@@ -44,6 +48,8 @@ license_lookup <- function(x) {
   )
 }
 
+# The comment on each license in `x`: how DESCRIPTION declared it and why it has
+# no SPDX expression, or NA for a missing one.
 license_comment <- function(x) {
   r <- license_lookup(x)
   out <- rep(NA_character_, nrow(r))

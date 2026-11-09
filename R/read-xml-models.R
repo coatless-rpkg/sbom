@@ -156,6 +156,8 @@ cdx_xml_trim <- function(x) {
   x
 }
 
+# The CycloneDX children of the XML `node`, as a named list, in the namespace
+# and prefixes of the context `ctx`.
 cdx_xml_kids <- function(node, ctx) {
   xml_kids_in(node, ctx$ns, ctx$prefixes)
 }

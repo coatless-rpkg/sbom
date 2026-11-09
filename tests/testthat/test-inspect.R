@@ -1,10 +1,3 @@
-local_plain_cli <- function(env = parent.frame()) {
-  withr::local_options(
-    cli.width = 80, cli.num_colors = 1, cli.unicode = FALSE,
-    .local_envir = env
-  )
-}
-
 test_that("summary() counts components, licenses, unknowns and drift", {
   local_plain_cli()
   s <- summary(fixture_sbom())

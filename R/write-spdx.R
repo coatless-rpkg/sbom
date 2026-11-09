@@ -10,6 +10,8 @@ spdx_prefixes <- c(
 )
 
 
+# `x` with every character outside letters, digits, `.` and `-` replaced by
+# `-`, as an SPDXID allows.
 spdx_sanitize <- function(x) {
   gsub("[^A-Za-z0-9.-]", "-", x)
 }
@@ -42,6 +44,7 @@ spdx_ids <- function(components) {
   ids
 }
 
+# Whether `v` is one non-NA, non-empty string.
 spdx_is_set <- function(v) {
   length(v) == 1L && !is.na(v) && nzchar(v)
 }
@@ -226,6 +229,8 @@ spdx_package <- function(row, id, version = "2.3", advisories = list()) {
   p
 }
 
+# The SPDX relationship objects of `x`: the DESCRIBES link from the document
+# to the root, then one per row of its relationships, using SPDXIDs `ids`.
 spdx_relationships <- function(x, ids) {
   rel <- x$relationships
   id_of <- function(ref) unname(ids[match(ref, x$components$ref)])
@@ -273,6 +278,8 @@ spdx_relationships <- function(x, ids) {
 
 spdx_versions <- c("2.2", "2.3")
 
+# The SPDX 2 document of `x` at spec `version` as a list for jsonlite, with
+# packages sorted by SPDXID. Aborts when `version` is not supported.
 spdx_document <- function(x, version = "2.3") {
   if (!is.character(version) || length(version) != 1L || !version %in% spdx_versions) {
     cli::cli_abort(
@@ -350,6 +357,8 @@ spdx_extracted_licenses <- function(packages) {
   })
 }
 
+# The SPDX 2 JSON text of `x` at spec `version`, pretty-printed and ending
+# in a newline.
 spdx_json <- function(x, version = "2.3") {
   json <- jsonlite::toJSON(
     spdx_document(x, version), auto_unbox = TRUE, pretty = TRUE, null = "null"

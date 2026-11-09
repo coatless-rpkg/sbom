@@ -68,6 +68,9 @@ decode_dcf <- function(bytes) {
   out
 }
 
+# The path of the DESCRIPTION file in `path`, a package folder, a source
+# archive (extracted into `exdir`) or the file itself. Aborts when there is
+# none.
 description_file <- function(path, exdir) {
   if (!is.character(path) || length(path) != 1L || is.na(path) || !file.exists(path)) {
     cli::cli_abort("{.file {path}} does not exist.")

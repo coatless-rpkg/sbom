@@ -372,6 +372,8 @@ content_purls <- function(purls, el) {
 
 # Profiles ---------------------------------------------------------------------
 
+# The findings of the "none" profile, which adds no checks to the integrity
+# rules: none.
 content_none <- function(tables, format = NA_character_) {
   content_bind(list())
 }

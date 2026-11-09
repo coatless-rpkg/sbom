@@ -1,3 +1,6 @@
+# Whether YAML text nests deeper than sbom reads (yaml_problem()).
+yaml_too_deep <- function(txt) identical(yaml_problem(txt, json_max_depth), "deep")
+
 tp <- function(...) test_path("fixtures", "third-party", ...)
 
 spdx_example <- function(version, format) {

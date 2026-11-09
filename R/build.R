@@ -297,6 +297,7 @@ sbom_installed <- function(pkgs = NULL, lib = .libPaths(), name = "R library",
   apply_advisories(apply_overrides(x, overrides), advisories, on_error)
 }
 
+# The placeholder package name of the root of a library build.
 installed_root_name <- function() ".sbom-library-root"
 
 # Every library path must exist. read_library() skips missing ones, which
@@ -336,10 +337,10 @@ check_regid <- function(regid, call = parent.frame()) {
 # resolve_dependencies() returns whose edges may also have an `evidence`
 # column (default "declared"). Its records come from a lock file rather than
 # a library: `package_evidence` and `package_source` give their evidence and
-# source, `where` says
-# where a missing dependency is not and `missing_code` is its issue code, `r_evidence` overrides the
-# evidence for an exact R version, and `all_required` makes every package
-# required, since a lock file lists what the project needs. `not_installed`
+# source, `where` says where a missing dependency is not and `missing_code`
+# is its issue code, `r_evidence` overrides the evidence for an exact R
+# version, and `all_required` makes every package required, since a lock
+# file lists what the project needs. `not_installed`
 # names the records that lacked a field and that no installed copy of the
 # same version could fill.
 build_sbom <- function(...) {
@@ -348,6 +349,8 @@ build_sbom <- function(...) {
   with_sys_cache(build_sbom_cached(...))
 }
 
+# The body of build_sbom(), run inside its per-build system cache. Takes the
+# same arguments.
 build_sbom_cached <- function(root, lookup, root_desc, fields, root_suggests, lib,
                        r_version, author, organization, regid, timestamp,
                        inputs, extra_base = character(), resolved = NULL,
@@ -394,36 +397,9 @@ build_sbom_cached <- function(root, lookup, root_desc, fields, root_suggests, li
     comps[[length(comps) + 1L]] <- row
     ref_of[[pkg]] <- row$ref
   }
-  gone <- edges[edges$to %in% res$missing, , drop = FALSE]
-  gone <- gone[!duplicated(gone[c("from", "to")]), , drop = FALSE]
-  # A stand-in root is named by the root component's name.
-  gone$from[gone$from == root_name] <- root_row$name
-  for (i in seq_len(nrow(gone))) {
-    issues <- add_issue(
-      issues, ref_of[[gone$to[[i]]]], "dependencies", missing_code,
-      paste0(
-        gone$to[[i]], " is named as a dependency of ", gone$from[[i]],
-        " but is not ", where, ", so its version and ",
-        "source are unknown."
-      )
-    )
-  }
-
-  # Constraints on installed packages.
-  checked <- edges[!is.na(edges$constraint) & edges$to %in% res$packages, , drop = FALSE]
-  for (i in seq_len(nrow(checked))) {
-    record <- lookup$get(checked$to[[i]])
-    have <- if ("Version" %in% names(record)) trimws(record[["Version"]]) else NA_character_
-    if (isFALSE(constraint_satisfied(have, checked$constraint[[i]]))) {
-      issues <- add_issue(
-        issues, ref_of[[checked$to[[i]]]], "version", "constraint-unsatisfied",
-        paste0(
-          pkg_label(checked$to[[i]], have), " is installed, but ",
-          checked$from[[i]], " requires ", checked$spec[[i]], "."
-        )
-      )
-    }
-  }
+  issues <- dependency_issues(
+    issues, edges, res, ref_of, lookup, root_name, root_row$name, where, missing_code
+  )
 
   # R and base packages.
   base_edge <- unique(edges$to[edges$to %in% base])
@@ -440,42 +416,7 @@ build_sbom_cached <- function(root, lookup, root_desc, fields, root_suggests, li
   all_comps <- all_comps[order(all_comps$ref, method = "radix"), , drop = FALSE]
   rownames(all_comps) <- NULL
 
-  # Relationships.
-  ref_for <- function(name) {
-    ifelse(name == "R", "R",
-      ifelse(name %in% base, paste0("R/", name),
-        ifelse(name == root_name, root_row$ref, unname(ref_of[name]))
-      )
-    )
-  }
-  rels <- empty_relationships()
-  keep <- if (root_is_library) edges$from != root_name else rep(TRUE, nrow(edges))
-  declared <- edges[keep, , drop = FALSE]
-  if (nrow(declared) > 0L) {
-    rels <- rbind(rels, data.frame(
-      from = ref_for(declared$from), to = ref_for(declared$to),
-      field = declared$field, spec = declared$spec,
-      evidence = if (is.null(declared$evidence)) "declared" else declared$evidence,
-      stringsAsFactors = FALSE
-    ))
-  }
-  if (length(base_used) > 0L) {
-    rels <- rbind(rels, data.frame(
-      from = "R", to = paste0("R/", base_used), field = "contains",
-      spec = NA_character_, evidence = "inferred", stringsAsFactors = FALSE
-    ))
-  }
-  if (root_is_library) {
-    listed <- c(
-      ref_for(unique(edges$to[edges$from == root_name & !edges$to %in% base]))
-    )
-    if (length(listed) > 0L) {
-      rels <- rbind(rels, data.frame(
-        from = root_row$ref, to = listed, field = "contains",
-        spec = NA_character_, evidence = "observed", stringsAsFactors = FALSE
-      ))
-    }
-  }
+  rels <- package_relationships(edges, base_used, ref_of, root_row$ref, root_name, root_is_library)
   if (embedded) {
     inside <- linkingto_components(all_comps, rels, lookup, where)
     vendored <- detect_bundled(
@@ -508,31 +449,8 @@ build_sbom_cached <- function(root, lookup, root_desc, fields, root_suggests, li
   rels <- rels[order(rels$from, rels$to, rels$field, method = "radix"), , drop = FALSE]
   rownames(rels) <- NULL
 
-  has_value <- function(x) !is.null(x) && length(x) == 1L && !is.na(x) && nzchar(x)
-  authors <- enc2utf8_bytes(as.character(author))
-  authors <- authors[!is.na(authors) & nzchar(trimws(authors))]
-  organization <- enc2utf8_bytes(as.character(organization))
-  if (length(authors) == 0L && !has_value(organization)) {
-    issues <- add_issue(
-      issues, root_row$ref, "author", "no-sbom-author",
-      paste0(
-        "No author or organization was given for this SBOM, so only the tool ",
-        "that made it is recorded."
-      ),
-      severity = "info"
-    )
-  }
-  if (has_value(organization) && !has_value(regid)) {
-    issues <- add_issue(
-      issues, root_row$ref, "regid", "regid-missing",
-      paste0(
-        "No regid was given for ", organization, ", so a SWID tag names it ",
-        "with the placeholder http://invalid.unavailable."
-      ),
-      severity = "info"
-    )
-  }
-  rownames(issues) <- NULL
+  who <- sbom_authorship(author, organization, regid, issues, root_row$ref)
+  issues <- who$issues
 
   suggests_only <- vapply(c(res$packages, res$missing), scope_of, "") == "optional"
   notes <- c(
@@ -553,17 +471,136 @@ build_sbom_cached <- function(root, lookup, root_desc, fields, root_suggests, li
     list(
       root = root_row$ref,
       timestamp = timestamp,
-      author = if (length(authors) > 0L) authors else NA_character_,
-      organization = if (has_value(organization)) organization else NA_character_,
+      author = who$author,
+      organization = who$organization,
       tool_version = as.character(utils::packageVersion("sbom")),
       notes = notes,
       inputs = inputs,
-      regid = if (has_value(regid)) as.character(regid) else NA_character_
+      regid = who$regid
     ),
     all_comps, rels, issues
   )
 }
 
+# `issues` with those about the dependencies in `edges`: each package in
+# `res$missing` that a package names but that is not `where` (issue code
+# `missing_code`), and each installed package whose version misses a
+# constraint on it. `ref_of` gives each package's ref, `lookup` its record,
+# and a stand-in root, `root_name`, is named `root_label`.
+dependency_issues <- function(issues, edges, res, ref_of, lookup, root_name, root_label,
+                              where, missing_code) {
+  gone <- edges[edges$to %in% res$missing, , drop = FALSE]
+  gone <- gone[!duplicated(gone[c("from", "to")]), , drop = FALSE]
+  gone$from[gone$from == root_name] <- root_label
+  for (i in seq_len(nrow(gone))) {
+    issues <- add_issue(
+      issues, ref_of[[gone$to[[i]]]], "dependencies", missing_code,
+      paste0(
+        gone$to[[i]], " is named as a dependency of ", gone$from[[i]],
+        " but is not ", where, ", so its version and ",
+        "source are unknown."
+      )
+    )
+  }
+  checked <- edges[!is.na(edges$constraint) & edges$to %in% res$packages, , drop = FALSE]
+  for (i in seq_len(nrow(checked))) {
+    record <- lookup$get(checked$to[[i]])
+    have <- if ("Version" %in% names(record)) trimws(record[["Version"]]) else NA_character_
+    if (isFALSE(constraint_satisfied(have, checked$constraint[[i]]))) {
+      issues <- add_issue(
+        issues, ref_of[[checked$to[[i]]]], "version", "constraint-unsatisfied",
+        paste0(
+          pkg_label(checked$to[[i]], have), " is installed, but ",
+          checked$from[[i]], " requires ", checked$spec[[i]], "."
+        )
+      )
+    }
+  }
+  issues
+}
+
+# The relationships of a build: one for each edge between packages, by ref
+# (`ref_of` for packages, "R" and "R/<name>" for R and the base packages, and
+# `root_ref` for the root, named `root_name` in `edges`), one from R to each
+# base package in `base_used`, and, for a library root, one from the root to
+# each package it lists instead of its edges.
+package_relationships <- function(edges, base_used, ref_of, root_ref, root_name, root_is_library) {
+  base <- base_packages()
+  ref_for <- function(name) {
+    ifelse(name == "R", "R",
+      ifelse(name %in% base, paste0("R/", name),
+        ifelse(name == root_name, root_ref, unname(ref_of[name]))
+      )
+    )
+  }
+  rels <- empty_relationships()
+  keep <- if (root_is_library) edges$from != root_name else rep(TRUE, nrow(edges))
+  declared <- edges[keep, , drop = FALSE]
+  if (nrow(declared) > 0L) {
+    rels <- rbind(rels, data.frame(
+      from = ref_for(declared$from), to = ref_for(declared$to),
+      field = declared$field, spec = declared$spec,
+      evidence = if (is.null(declared$evidence)) "declared" else declared$evidence,
+      stringsAsFactors = FALSE
+    ))
+  }
+  if (length(base_used) > 0L) {
+    rels <- rbind(rels, data.frame(
+      from = "R", to = paste0("R/", base_used), field = "contains",
+      spec = NA_character_, evidence = "inferred", stringsAsFactors = FALSE
+    ))
+  }
+  if (root_is_library) {
+    listed <- ref_for(unique(edges$to[edges$from == root_name & !edges$to %in% base]))
+    if (length(listed) > 0L) {
+      rels <- rbind(rels, data.frame(
+        from = root_ref, to = listed, field = "contains",
+        spec = NA_character_, evidence = "observed", stringsAsFactors = FALSE
+      ))
+    }
+  }
+  rels
+}
+
+# Who made an SBOM, as its metadata stores it (`author`, `organization` and
+# `regid`, each NA when not given), and `issues` with those about it added
+# at `root`, as info: that no author or organization was given, and that an
+# organization was given without a regid.
+sbom_authorship <- function(author, organization, regid, issues, root) {
+  has_value <- function(x) !is.null(x) && length(x) == 1L && !is.na(x) && nzchar(x)
+  authors <- enc2utf8_bytes(as.character(author))
+  authors <- authors[!is.na(authors) & nzchar(trimws(authors))]
+  organization <- enc2utf8_bytes(as.character(organization))
+  if (length(authors) == 0L && !has_value(organization)) {
+    issues <- add_issue(
+      issues, root, "author", "no-sbom-author",
+      paste0(
+        "No author or organization was given for this SBOM, so only the tool ",
+        "that made it is recorded."
+      ),
+      severity = "info"
+    )
+  }
+  if (has_value(organization) && !has_value(regid)) {
+    issues <- add_issue(
+      issues, root, "regid", "regid-missing",
+      paste0(
+        "No regid was given for ", organization, ", so a SWID tag names it ",
+        "with the placeholder http://invalid.unavailable."
+      ),
+      severity = "info"
+    )
+  }
+  rownames(issues) <- NULL
+  list(
+    author = if (length(authors) > 0L) authors else NA_character_,
+    organization = if (has_value(organization)) organization else NA_character_,
+    regid = if (has_value(regid)) as.character(regid) else NA_character_,
+    issues = issues
+  )
+}
+
+# The SBOM note that says which checksums are on record.
 checksum_note <- function() {
   "Checksums are only those of files sbom read itself, and a component without one has none on record."
 }

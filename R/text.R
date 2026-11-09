@@ -80,3 +80,25 @@ quote_value <- function(x, max = 80L) {
   }
   x
 }
+
+# Whether each element of `x` starts with a URL scheme and "://"; FALSE for NA.
+is_url <- function(x) {
+  !is.na(x) & grepl("^[A-Za-z][A-Za-z0-9+.-]*://", x)
+}
+
+# A URL without its credentials (user and password), query string and
+# fragment, which can hold tokens. Anything that is not a URL is unchanged.
+strip_url <- function(x) {
+  url <- is_url(x)
+  x[url] <- sub("[?#].*$", "", sub("^([A-Za-z][A-Za-z0-9+.-]*://)[^/]*@", "\\1", x[url]))
+  x
+}
+
+# Items for a sentence, in the order given, with at most `cap` of them shown:
+# "a, b and c", or "a, b, ..., t, and 5 more".
+capped_list <- function(x, cap = 20L) {
+  if (length(x) <= cap) {
+    return(and_list(x))
+  }
+  paste0(paste(x[seq_len(cap)], collapse = ", "), ", and ", length(x) - cap, " more")
+}

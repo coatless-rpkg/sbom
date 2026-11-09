@@ -1,9 +1,5 @@
 tp <- function(...) test_path("fixtures", "third-party", ...)
 
-local_plain_cli <- function(env = parent.frame()) {
-  withr::local_options(cli.width = 80, cli.unicode = FALSE, cli.num_colors = 1, .local_envir = env)
-}
-
 # fixture_sbom() with every NTIA minimum element present: the suppliers,
 # versions and purls sbom cannot find are asserted with overrides.
 described_sbom <- function(env = parent.frame()) {

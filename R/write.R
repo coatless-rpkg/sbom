@@ -142,6 +142,8 @@ write_sbom <- function(x, path, format = NULL, version = NULL) {
   invisible(path)
 }
 
+# Writes `txt` to the file `path` as UTF-8 bytes, so line endings stay as
+# given on every platform.
 write_text <- function(txt, path) {
   con <- file(path, open = "wb")
   on.exit(close(con), add = TRUE)

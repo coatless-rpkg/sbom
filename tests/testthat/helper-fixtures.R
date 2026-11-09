@@ -185,3 +185,8 @@ every_format_version <- function() {
 written <- function(x, f, v) {
   format_registry()[[f]]$writer(x, v)
 }
+
+# cli output at a fixed width, without colors or Unicode, for snapshots.
+local_plain_cli <- function(env = parent.frame()) {
+  withr::local_options(cli.width = 80, cli.num_colors = 1, cli.unicode = FALSE, .local_envir = env)
+}

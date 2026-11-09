@@ -31,8 +31,12 @@ osv_id_ok <- function(id) {
 # takes time in the square of the entry count: 2,000 entries take seconds
 # where 10,000 took minutes. OSV's CRAN export holds a few dozen.
 osv_max_mb <- function() osv_cap_option("sbom.osv_max_mb", 50)
+# The most entries an OSV archive may hold, from the sbom.osv_max_entries
+# option.
 osv_max_entries <- function() osv_cap_option("sbom.osv_max_entries", 2000)
 
+# The positive number in option `name`, or `default` when the option is unset or
+# is not a single positive finite number.
 osv_cap_option <- function(name, default) {
   value <- getOption(name, default)
   if (!is.numeric(value) || length(value) != 1L || !is.finite(value) || value <= 0) default else value
@@ -326,6 +330,8 @@ osv_objects <- function(x) {
   Filter(function(item) is.list(item) && !is.null(names(item)), x)
 }
 
+# A data frame with one row per advisory document in `docs`: its id, summary,
+# dates, first source URL and a list column of upstream ids.
 osv_records <- function(docs) {
   text <- function(key) vapply(docs, function(d) osv_text(osv_field(d, key)), "")
   source_url <- vapply(docs, function(d) {
@@ -695,6 +701,8 @@ cvss_parse <- function(vector) {
   metrics[need]
 }
 
+# The CVSS v3 base score of one `vector` string; NA when it does not parse or
+# has an unknown metric value.
 cvss_score_one <- function(vector) {
   m <- cvss_parse(vector)
   if (is.null(m)) {

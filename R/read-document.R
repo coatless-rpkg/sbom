@@ -46,10 +46,12 @@ read_abort <- function(sentence, call) {
   cli::cli_abort("{sentence}", class = "sbom_read_error", sentence = sentence, call = call)
 }
 
+# Whether `x` is one character string that is not NA.
 is_string <- function(x) {
   is.character(x) && length(x) == 1L && !is.na(x)
 }
 
+# The display name of `format`, from the format registry.
 read_format_name <- function(format) {
   format_registry()[[format]]$name
 }
@@ -114,6 +116,8 @@ read_parse <- function(expr, file, what, syntax, call) {
   value
 }
 
+# Aborts, with errors named for `call`, unless `format` is a format sbom reads;
+# "csv" gets its own message.
 read_check_format <- function(format, call) {
   if (identical(format, "csv")) {
     cli::cli_abort(

@@ -21,6 +21,9 @@ purl_parse <- function(x) {
   )
 }
 
+# The parts of the package URL `x` as a list: valid, problem, type, namespace,
+# name, version, qualifiers and subpath. When `x` is invalid, `problem` says why
+# and the parts are NA.
 purl_parse_one <- function(x) {
   fail <- function(problem) {
     list(valid = FALSE, problem = problem, type = NA_character_, namespace = NA_character_,

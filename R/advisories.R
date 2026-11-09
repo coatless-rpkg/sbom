@@ -339,6 +339,7 @@ cve_ids <- function(upstream) {
   upstream[grepl("^CVE-[0-9]{4}-[0-9]+$", upstream)]
 }
 
+# The cve.org record page URL for the CVE id `id`.
 cve_record_url <- function(id) {
   paste0("https://www.cve.org/CVERecord?id=", id)
 }

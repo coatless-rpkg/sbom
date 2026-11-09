@@ -1,3 +1,5 @@
+# The supported formats as a named list: each one's name, writer, file
+# extension, versions, default version and media type.
 format_registry <- function() {
   cdx_versions <- c("1.4", "1.5", "1.6", "1.7")
   list(

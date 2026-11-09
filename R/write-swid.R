@@ -8,6 +8,7 @@ swid_iso_ns <- "http://standards.iso.org/iso/19770/-2/2015/schema.xsd"
 swid_sbom_ns <- "https://cran.r-project.org/package=sbom"
 swid_placeholder_regid <- "http://invalid.unavailable"
 
+# Whether `x` is one non-NA, non-empty string.
 swid_set <- function(x) {
   length(x) == 1L && !is.na(x) && nzchar(x)
 }
@@ -64,6 +65,8 @@ swid_advisory_notes <- function(notes, issues, listed) {
   notes_without(notes, pattern, with = if (listed || said) advisory_notes$swid)
 }
 
+# The SWID tag XML text of the root component of `x` at SWID `version`,
+# with its other components as links.
 swid_tag <- function(x, version = "2015") {
   comps <- x$components
   root <- comps[comps$ref == x$metadata$root, , drop = FALSE][1, ]

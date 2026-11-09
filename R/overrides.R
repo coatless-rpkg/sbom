@@ -2,8 +2,10 @@
 # different). Each applied value is recorded in the component's `asserted`
 # table with who asserted it and why.
 
+# The column names an overrides table must have, in order.
 override_columns <- function() c("component", "field", "value", "asserted_by", "reason")
 
+# The component fields an override can set.
 override_fields <- function() {
   c(
     "version", "license_spdx", "supplier_name", "supplier_url", "maintainer",
@@ -43,6 +45,8 @@ read_overrides <- function(overrides, call = parent.frame()) {
   out
 }
 
+# The indices of the rows of `comps` that override `value` names, by ref or by
+# name; aborts for override row `row` when none or more than one match.
 match_component <- function(comps, value, row, call) {
   # An embedded component shares its name with the package it copies, and a
   # system component may share its name with an R package (openssl), so only
@@ -236,14 +240,9 @@ override_purl_version <- function(purl, old, new) {
 # that names both refs. The tables are sorted again at the end of
 # apply_overrides().
 override_move_ref <- function(x, old, new, row) {
-  inside <- paste0(old, "#")
-  rewrite <- function(ref) {
-    hit <- !is.na(ref) & (ref == old | startsWith(ref, inside))
-    ref[hit] <- paste0(new, substring(ref[hit], nchar(old) + 1L))
-    ref
-  }
+  rewrite <- ref_mover(old, new)
   comps <- x$components
-  moving <- comps$ref == old | startsWith(comps$ref, inside)
+  moving <- comps$ref == old | startsWith(comps$ref, paste0(old, "#"))
   to <- rewrite(comps$ref[moving])
   taken <- which(to %in% comps$ref[!moving])
   if (length(taken) > 0L) {
@@ -256,20 +255,7 @@ override_move_ref <- function(x, old, new, row) {
       call = NULL
     )
   }
-  comps$ref <- rewrite(comps$ref)
-  comps$parent_ref <- rewrite(comps$parent_ref)
-  x$components <- comps
-  x$relationships$from <- rewrite(x$relationships$from)
-  x$relationships$to <- rewrite(x$relationships$to)
-  x$issues$ref <- rewrite(x$issues$ref)
-  if (is.data.frame(x$advisories) && nrow(x$advisories) > 0L) {
-    x$advisories$affects <- lapply(x$advisories$affects, function(a) {
-      a$ref <- rewrite(a$ref)
-      a
-    })
-  }
-  x$metadata$root <- rewrite(x$metadata$root)
-  x
+  rewrite_refs(x, rewrite)
 }
 
 # The file name of a package whose version an override changes from `old` to

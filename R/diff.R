@@ -92,6 +92,8 @@ component_keys <- function(comps) {
   key
 }
 
+# One row of a diff for the component `comp`, with its `change` and the `old`
+# and `new` values.
 diff_row <- function(comp, change, old = NA_character_, new = NA_character_) {
   data.frame(
     name = comp$name, ecosystem = comp$ecosystem, change = change,

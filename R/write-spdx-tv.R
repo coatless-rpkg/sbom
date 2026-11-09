@@ -7,6 +7,8 @@
 # lines appended one package at a time, took most of a minute for a large
 # SBOM.
 
+# `s` wrapped in `<text>` tags for tag-value, with any `</text>` inside
+# removed so the value cannot close early.
 tv_text <- function(s) {
   by_encoding(s, function(s) {
     # Removing a closer can join its neighbors into a new one, so repeat.
@@ -59,6 +61,8 @@ tv_package_tags <- c(
   originator = "PackageOriginator", downloadLocation = "PackageDownloadLocation"
 )
 
+# The tag-value entries of the SPDX package list element `p` at spec
+# `version`, with its checksums and external references as lines.
 tv_package_entries <- function(p, version = "2.3") {
   checksums <- lapply(p$checksums, function(cs) paste0(cs$algorithm, ": ", cs$checksumValue))
   refs <- do.call(c, lapply(p$externalRefs, function(ref) {
@@ -103,6 +107,8 @@ tv_package_entries <- function(p, version = "2.3") {
   )
 }
 
+# The SPDX tag-value text of `x` at spec `version`: header, packages,
+# extracted licenses and relationships, ending in a newline.
 spdx_tv <- function(x, version = "2.3") {
   doc <- spdx_document(x, version)
   creators <- doc$creationInfo$creators

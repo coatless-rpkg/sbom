@@ -3,6 +3,7 @@
 
 cdx_versions <- c("1.4", "1.5", "1.6", "1.7")
 
+# Whether `v` is one non-NA, non-empty string.
 cdx_is_set <- function(v) {
   length(v) == 1L && !is.na(v) && nzchar(v)
 }
@@ -15,10 +16,14 @@ cdx_put <- function(lst, name, value) {
   lst
 }
 
+# A CycloneDX property object, a list of `name` and `value`, with `value`
+# coerced to character.
 cdx_property <- function(name, value) {
   list(name = name, value = as.character(value))
 }
 
+# The CycloneDX `component` object of the component row `row`, as a list for
+# jsonlite, with `children` nested under it. Version 1.4 has no `platform`.
 cdx_component <- function(row, version, children = NULL) {
   type <- row$type
   if (type == "platform" && version == "1.4") {
@@ -206,6 +211,8 @@ cdx_vulnerabilities <- function(x, version) {
   })
 }
 
+# The CycloneDX BOM of `x` at spec `version` as a list for jsonlite, with
+# components sorted by `ref`. Aborts when `version` is not supported.
 cdx_document <- function(x, version = "1.6") {
   if (!is.character(version) || length(version) != 1L ||
         !version %in% cdx_versions) {
@@ -282,6 +289,8 @@ cdx_document <- function(x, version = "1.6") {
   doc
 }
 
+# The CycloneDX JSON text of `x` at spec `version`, pretty-printed and
+# ending in a newline.
 cdx_json <- function(x, version = "1.6") {
   doc <- cdx_document(x, version)
   json <- jsonlite::toJSON(

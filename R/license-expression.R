@@ -1,5 +1,6 @@
 # The SPDX License List and SPDX license expressions (SPDX 2.3 Annex D; SPDX 3 uses the same grammar).
 
+# The bundled SPDX License List as a data frame, read once and then cached.
 spdx_license_list <- function() {
   if (is.null(the$spdx_license_list)) {
     path <- system.file("extdata", "spdx-licenses.csv", package = "sbom")
@@ -10,6 +11,7 @@ spdx_license_list <- function() {
   the$spdx_license_list
 }
 
+# The version of the bundled SPDX License List, read once and then cached.
 spdx_license_list_version <- function() {
   if (is.null(the$spdx_license_list_version)) {
     path <- system.file("extdata", "spdx-licenses.dcf", package = "sbom")

@@ -7,6 +7,7 @@
 # htmlwidgets/lib/ and lib/, or declared in htmlwidgets YAML, become npm
 # components, found by inst/extdata/javascript.csv.
 
+# The ref of the component `name` embedded in the component `parent_ref`.
 embedded_ref <- function(parent_ref, name) {
   paste0(parent_ref, "#embedded/", name)
 }
@@ -457,38 +458,9 @@ javascript_components <- function(pkg_dir, parent, installed = FALSE, max_files 
     file.path(pkg_dir, dirs)
   }
   name_regex <- paste0("(", paste(rules$file_regex, collapse = ")|("), ")")
-  files <- character()
-  truncated <- FALSE
-  walk <- function(dir, depth) {
-    entries <- list.files(dir, all.files = FALSE, no.. = TRUE)
-    entries <- entries[order(entries, method = "radix")]
-    paths <- file.path(dir, entries)
-    is_dir <- dir.exists(paths)
-    for (path in paths[!is_dir]) {
-      name <- basename(path)
-      if (grepl("\\.(js|css)$", name, ignore.case = TRUE) && grepl(name_regex, name, perl = TRUE)) {
-        if (length(files) >= max_files) {
-          truncated <<- TRUE
-          return(invisible())
-        }
-        files[[length(files) + 1L]] <<- path
-      }
-    }
-    if (depth < 6L) {
-      for (path in paths[is_dir]) {
-        if (!nzchar(Sys.readlink(path)) && !truncated) {
-          walk(path, depth + 1L)
-        }
-      }
-    }
-    invisible()
-  }
-  for (root in roots[dir.exists(roots)]) {
-    if (!nzchar(Sys.readlink(root))) {
-      walk(root, 0L)
-    }
-  }
-  if (truncated) {
+  candidates <- javascript_candidates(roots, name_regex, max_files)
+  files <- candidates$files
+  if (candidates$truncated) {
     issues <- add_issue(
       issues, parent$ref, "embedded", "javascript-scan-truncated",
       paste0(
@@ -536,6 +508,60 @@ javascript_components <- function(pkg_dir, parent, installed = FALSE, max_files 
       )
     }
   }
+  new <- javascript_rows(found, parent)
+  list(
+    components = new,
+    relationships = data.frame(
+      from = new$parent_ref, to = new$ref, field = "contains",
+      spec = NA_character_, evidence = new$evidence, stringsAsFactors = FALSE
+    ),
+    issues = issues, libraries = pkg_label(new$name, new$version)
+  )
+}
+
+# The .js and .css files under the folders `roots` whose names match
+# `name_regex`, within 6 levels of each, without following symlinked folders,
+# in a stable order, as list(files, truncated): at most `max_files`, and
+# `truncated` says whether there were more.
+javascript_candidates <- function(roots, name_regex, max_files) {
+  files <- character()
+  truncated <- FALSE
+  walk <- function(dir, depth) {
+    entries <- list.files(dir, all.files = FALSE, no.. = TRUE)
+    entries <- entries[order(entries, method = "radix")]
+    paths <- file.path(dir, entries)
+    is_dir <- dir.exists(paths)
+    for (path in paths[!is_dir]) {
+      name <- basename(path)
+      if (grepl("\\.(js|css)$", name, ignore.case = TRUE) && grepl(name_regex, name, perl = TRUE)) {
+        if (length(files) >= max_files) {
+          truncated <<- TRUE
+          return(invisible())
+        }
+        files[[length(files) + 1L]] <<- path
+      }
+    }
+    if (depth < 6L) {
+      for (path in paths[is_dir]) {
+        if (!nzchar(Sys.readlink(path)) && !truncated) {
+          walk(path, depth + 1L)
+        }
+      }
+    }
+    invisible()
+  }
+  for (root in roots[dir.exists(roots)]) {
+    if (!nzchar(Sys.readlink(root))) {
+      walk(root, 0L)
+    }
+  }
+  list(files = files, truncated = truncated)
+}
+
+# The components of the JavaScript and CSS libraries in `found`, as
+# javascript_components() records them, nested in the package `parent`,
+# sorted by ref.
+javascript_rows <- function(found, parent) {
   rows <- lapply(found, function(hit) {
     known <- !is.na(hit$version)
     component_row(
@@ -562,14 +588,7 @@ javascript_components <- function(pkg_dir, parent, installed = FALSE, max_files 
   new <- do.call(rbind, unname(rows))
   new <- new[order(new$ref, method = "radix"), , drop = FALSE]
   rownames(new) <- NULL
-  list(
-    components = new,
-    relationships = data.frame(
-      from = new$parent_ref, to = new$ref, field = "contains",
-      spec = NA_character_, evidence = new$evidence, stringsAsFactors = FALSE
-    ),
-    issues = issues, libraries = pkg_label(new$name, new$version)
-  )
+  new
 }
 
 # The folder of the installed copy of `name` in `lib` when its version is

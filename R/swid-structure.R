@@ -135,6 +135,7 @@ swid_creator_findings <- function(doc) {
   swid_findings("/SoftwareIdentity", swid_no_creator)
 }
 
+# A findings table of `location` and `message`, both as text.
 swid_findings <- function(location, message) {
   data.frame(location = as.character(location), message = as.character(message), stringsAsFactors = FALSE)
 }

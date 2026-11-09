@@ -22,6 +22,8 @@ spdx3_unique_local <- function(local, taken) {
   out
 }
 
+# The comment text of the SPDX 3 package for the component row `row`: its
+# maintainer, description and license note, joined into one string.
 spdx3_package_comment <- function(row) {
   is_r <- identical(row$ecosystem, "r")
   is_base <- identical(row$parent_ref, "R")
@@ -50,6 +52,8 @@ spdx3_hash_algorithm <- function(alg) {
   ifelse(startsWith(alg, "sha3-"), sub("-", "_", alg, fixed = TRUE), gsub("-", "", alg, fixed = TRUE))
 }
 
+# The SPDX 3 `software_Package` element of the component row `row` with SPDX
+# id `id`, linked to the ids `supplier` and `person` (`person` may be NULL).
 spdx3_package <- function(row, id, supplier, person) {
   p <- list(
     type = "software_Package", spdxId = id,
@@ -338,6 +342,8 @@ spdx3_advisories <- function(x, pkg_ids, taken, id) {
   out
 }
 
+# The SPDX 3 JSON-LD graph of `x` at spec `version` as a list for jsonlite.
+# Aborts when `version` is not supported.
 spdx3_document <- function(x, version = "3.0.1") {
   if (!is.character(version) || length(version) != 1L || !version %in% spdx3_versions) {
     cli::cli_abort(
@@ -400,6 +406,8 @@ spdx3_document <- function(x, version = "3.0.1") {
   )
 }
 
+# The SPDX 3 JSON-LD text of `x` at spec `version`, pretty-printed and
+# ending in a newline.
 spdx3_jsonld <- function(x, version = "3.0.1") {
   json <- jsonlite::toJSON(
     spdx3_document(x, version), auto_unbox = TRUE, pretty = TRUE, null = "null"

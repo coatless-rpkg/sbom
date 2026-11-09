@@ -1,6 +1,7 @@
 # CSV component inventory: a spreadsheet view for compliance reviewers, not an
 # SBOM standard. Built by hand so the bytes never pass through the native locale.
 
+# The column names of the CSV inventory, in output order.
 csv_columns <- function() {
   c(
     "ref", "name", "version", "version_is", "type", "ecosystem", "scope", "purl",
@@ -10,6 +11,8 @@ csv_columns <- function() {
   )
 }
 
+# `x` as double-quoted CSV fields, with inner quotes doubled; NA becomes an
+# empty quoted field.
 csv_quote <- function(x) {
   x <- as.character(x)
   out <- paste0("\"", gsub("\"", "\"\"", x, fixed = TRUE), "\"")
@@ -28,6 +31,8 @@ csv_neutralize <- function(x) {
   x
 }
 
+# The first SHA-256 digest in each data frame of `hashes`, or NA when an
+# element has none.
 csv_sha256 <- function(hashes) {
   vapply(hashes, function(h) {
     hit <- if (is.data.frame(h) && nrow(h) > 0L) h$content[h$alg %in% "SHA-256"] else character()
@@ -35,6 +40,8 @@ csv_sha256 <- function(hashes) {
   }, character(1))
 }
 
+# The CSV `asserted` cell of each element of `asserted`: its overrides as
+# `field=value (by: reason)` joined by `; `, or NA when there are none.
 csv_asserted <- function(asserted) {
   vapply(asserted, function(a) {
     if (!is.data.frame(a) || nrow(a) == 0L) {
@@ -44,6 +51,8 @@ csv_asserted <- function(asserted) {
   }, character(1))
 }
 
+# The CSV text of the inventory of `x`: a header row, then one row per
+# component, the root first and the rest by `ref`, ending in a newline.
 csv_inventory <- function(x, version = NA) {
   comps <- x$components
   comps <- comps[order(!(comps$is_root %in% TRUE), comps$ref, method = "radix"), , drop = FALSE]

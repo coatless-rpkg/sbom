@@ -176,6 +176,8 @@ xml_each <- function(level, container, lists, fn) {
   xml_nodes(level, container, xml_group(item_lines, rep.int(seq_len(n), lengths(lists)), n))
 }
 
+# The XML lines of the organizations `orgs`, each an element `name` with a
+# `name` child and any `url` children.
 xml_orgs <- function(level, name, orgs) {
   n <- length(orgs)
   names <- xml_leaves(level + 1L, "name", lapply(orgs, function(org) org$name))
@@ -187,6 +189,8 @@ xml_orgs <- function(level, name, orgs) {
   xml_nodes(level, name, children)
 }
 
+# The XML lines of the license choices `items`, one list element each: an
+# `expression` element, or a `license` element holding a `name`.
 xml_licenses <- function(level, items) {
   expression <- vapply(items, function(item) !is.null(item$expression), NA)
   out <- vector("list", length(items))
@@ -203,6 +207,8 @@ xml_licenses <- function(level, items) {
   out
 }
 
+# The XML lines of the external references `refs`: a `reference` element
+# each, with a `type` attribute, a `url` child and any `comment` child.
 xml_references <- function(level, refs) {
   n <- length(refs)
   urls <- xml_leaves(level + 1L, "url", lapply(refs, function(ref) ref$url))
@@ -215,6 +221,8 @@ xml_references <- function(level, refs) {
   xml_nodes(level, "reference", children, xml_attr_text(list(type = lapply(refs, function(ref) ref$type)), n))
 }
 
+# The XML lines of one `properties` container for each list in `lists`, with
+# a `property` element per name and value.
 xml_properties <- function(level, lists) {
   xml_each(level, "properties", lists, function(level, props) {
     as.list(xml_leaves(
@@ -239,10 +247,14 @@ xml_component_special <- list(
   components = function(level, v) xml_each(level, "components", v, xml_components)
 )
 
+# The XML lines of the CycloneDX components `comps`, each an element `tag`
+# at indent `level`.
 xml_components <- function(level, comps, tag = "component") {
   xml_items(level, tag, comps, attrs = c("type", "bom-ref"), special = xml_component_special)
 }
 
+# The XML lines of the CycloneDX `metadata` object `meta`: timestamp,
+# tools, authors and the root component, at indent `level`.
 xml_metadata <- function(level, meta) {
   inner <- level + 1L
   tools <- if (!is.null(meta$tools$components)) {
@@ -263,6 +275,8 @@ xml_metadata <- function(level, meta) {
   unlist(xml_nodes(level, "metadata", list(children)))
 }
 
+# The XML lines of the dependency list `deps`: one `dependency` element
+# per entry, with a child per `dependsOn` target.
 xml_dependencies <- function(level, deps) {
   n <- length(deps)
   targets <- lapply(deps, function(dep) as.list(dep$dependsOn))
@@ -274,6 +288,8 @@ xml_dependencies <- function(level, deps) {
   xml_nodes(level, "dependency", children, xml_attr_text(list(ref = lapply(deps, function(dep) dep$ref)), n))
 }
 
+# The XML lines of the vulnerabilities `vulns`, each a `vulnerability`
+# element with its nested source, references, ratings and advisories.
 xml_vulnerability_items <- function(level, vulns) {
   sources <- function(level, s) xml_items(level, "source", s)
   xml_items(level, "vulnerability", vulns, attrs = "bom-ref", special = list(
@@ -295,6 +311,8 @@ xml_vulnerability_items <- function(level, vulns) {
   ))
 }
 
+# The CycloneDX XML text of `x` at spec `version`, built from the same
+# document list as the JSON writer, ending in a newline.
 cdx_xml <- function(x, version = "1.6") {
   doc <- cdx_document(x, version)
   children <- c(

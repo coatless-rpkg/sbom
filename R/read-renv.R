@@ -505,6 +505,8 @@ scan_issue <- function(issues, root, scan) {
   )
 }
 
+# The edge data frames in `rows` bound into one; an empty edge table when
+# `rows` is empty.
 bind_edges <- function(rows) {
   if (length(rows) == 0L) {
     return(data.frame(

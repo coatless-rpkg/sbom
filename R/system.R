@@ -22,6 +22,7 @@ with_sys_cache <- function(code) {
   code
 }
 
+# Closes the system cache, so later lookups are evaluated each time.
 sys_cache_drop <- function() {
   sys_cache$current <- NULL
 }
@@ -261,6 +262,8 @@ sys_os_release <- function(file = "/etc/os-release") {
   parse_os_release(lines)
 }
 
+# The KEY=value lines of `lines` as a list with lower-case names and values and
+# quotes removed; NULL when no line has that form.
 parse_os_release <- function(lines) {
   lines <- trimws(lines)
   lines <- lines[grepl("^[A-Za-z_][A-Za-z0-9_]*=", lines)]

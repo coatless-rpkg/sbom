@@ -337,18 +337,12 @@ apply_app_layout <- function(x, path, layout, evaluate_ui = FALSE, lib = .libPat
   x
 }
 
-# `x` with its root component replaced by `new`. Every ref that is the old
-# root, or starts with "<old root>#", is rewritten in the components (`ref`
-# and `parent_ref`), the relationships, the issues and `metadata$root`. The
+# `x` with its root component replaced by `new`, and every ref that is the
+# old root, or is nested in it, moved to the new one (rewrite_refs()). The
 # new row keeps what the old root recorded that it does not say itself: its
 # dependencies, license, maintainer and the like.
 replace_root <- function(x, new) {
   old <- x$metadata$root
-  rewrite <- function(ref) {
-    hit <- !is.na(ref) & (ref == old | startsWith(ref, paste0(old, "#")))
-    ref[hit] <- paste0(new$ref, substring(ref[hit], nchar(old) + 1L))
-    ref
-  }
   comps <- x$components
   i <- which(comps$ref == old)
   row <- new
@@ -368,12 +362,6 @@ replace_root <- function(x, new) {
     comps <- rbind(comps[seq_len(nrow(comps)) < i, , drop = FALSE], row,
       comps[seq_len(nrow(comps)) > i, , drop = FALSE])
   }
-  comps$ref <- rewrite(comps$ref)
-  comps$parent_ref <- rewrite(comps$parent_ref)
   x$components <- comps
-  x$relationships$from <- rewrite(x$relationships$from)
-  x$relationships$to <- rewrite(x$relationships$to)
-  x$issues$ref <- rewrite(x$issues$ref)
-  x$metadata$root <- rewrite(old)
-  x
+  rewrite_refs(x, ref_mover(old, new$ref))
 }

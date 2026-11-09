@@ -44,6 +44,8 @@ json_quote <- function(x) {
   paste0("\"", x, "\"")
 }
 
+# The YAML text of the scalar `v`: a bare `true`, `false` or number, a quoted
+# string, or a JSON array for a longer vector.
 yaml_scalar <- function(v) {
   if (is.logical(v)) {
     return(if (isTRUE(v)) "true" else "false")
@@ -98,10 +100,12 @@ yaml_lines <- function(value, level) {
   as.character(unlist(out, use.names = FALSE))
 }
 
+# The YAML text of the nested list `value`, in UTF-8 and ending in a newline.
 yaml_emit <- function(value) {
   enc2utf8(paste0(paste(yaml_lines(value, 0L), collapse = "\n"), "\n"))
 }
 
+# The SPDX YAML text of `x` at spec `version`.
 spdx_yaml <- function(x, version = "2.3") {
   yaml_emit(spdx_document(x, version))
 }

@@ -2,6 +2,7 @@
 # advisories) plus metadata. Every later task builds, reads and writes this
 # shape.
 
+# The column names of the components table, in order.
 component_columns <- function() {
   c(
     "ref", "name", "version", "version_is", "type", "ecosystem", "is_root",
@@ -13,15 +14,20 @@ component_columns <- function() {
   )
 }
 
+# The column names of the relationships table, in order.
 relationship_columns <- function() c("from", "to", "field", "spec", "evidence")
 
+# The column names of the issues table, in order.
 issue_columns <- function() c("ref", "field", "severity", "code", "message")
 
+# The names every metadata list must have.
 metadata_names <- function() {
   c("root", "timestamp", "author", "organization", "tool_version", "notes", "inputs",
     "regid")
 }
 
+# A data frame with no rows and the columns `cols`: logical for those in
+# `logical`, list for those in `list`, character for the rest.
 empty_df <- function(cols, logical = character(), list = character()) {
   out <- data.frame(row.names = character())
   for (col in cols) {
@@ -49,6 +55,7 @@ df_rows <- function(df) {
   .mapply(list, cols, NULL)
 }
 
+# The components table with no rows.
 empty_components <- function() {
   empty_df(
     component_columns(),
@@ -57,10 +64,13 @@ empty_components <- function() {
   )
 }
 
+# The relationships table with no rows.
 empty_relationships <- function() empty_df(relationship_columns())
 
+# The issues table with no rows.
 empty_issues <- function() empty_df(issue_columns())
 
+# The column names of the advisories table, in order.
 advisory_columns <- function() {
   c("id", "summary", "published", "source_url", "upstream", "ratings", "affects")
 }
@@ -110,6 +120,8 @@ advisories_line <- function(status, n) {
   )
 }
 
+# Aborts, with errors named for `call`, unless `x` is a data frame with every
+# column in `required`; `what` names the argument in the message.
 check_columns <- function(x, required, what, call = parent.frame()) {
   missing <- setdiff(required, names(x))
   if (!is.data.frame(x) || length(missing) > 0) {
@@ -123,6 +135,8 @@ check_columns <- function(x, required, what, call = parent.frame()) {
   }
 }
 
+# An <sbom> built from its parts; aborts unless `metadata` has every name and
+# each table has its columns and, for `components`, unique refs.
 new_sbom <- function(metadata, components, relationships, issues,
                      advisories = empty_advisories()) {
   if (!is.list(metadata) || !all(metadata_names() %in% names(metadata))) {
@@ -164,6 +178,39 @@ check_unique_refs <- function(refs, call = parent.frame()) {
   }
 }
 
+# `x` with every ref passed through `rewrite`, a function that takes a
+# character vector of refs and returns it with some changed (and NA left
+# NA), wherever a ref appears: the components' `ref` and `parent_ref`, the
+# relationships, the issues, the advisories' targets and `metadata$root`.
+rewrite_refs <- function(x, rewrite) {
+  x$components$ref <- rewrite(x$components$ref)
+  x$components$parent_ref <- rewrite(x$components$parent_ref)
+  x$relationships$from <- rewrite(x$relationships$from)
+  x$relationships$to <- rewrite(x$relationships$to)
+  x$issues$ref <- rewrite(x$issues$ref)
+  if (is.data.frame(x$advisories) && nrow(x$advisories) > 0L) {
+    x$advisories$affects <- lapply(x$advisories$affects, function(a) {
+      a$ref <- rewrite(a$ref)
+      a
+    })
+  }
+  x$metadata$root <- rewrite(x$metadata$root)
+  x
+}
+
+# A rewrite for rewrite_refs() that moves the ref `old` to `new`, and with it
+# the refs of the components nested in it, which start with "<old>#".
+ref_mover <- function(old, new) {
+  inside <- paste0(old, "#")
+  function(ref) {
+    hit <- !is.na(ref) & (ref == old | startsWith(ref, inside))
+    ref[hit] <- paste0(new, substring(ref[hit], nchar(old) + 1L))
+    ref
+  }
+}
+
+# `issues` with one row added from `ref`, `field`, `code`, `message` and
+# `severity`.
 add_issue <- function(issues, ref, field, code, message, severity = "warning") {
   row <- data.frame(
     ref = ref, field = field, severity = severity, code = code,
@@ -189,6 +236,7 @@ document_notes <- function(x, swid = FALSE) {
   notes_without(notes, advisory_sentences$swid, with = if (instead) advisory_notes$no_data)
 }
 
+# The value of SOURCE_DATE_EPOCH, or "" when it is unset.
 source_date_epoch <- function() Sys.getenv("SOURCE_DATE_EPOCH", unset = "")
 
 # An explicit `timestamp` wins, then SOURCE_DATE_EPOCH, then the clock (spec
@@ -280,6 +328,8 @@ sbom_issues <- function(x) {
   x$issues
 }
 
+# Aborts, with errors named for `call`, unless `x` is an <sbom>; `arg` names the
+# argument in the message.
 check_sbom <- function(x, arg = "x", call = parent.frame()) {
   if (!inherits(x, "sbom")) {
     cli::cli_abort("{.arg {arg}} must be an {.cls sbom} object.", call = call)

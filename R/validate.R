@@ -274,6 +274,7 @@ validate_sbom <- function(x, checks = c("schema", "content"), profile = "ntia-20
   result
 }
 
+# An <sbom_validation> holding its arguments, in that order, as list elements.
 new_sbom_validation <- function(status, findings, format, version, file, profile, checks) {
   structure(
     list(
@@ -323,6 +324,7 @@ validation_file <- function(path, checks, profile, call = parent.frame()) {
   )
 }
 
+# "fail" when `findings` has an error-severity row, else "pass".
 validation_content_status <- function(findings) {
   if (any(findings$severity == "error")) "fail" else "pass"
 }

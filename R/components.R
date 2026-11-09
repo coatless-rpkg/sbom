@@ -1,14 +1,17 @@
 # Component rows built from DESCRIPTION fields and from R itself.
 
+# A zero-row data frame of the hash columns of a component.
 empty_hashes <- function() {
   data.frame(alg = character(), content = character(), of = character(),
     stringsAsFactors = FALSE)
 }
 
+# A zero-row data frame of the dependency columns of a component.
 empty_deps <- function() {
   data.frame(field = character(), spec = character(), stringsAsFactors = FALSE)
 }
 
+# A zero-row data frame of the asserted-value columns of a component.
 empty_asserted <- function() {
   data.frame(field = character(), value = character(), asserted_by = character(),
     reason = character(), stringsAsFactors = FALSE)
@@ -63,6 +66,8 @@ and_list <- function(x) {
   paste(paste(x[-n], collapse = ", "), "and", x[[n]])
 }
 
+# The trimmed value of `field` in the DESCRIPTION `desc`; NA when it is
+# absent, NA or blank.
 desc_field <- function(desc, field) {
   if (field %in% names(desc) && !is.na(desc[[field]]) && nzchar(trimws(desc[[field]]))) {
     trimws(desc[[field]])
@@ -71,6 +76,8 @@ desc_field <- function(desc, field) {
   }
 }
 
+# The Bioconductor release, such as "3.12", named by a `RELEASE_3_12` git
+# branch `git_branch`; NA for any other branch or an NA.
 bioc_release <- function(git_branch) {
   if (is.na(git_branch) || !grepl("^RELEASE_[0-9]+_[0-9]+$", git_branch)) {
     return(NA_character_)
@@ -78,6 +85,8 @@ bioc_release <- function(git_branch) {
   sub("^RELEASE_([0-9]+)_([0-9]+)$", "\\1.\\2", git_branch)
 }
 
+# The first GitHub or GitLab repository URL in `text`, without a trailing
+# .git; NA when there is none.
 github_repo_url <- function(text) {
   m <- regmatches(text, regexpr("https://(github|gitlab)\\.com/[^/[:space:],;<>()#?]+/[^/[:space:],;<>()#?]+", text))
   if (length(m) == 0L) {
@@ -113,6 +122,8 @@ gitlab_own_host <- function(remote_host) {
   own_host(remote_host, "gitlab.com")
 }
 
+# The host of `remote_host` without scheme, trailing slash or /api path; NA
+# when it is NA, empty or one of the `public` hosts.
 own_host <- function(remote_host, public) {
   if (is.na(remote_host)) {
     return(NA_character_)
@@ -386,6 +397,8 @@ r_components <- function(version, version_is, stated_spec, base_used, evidence =
   out
 }
 
+# A required library row for the package `name`, which is not installed or
+# otherwise known.
 unknown_component <- function(name) {
   component_row(
     ref = paste0("unknown/", name), name = name, type = "library",

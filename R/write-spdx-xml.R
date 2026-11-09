@@ -2,6 +2,8 @@
 # <Document>, as R Observatory writes it. A list is the same element repeated,
 # and a logical is `true` or `false`. SPDX has no official XML schema.
 
+# The text of the scalar `v` for an XML element: `true` or `false` for a
+# logical, otherwise `v` as UTF-8 character.
 spdx_xml_scalar <- function(v) {
   if (is.logical(v)) {
     return(if (isTRUE(v)) "true" else "false")
@@ -24,6 +26,8 @@ spdx_xml_add <- function(parent, name, value) {
   invisible(parent)
 }
 
+# The SPDX XML text of `x` at spec `version`, written from the document list
+# under a `Document` root and ending in a newline.
 spdx_xml <- function(x, version = "2.3") {
   doc <- spdx_document(x, version)
   root <- xml2::xml_new_root("Document")

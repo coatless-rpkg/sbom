@@ -87,6 +87,8 @@ uuid_json_column <- function(col) {
   structure(out, class = "json")
 }
 
+# The document namespace URI of `x`: the sbom.namespace option, then the root
+# component's name and version, then the document's uuid.
 spdx_namespace <- function(x) {
   base <- getOption("sbom.namespace", "https://spdx.org/spdxdocs")
   root <- x$components[x$components$ref == x$metadata$root, , drop = FALSE][1, ]
@@ -97,6 +99,7 @@ spdx_namespace <- function(x) {
   paste0(base, "/", name, "-", sbom_uuid(x))
 }
 
+# The time `t` as an ISO 8601 UTC string, such as 2024-01-31T12:00:00Z.
 format_timestamp <- function(t) {
   format(as.POSIXct(t), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
 }

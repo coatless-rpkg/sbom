@@ -18,6 +18,8 @@ has_jsonvalidate <- function() {
   requireNamespace("jsonvalidate", quietly = TRUE)
 }
 
+# The schema version to check `format` against: `version`, or the default for
+# the format when it is NULL; aborts for an unsupported format or version.
 resolve_schema_version <- function(format, version) {
   if (!is.character(format) || length(format) != 1L || !format %in% read_formats) {
     cli::cli_abort(
@@ -60,6 +62,7 @@ schema_file <- function(format, version) {
   path
 }
 
+# A findings table with no rows, with columns `location` and `message`.
 empty_findings <- function() {
   data.frame(location = character(), message = character(), stringsAsFactors = FALSE)
 }
@@ -421,10 +424,6 @@ validate_json_model <- function(doc, format, version, what = "valid JSON") {
     }
   }
   validation_result("pass")
-}
-
-has_yaml <- function() {
-  requireNamespace("yaml", quietly = TRUE)
 }
 
 # Parses the YAML, unless `doc` is its model already, and applies the SPDX
