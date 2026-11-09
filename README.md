@@ -1,3 +1,7 @@
+
+
+<!-- README.md is generated from README.qmd. Please edit that file. -->
+
 # sbom <picture><source media="(prefers-color-scheme: dark)" srcset="man/figures/sbom-logo-animated-dark.svg"><img class="sb-logo" src="man/figures/sbom-logo-animated-light.svg" align="right" height="139" alt="sbom hex logo: a wooden shipping crate stencilled SBOM and marked THIS SIDE UP" /></picture>
 
 <picture><source media="(prefers-color-scheme: dark)" srcset="man/figures/hero-dark.svg"><img class="sb-hero" src="man/figures/hero-light.svg" alt="Left: an R project, the folder my-analysis with an analysis script, a Quarto report and an renv lockfile, passed to sbom(). Right: the software bill of materials it makes, a packing list of every component with its version, license and supplier: cli 3.6.5, jsonlite 2.0.0 and xml2 1.4.0, all MIT from CRAN, and the in-house package inhouse 0.3.0, whose license and supplier are unknown and flagged; an override can supply them. write_sbom() saves the list as CycloneDX, SPDX 2, SPDX 3, SWID or CSV." width="100%"/></picture>
@@ -37,6 +41,11 @@ library(sbom)
 
 x <- sbom_package(system.file("DESCRIPTION", package = "sbom"), system = FALSE)
 x
+#> <sbom> sbom 0.1.0
+#> Components: 19
+#> Relationships: 28
+#> Issues: 3 (see sbom_issues())
+#> Advisories: not requested.
 ```
 
 Printing gives a short summary. To hand the result to someone, write it out:
@@ -51,7 +60,7 @@ auditor asked for. They rarely want all eight.
 ## Pick a starting point
 
 | Start from | Call |
-|:--|:--|
+|:---|:---|
 | A project folder, letting `{sbom}` work out the rest | `sbom()` |
 | One package's `DESCRIPTION` | `sbom_package()` |
 | Everything in an R library | `sbom_installed()` |
@@ -92,16 +101,16 @@ Supply a missing value with `overrides`, as `vignette("compliance")` shows.
 
 ## Choose a format
 
-| Format | Extension | Versions |
-|:--|:--|:--|
-| CycloneDX JSON | `.cdx.json` | 1.4, 1.5, 1.6 (default), 1.7 |
-| CycloneDX XML | `.cdx.xml` | 1.4, 1.5, 1.6 (default), 1.7 |
-| SPDX JSON | `.spdx.json` | 2.2, 2.3 (default) |
-| SPDX YAML | `.spdx.yaml` | 2.2, 2.3 (default) |
-| SPDX XML | `.spdx.xml` | 2.2, 2.3 (default) |
-| SPDX tag-value | `.spdx` | 2.2, 2.3 (default) |
-| SPDX 3 JSON-LD | `.spdx3.jsonld` | 3.0.1 |
-| SWID tag | `.swidtag` | 2015 |
+| Format         | Extension       | Versions                     |
+|:---------------|:----------------|:-----------------------------|
+| CycloneDX JSON | `.cdx.json`     | 1.4, 1.5, 1.6 (default), 1.7 |
+| CycloneDX XML  | `.cdx.xml`      | 1.4, 1.5, 1.6 (default), 1.7 |
+| SPDX JSON      | `.spdx.json`    | 2.2, 2.3 (default)           |
+| SPDX YAML      | `.spdx.yaml`    | 2.2, 2.3 (default)           |
+| SPDX XML       | `.spdx.xml`     | 2.2, 2.3 (default)           |
+| SPDX tag-value | `.spdx`         | 2.2, 2.3 (default)           |
+| SPDX 3 JSON-LD | `.spdx3.jsonld` | 3.0.1                        |
+| SWID tag       | `.swidtag`      | 2015                         |
 
 `format = "csv"` writes an inventory for spreadsheet review. It is not an SBOM
 standard, so `"all"` leaves it out. `sbom_formats()` lists every format and
@@ -155,6 +164,6 @@ Critical Security Controls.
 
 If you need SBOMs for R packages quickly, you can get them from:
 
-```default
+``` default
 observe.rstats.dev/assess
 ```

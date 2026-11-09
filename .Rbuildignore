@@ -2,7 +2,7 @@
 ^data-raw$
 ^\.git
 ^LICENSE\.md$
-^README\.Rmd$
+^README\.qmd$
 ^\.gitattributes$
 ^cran-comments\.md$
 ^_pkgdown\.yml$
