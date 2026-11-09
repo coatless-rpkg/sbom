@@ -52,9 +52,10 @@ sbom_renv <- function(lockfile = "renv.lock", library = NULL,
                       organization = getOption("sbom.organization"),
                       regid = getOption("sbom.regid"),
                       timestamp = NULL, overrides = NULL,
-                      embedded = TRUE, system = TRUE, advisories = FALSE,
+                      embedded = TRUE, system = TRUE, checksums = FALSE, advisories = FALSE,
                       advisories_on_error = c("error", "continue")) {
   on_error <- check_advisories_args(advisories, advisories_on_error)
+  check_checksums_arg(checksums)
   regid <- check_regid(regid)
   lock <- read_renv_lock(lockfile)
   project <- dirname(normalizePath(lockfile, mustWork = TRUE))
@@ -156,7 +157,7 @@ sbom_renv <- function(lockfile = "renv.lock", library = NULL,
     )
   }
   rownames(x$issues) <- NULL
-  apply_advisories(apply_overrides(x, overrides), advisories, on_error)
+  apply_advisories(apply_checksums(apply_overrides(x, overrides), checksums), advisories, on_error)
 }
 
 # The lockfile as a list, or an error that names the file. renv's own errors

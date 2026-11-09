@@ -15,7 +15,7 @@ argument of \code{\link[=sbom_renv]{sbom_renv()}}, \code{\link[=sbom_rsconnect]{
 than the file or folder it reads, such as \code{library}, \code{lib},
 \code{dependencies}, \code{r_version}, \code{author}, \code{overrides} or \code{advisories}. The
 code scan takes \code{lib}, \code{author}, \code{organization}, \code{regid}, \code{timestamp},
-\code{overrides}, \code{embedded}, \code{system}, \code{advisories} and
+\code{overrides}, \code{embedded}, \code{system}, \code{checksums}, \code{advisories} and
 \code{advisories_on_error}. A Shiny app also takes
 \code{evaluate_ui} (see \code{\link[=sbom_shiny]{sbom_shiny()}}), which other folders ignore. A name
 that no reader takes is an error. The reader ignores those it does not
@@ -37,7 +37,9 @@ source it finds, and reads every other source to check it. It runs no code
 from the project and makes no network requests, except that, with Nix
 installed, a \code{default.nix} is read by running \code{nix-instantiate} (see
 \code{\link[=sbom_nix]{sbom_nix()}}), which may download nixpkgs, that \code{snapshot} looks up a
-CRAN snapshot, and that \code{advisories = TRUE} downloads OSV's advisory data.
+CRAN snapshot, that \code{checksums = TRUE} reads repository metadata with pak,
+which may download it, and that \code{advisories = TRUE} downloads OSV's
+advisory data.
 }
 \details{
 The sources, from strongest to weakest:

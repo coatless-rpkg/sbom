@@ -168,16 +168,17 @@ sbom_nix <- function(path = "default.nix", nix = NA, snapshot = NULL, library = 
                      organization = getOption("sbom.organization"),
                      regid = getOption("sbom.regid"),
                      timestamp = NULL, overrides = NULL,
-                     embedded = TRUE, system = TRUE, advisories = FALSE,
+                     embedded = TRUE, system = TRUE, checksums = FALSE, advisories = FALSE,
                      advisories_on_error = c("error", "continue")) {
   on_error <- check_advisories_args(advisories, advisories_on_error)
+  check_checksums_arg(checksums)
   x <- read_nix_sbom(
     path, nix = nix, snapshot = snapshot, library = library, author = author,
     organization = organization, regid = regid, timestamp = timestamp,
     overrides = overrides, embedded = embedded, system = system,
     call = environment()
   )$sbom
-  apply_advisories(x, advisories, on_error)
+  apply_advisories(apply_checksums(x, checksums), advisories, on_error)
 }
 
 # The checks of sbom_nix()'s `nix` and `snapshot`, which sbom() makes too.
@@ -350,8 +351,7 @@ read_nix_sbom <- function(path, nix = NA, snapshot = NULL, library = NULL,
   )
   x$metadata$notes <- c(x$metadata$notes, nix_source_note(p$nixpkgs))
   if (!is.null(looked)) {
-    old <- "Download locations are not recorded, since sbom did not look up any package repository."
-    x$metadata$notes[x$metadata$notes == old] <- paste0(
+    x$metadata$notes[x$metadata$notes == download_note()] <- paste0(
       "Download locations are not recorded; versions were looked up in ", snap$label, " only."
     )
     x$metadata$notes <- c(x$metadata$notes, paste0(

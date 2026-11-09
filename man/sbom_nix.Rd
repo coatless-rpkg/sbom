@@ -16,6 +16,7 @@ sbom_nix(
   overrides = NULL,
   embedded = TRUE,
   system = TRUE,
+  checksums = FALSE,
   advisories = FALSE,
   advisories_on_error = c("error", "continue")
 )
@@ -113,6 +114,16 @@ with the rules of the pak package, when it is installed. sbom turns off
 pak's update of those rules, so pak uses the rules it has cached or
 ships and makes no network request. The shared libraries that installed
 compiled code links are read with \code{otool} (macOS) or \code{ldd} (Linux).}
+
+\item{checksums}{Whether to look up the SHA-256 and MD5 of the source
+tarball of each R package with a CRAN or Bioconductor package URL and an
+exact version, in the repository metadata that the pak package keeps.
+\code{FALSE}, the default, makes no request. \code{TRUE} needs pak, which
+downloads the metadata when its copy is out of date, and records each
+package's file name and download location along with its checksums. The
+metadata lists only the versions each repository offers now, so an
+archived version gets no checksum and is named in a
+\code{checksums-not-found} issue. Checksums are looked up after \code{overrides}.}
 
 \item{advisories}{Whether to list the OSV security advisories for the
 SBOM's packages, from the R Consortium advisory database that OSV

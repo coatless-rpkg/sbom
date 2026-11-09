@@ -55,7 +55,7 @@ combine_sbom <- function(..., name, version = NULL,
                          author = getOption("sbom.author"),
                          organization = getOption("sbom.organization"),
                          regid = getOption("sbom.regid"),
-                         timestamp = NULL, overrides = NULL,
+                         timestamp = NULL, overrides = NULL, checksums = FALSE,
                          advisories = FALSE, advisories_on_error = c("error", "continue")) {
   xs <- list(...)
   if (length(xs) == 1L && is.list(xs[[1L]]) && !inherits(xs[[1L]], "sbom")) {
@@ -81,6 +81,7 @@ combine_sbom <- function(..., name, version = NULL,
     cli::cli_abort("{.arg version} must be a single string or {.code NULL}, not {.obj_type_friendly {version}}.")
   }
   on_error <- check_advisories_args(advisories, advisories_on_error)
+  check_checksums_arg(checksums)
   regid <- check_regid(regid)
   name <- enc2utf8_bytes(trimws(name))
   version <- if (is.null(version)) NA_character_ else enc2utf8_bytes(trimws(version))
@@ -130,7 +131,7 @@ combine_sbom <- function(..., name, version = NULL,
     ),
     x$components, x$relationships, issues, kept$advisories
   )
-  out <- apply_overrides(out, overrides)
+  out <- apply_checksums(apply_overrides(out, overrides), checksums)
   if (!isFALSE(advisories)) {
     out <- apply_advisories(out, advisories, on_error)
   }
