@@ -10,7 +10,9 @@
 #' from the project and makes no network requests, except that, with Nix
 #' installed, a `default.nix` is read by running `nix-instantiate` (see
 #' [sbom_nix()]), which may download nixpkgs, that `snapshot` looks up a
-#' CRAN snapshot, and that `advisories = TRUE` downloads OSV's advisory data.
+#' CRAN snapshot, that `checksums = TRUE` reads repository metadata with pak,
+#' which may download it, and that `advisories = TRUE` downloads OSV's
+#' advisory data.
 #'
 #' The sources, from strongest to weakest:
 #'
@@ -106,7 +108,7 @@
 #'   than the file or folder it reads, such as `library`, `lib`,
 #'   `dependencies`, `r_version`, `author`, `overrides` or `advisories`. The
 #'   code scan takes `lib`, `author`, `organization`, `regid`, `timestamp`,
-#'   `overrides`, `embedded`, `system`, `advisories` and
+#'   `overrides`, `embedded`, `system`, `checksums`, `advisories` and
 #'   `advisories_on_error`. A Shiny app also takes
 #'   `evaluate_ui` (see [sbom_shiny()]), which other folders ignore. A name
 #'   that no reader takes is an error. The reader ignores those it does not
@@ -219,7 +221,7 @@ sbom_paths <- function(paths, dots, name, version, call = parent.frame()) {
   if (length(twice) > 0L) {
     cli::cli_abort("{.arg path} holds {.file {twice}} more than once.", call = call)
   }
-  whole <- c("author", "organization", "regid", "overrides", "advisories", "advisories_on_error")
+  whole <- c("author", "organization", "regid", "overrides", "checksums", "advisories", "advisories_on_error")
   each <- args[setdiff(names(args), whole)]
   xs <- lapply(paths, function(p) {
     if (dir.exists(p)) {
@@ -264,6 +266,9 @@ check_project_args <- function(path, dots, call = parent.frame()) {
     check_nix_arg(args$nix, call = call)
   }
   check_snapshot_arg(args$snapshot, call = call)
+  if ("checksums" %in% names(args)) {
+    check_checksums_arg(args$checksums, call = call)
+  }
   args
 }
 
@@ -275,7 +280,7 @@ sbom_project <- function(path, args, layout = NA, evaluate_ui = FALSE, call = pa
   # Overrides and advisories apply once, to the SBOM, at the end, so the
   # reader of the strongest source does not take them; a cross-check takes
   # only `lib`, `nix`, `embedded` and `system`.
-  at_end <- c("overrides", "advisories", "advisories_on_error")
+  at_end <- c("overrides", "checksums", "advisories", "advisories_on_error")
   # A default.nix that cannot be read at all, as the strongest source, is an
   # issue, and the SBOM comes from the next source. Every other error is the
   # user's to see.
@@ -363,6 +368,7 @@ sbom_project <- function(path, args, layout = NA, evaluate_ui = FALSE, call = pa
   x$metadata$inputs <- inputs
   rownames(x$issues) <- NULL
   x <- apply_overrides(x, overrides)
+  x <- apply_checksums(x, isTRUE(args$checksums), call = call)
   advisories <- if (is.null(args$advisories)) FALSE else args$advisories
   on_error <- if (is.null(args$advisories_on_error)) "error" else args$advisories_on_error
   apply_advisories(x, advisories, on_error, call = call)
@@ -377,7 +383,7 @@ reader_args <- function() {
     package = setdiff(names(formals(sbom_package)), "path"),
     nix = setdiff(names(formals(sbom_nix)), "path"),
     code = c("author", "organization", "regid", "timestamp", "overrides", "lib",
-      "embedded", "system", "advisories", "advisories_on_error"),
+      "embedded", "system", "checksums", "advisories", "advisories_on_error"),
     shiny = "evaluate_ui"
   )
 }

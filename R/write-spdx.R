@@ -83,6 +83,17 @@ spdx_nix_info <- function(row) {
   }
 }
 
+# The summary of an R package, its DESCRIPTION Title, which sbom keeps as the
+# package's description; NULL for R itself, base packages, embedded code,
+# system components and a package whose description is what Nix says.
+spdx_package_summary <- function(row) {
+  special <- identical(row$ecosystem, "r") || identical(row$parent_ref, "R") ||
+    is_embedded_ref(row$ref) || row$ecosystem %in% system_ecosystems
+  if (!special && is.null(spdx_nix_info(row)) && spdx_is_set(row$description)) {
+    row$description
+  }
+}
+
 # SPDX 2's sourceInfo: the source repository, then what Nix says.
 spdx_source_info <- function(row) {
   parts <- c(
@@ -200,6 +211,8 @@ spdx_package <- function(row, id, version = "2.3", advisories = list()) {
       parts <- c(parts, paste0("Published ", row$published, "."))
     }
   }
+  summary <- spdx_package_summary(row)
+  if (!is.null(summary)) p$summary <- summary
   parts <- c(parts, spdx_asserted_sentences(row), spdx_system_requirements(row))
   if (length(parts) > 0L) p$comment <- paste(parts, collapse = " ")
 

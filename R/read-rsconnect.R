@@ -39,9 +39,10 @@ sbom_rsconnect <- function(manifest = "manifest.json",
                            organization = getOption("sbom.organization"),
                            regid = getOption("sbom.regid"),
                            timestamp = NULL, overrides = NULL,
-                           embedded = TRUE, system = TRUE, advisories = FALSE,
+                           embedded = TRUE, system = TRUE, checksums = FALSE, advisories = FALSE,
                            advisories_on_error = c("error", "continue")) {
   on_error <- check_advisories_args(advisories, advisories_on_error)
+  check_checksums_arg(checksums)
   regid <- check_regid(regid)
   m <- read_manifest(manifest)
   project <- dirname(normalizePath(manifest, mustWork = TRUE))
@@ -91,7 +92,7 @@ sbom_rsconnect <- function(manifest = "manifest.json",
     "sbom did not read the files."
   )
   rownames(x$issues) <- NULL
-  apply_advisories(apply_overrides(x, overrides), advisories, on_error)
+  apply_advisories(apply_checksums(apply_overrides(x, overrides), checksums), advisories, on_error)
 }
 
 # "Deployed to Posit Connect as a {appmode} application.", or without the

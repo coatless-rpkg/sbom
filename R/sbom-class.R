@@ -302,6 +302,10 @@ timestamp_notes <- function(timestamp = NULL) {
 #'   account's page as `supplier_url`, such as `https://github.com/r-lib`; the
 #'   repository itself is `vcs_url`. Without an owner on record, the supplier
 #'   is the forge, with no URL.
+#'
+#'   An R package's `description` is the Title of its DESCRIPTION. CycloneDX
+#'   writes it as the component's description, and SPDX as the package's
+#'   summary.
 #' @examples
 #' x <- sbom_package(system.file("DESCRIPTION", package = "sbom"), system = FALSE)
 #' sbom_components(x)

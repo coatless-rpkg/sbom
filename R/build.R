@@ -104,6 +104,15 @@
 #'   pak's update of those rules, so pak uses the rules it has cached or
 #'   ships and makes no network request. The shared libraries that installed
 #'   compiled code links are read with `otool` (macOS) or `ldd` (Linux).
+#' @param checksums Whether to look up the SHA-256 and MD5 of the source
+#'   tarball of each R package with a CRAN or Bioconductor package URL and an
+#'   exact version, in the repository metadata that the pak package keeps.
+#'   `FALSE`, the default, makes no request. `TRUE` needs pak, which
+#'   downloads the metadata when its copy is out of date, and records each
+#'   package's file name and download location along with its checksums. The
+#'   metadata lists only the versions each repository offers now, so an
+#'   archived version gets no checksum and is named in a
+#'   `checksums-not-found` issue. Checksums are looked up after `overrides`.
 #' @param advisories Whether to list the OSV security advisories for the
 #'   SBOM's packages, from the R Consortium advisory database that OSV
 #'   publishes; see [sbom_advisories()]. Only exact versions are compared,
@@ -155,10 +164,11 @@ sbom_package <- function(path = ".",
                          organization = getOption("sbom.organization"),
                          regid = getOption("sbom.regid"),
                          timestamp = NULL, overrides = NULL,
-                         embedded = TRUE, system = TRUE, advisories = FALSE,
+                         embedded = TRUE, system = TRUE, checksums = FALSE, advisories = FALSE,
                          advisories_on_error = c("error", "continue")) {
   dependencies <- match.arg(dependencies, several.ok = TRUE)
   on_error <- check_advisories_args(advisories, advisories_on_error)
+  check_checksums_arg(checksums)
   check_lib(lib)
   regid <- check_regid(regid)
   root_desc <- read_package_description(path)
@@ -191,7 +201,7 @@ sbom_package <- function(path = ".",
       severity = "info"
     )
   }
-  apply_advisories(apply_overrides(x, overrides), advisories, on_error)
+  apply_advisories(apply_checksums(apply_overrides(x, overrides), checksums), advisories, on_error)
 }
 
 # The DESCRIPTION at `path` (a folder, a DESCRIPTION file or a tarball),
@@ -243,9 +253,10 @@ sbom_installed <- function(pkgs = NULL, lib = .libPaths(), name = "R library",
                            organization = getOption("sbom.organization"),
                            regid = getOption("sbom.regid"),
                            timestamp = NULL, overrides = NULL,
-                           embedded = TRUE, system = TRUE, advisories = FALSE,
+                           embedded = TRUE, system = TRUE, checksums = FALSE, advisories = FALSE,
                            advisories_on_error = c("error", "continue")) {
   on_error <- check_advisories_args(advisories, advisories_on_error)
+  check_checksums_arg(checksums)
   check_lib(lib)
   regid <- check_regid(regid)
   lookup <- library_lookup(lib)
@@ -294,7 +305,7 @@ sbom_installed <- function(pkgs = NULL, lib = .libPaths(), name = "R library",
     inputs = inputs, extra_base = listed_base, embedded = embedded,
     system = system
   )
-  apply_advisories(apply_overrides(x, overrides), advisories, on_error)
+  apply_advisories(apply_checksums(apply_overrides(x, overrides), checksums), advisories, on_error)
 }
 
 # The placeholder package name of the root of a library build.
@@ -463,7 +474,7 @@ build_sbom_cached <- function(root, lookup, root_desc, fields, root_suggests, li
       "Packages listed only under Suggests are included, but their own dependencies were not read."
     },
     checksum_note(),
-    "Download locations are not recorded, since sbom did not look up any package repository.",
+    download_note(),
     timestamp_notes(timestamp)
   )
   timestamp <- resolve_timestamp(timestamp)
@@ -601,6 +612,11 @@ sbom_authorship <- function(author, organization, regid, issues, root) {
 }
 
 # The SBOM note that says which checksums are on record.
+# The note that no download location is recorded.
+download_note <- function() {
+  "Download locations are not recorded, since sbom did not look up any package repository."
+}
+
 checksum_note <- function() {
   "Checksums are only those of files sbom read itself, and a component without one has none on record."
 }

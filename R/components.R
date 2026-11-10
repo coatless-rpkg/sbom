@@ -241,6 +241,13 @@ package_ecosystem <- function(desc) {
   result("local", NA_character_)
 }
 
+# The Title of the DESCRIPTION record `desc` on one line, or NA when it has
+# none.
+package_title <- function(desc) {
+  title <- desc_field(desc, "Title")
+  if (is.na(title)) title else gsub("[ \t\r\n]+", " ", title)
+}
+
 # Returns list(component = <1-row data.frame>, issues = <data.frame>).
 # `source_input` names where the record came from. A record from renv.lock or
 # manifest.json that lacks a license or maintainer says that the file does
@@ -287,6 +294,7 @@ package_component <- function(desc, evidence, source_input, is_root = FALSE,
     homepage = eco$homepage, vcs_url = vcs_url,
     package_file_name = if (has_file_name) paste0(name, "_", version, ".tar.gz") else NA_character_,
     doi = if (eco$ecosystem == "cran") cran_doi(name) else NA_character_,
+    description = package_title(desc),
     bioc_release = eco$bioc_release, evidence = evidence,
     source_input = source_input, deps = deps,
     system_requirements = desc_field(desc, "SystemRequirements")

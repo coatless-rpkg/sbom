@@ -249,6 +249,9 @@ Building an SBOM is offline unless you ask otherwise. The exceptions:
 
 * `advisories = TRUE` downloads OSV's advisory data (see the
   [compliance guide](compliance.html)).
+* `checksums = TRUE` reads the repository metadata that `{pak}` keeps, which
+  `{pak}` downloads when its copy is out of date, for the SHA-256 and MD5 of
+  each package's source tarball.
 * `snapshot` in `sbom_nix()`, or in `sbom()` for a folder with a
   `default.nix`, given as `"ppm"` or a URL.
 * Nix mode, where `nix-instantiate` may download nixpkgs. Pass `nix = FALSE`

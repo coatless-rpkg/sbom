@@ -81,7 +81,7 @@ tv_package_entries <- function(p, version = "2.3") {
       rep("PackageChecksum", length(checksums)),
       "PackageHomePage", "PackageSourceInfo", "PackageLicenseConcluded",
       "PackageLicenseDeclared", "PackageLicenseComments", "PackageCopyrightText",
-      "PackageComment", rep(c("ExternalRef", "ExternalRefComment"), n_refs),
+      "PackageSummary", "PackageComment", rep(c("ExternalRef", "ExternalRefComment"), n_refs),
       "PrimaryPackagePurpose"
     ),
     value = c(
@@ -93,14 +93,14 @@ tv_package_entries <- function(p, version = "2.3") {
       checksums,
       list(
         p$homepage, p$sourceInfo, p$licenseConcluded, p$licenseDeclared,
-        p$licenseComments, p$copyrightText, p$comment
+        p$licenseComments, p$copyrightText, p$summary, p$comment
       ),
       if (n_refs > 0L) refs,
       list(p$primaryPackagePurpose)
     ),
     wrap = c(
       rep(FALSE, 10L + length(checksums)),
-      FALSE, TRUE, FALSE, FALSE, TRUE, FALSE, TRUE,
+      FALSE, TRUE, FALSE, FALSE, TRUE, FALSE, TRUE, TRUE,
       rep(c(FALSE, TRUE), n_refs),
       FALSE
     )

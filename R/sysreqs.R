@@ -43,13 +43,17 @@ pak_call <- function(name, ...) {
   }
   op <- options(pkg.sysreqs_db_update = FALSE)
   on.exit(options(op), add = TRUE)
+  tryCatch(in_session_tmpdir(fun(...)), error = function(e) NULL)
+}
+
+# The value of `expr`, evaluated with TMPDIR set to this session's tempdir(),
+# so that a subprocess pak starts leaves its temporary folder where R removes
+# it at the end of the session.
+in_session_tmpdir <- function(expr) {
   old_tmpdir <- Sys.getenv("TMPDIR", unset = NA)
-  on.exit(
-    if (is.na(old_tmpdir)) Sys.unsetenv("TMPDIR") else Sys.setenv(TMPDIR = old_tmpdir),
-    add = TRUE
-  )
+  on.exit(if (is.na(old_tmpdir)) Sys.unsetenv("TMPDIR") else Sys.setenv(TMPDIR = old_tmpdir))
   Sys.setenv(TMPDIR = tempdir())
-  tryCatch(fun(...), error = function(e) NULL)
+  expr
 }
 
 # For each text in `spec`, a data frame of the sysreq names pak finds in it

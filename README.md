@@ -41,7 +41,7 @@ library(sbom)
 
 x <- sbom_package(system.file("DESCRIPTION", package = "sbom"), system = FALSE)
 x
-#> <sbom> sbom 0.1.0
+#> <sbom> sbom 0.1.1
 #> Components: 19
 #> Relationships: 28
 #> Issues: 3 (see sbom_issues())

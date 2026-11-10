@@ -256,7 +256,10 @@ read_spdx2_fields <- function(el) {
     vcs_url = read_first(vcs$value, refs$owner, n, rep(TRUE, length(vcs$value))),
     download_location = download$value,
     doi = read_first(doi$value, refs$owner, n, rep(TRUE, length(doi$value))),
-    description = tables_present(json_strings(raw, "description")),
+    description = tables_coalesce(
+      tables_present(json_strings(raw, "description")),
+      tables_present(json_strings(raw, "summary"))
+    ),
     published = read_date(json_strings(raw, "releaseDate")),
     package_file_name = tables_present(json_strings(raw, "packageFileName")),
     hashes = hashes$value, type = read_purpose_type(el$type),
@@ -296,7 +299,10 @@ read_spdx3_fields <- function(el, ix) {
     vcs_url = read_first(vcs$value, refs$owner, n, rep(TRUE, length(vcs$value))),
     download_location = download$value,
     doi = read_first(doi$value, ids$owner, n, rep(TRUE, length(doi$value))),
-    description = tables_present(json_strings(raw, "description")),
+    description = tables_coalesce(
+      tables_present(json_strings(raw, "description")),
+      tables_present(json_strings(raw, "summary"))
+    ),
     published = read_date(json_strings(raw, "releaseTime")),
     hashes = hashes$value, type = read_purpose_type(el$type),
     dropped = c(homepage$dropped, vcs$dropped, download$dropped, doi$dropped, hashes$dropped)

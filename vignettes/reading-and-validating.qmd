@@ -46,7 +46,7 @@ from the content, not the name, which helps with files called `sbom-final-v2.txt
 
 ```{r}
 mystery <- file.path(tempdir(), "sbom-final-v2.txt")
-file.copy(file.path(out, "sbom-0.1.0.spdx"), mystery)
+file.copy(file.path(out, "sbom-0.1.1.spdx"), mystery)
 y <- read_sbom(mystery)
 y
 y$metadata$notes[1]
@@ -161,7 +161,7 @@ best. Without `{jsonvalidate}`, the JSON formats are `partial` too.
 With the NTIA profile switched back on, `{sbom}`'s own SBOM fails:
 
 ```{r}
-validate_sbom(file.path(out, "sbom-0.1.0.cdx.json"))
+validate_sbom(file.path(out, "sbom-0.1.1.cdx.json"))
 ```
 
 None of R, its base packages or `{sbom}` itself, read here from a local
@@ -178,7 +178,7 @@ notice does not clearly allow it to be redistributed. A tag is checked against
 and the result marks the schema check as `partial`:
 
 ```{r}
-validate_sbom(file.path(out, "sbom-0.1.0.swidtag"))
+validate_sbom(file.path(out, "sbom-0.1.1.swidtag"))
 ```
 
 To check a tag fully, download the schema from
@@ -189,7 +189,7 @@ SHA-256, and needs no network for the check.
 ```{r}
 #| eval: false
 old <- options(sbom.swid_xsd = "path/to/schema.xsd")
-validate_sbom("sbom-0.1.0.swidtag")
+validate_sbom("sbom-0.1.1.swidtag")
 options(old)
 ```
 
